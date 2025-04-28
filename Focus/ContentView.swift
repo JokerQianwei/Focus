@@ -57,7 +57,7 @@ struct ContentView: View {
                 .padding(.horizontal)
 
                 // 完成信息
-                Text("已完成 \(timerManager.completedSessions) 个专注周期")
+                Text("今天已完成 \(timerManager.completedSessionsToday) 个专注周期")
                     .font(.subheadline)
                     .foregroundColor(.secondary)
 

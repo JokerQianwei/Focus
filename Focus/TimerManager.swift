@@ -20,7 +20,7 @@ class TimerManager: ObservableObject {
     @Published var timerRunning: Bool = false
     @Published var workMinutes: Int = 90
     @Published var breakMinutes: Int = 20
-    @Published var completedSessions: Int = 0
+    @Published private var completionTimestamps: [Date] = [] // Store completion timestamps
     @Published var promptSoundEnabled: Bool = true
     @Published var promptMinInterval: Int = 3 // 提示音最小间隔（分钟）
     @Published var promptMaxInterval: Int = 5 // 提示音最大间隔（分钟）
@@ -31,6 +31,7 @@ class TimerManager: ObservableObject {
     private var promptTimer: Timer? = nil
     private var secondPromptTimer: Timer? = nil
     private var nextPromptInterval: TimeInterval = 0
+    private let completionTimestampsKey = "completionTimestamps" // UserDefaults key
 
     // 格式化时间显示
     var timeString: String {
@@ -48,7 +49,53 @@ class TimerManager: ObservableObject {
     }
 
     // 私有初始化方法，防止外部创建实例
-    private init() {}
+    private init() {
+        // Load saved timestamps
+        if let savedTimestampsData = UserDefaults.standard.data(forKey: completionTimestampsKey),
+           let decodedTimestamps = try? JSONDecoder().decode([Date].self, from: savedTimestampsData) {
+            self.completionTimestamps = decodedTimestamps
+            // Cleanup timestamps older than the start of the current "day" (5 AM)
+            cleanupOldTimestampsIfNeeded()
+        }
+    }
+
+    // 计算今天（凌晨5点起）完成的专注周期数
+    var completedSessionsToday: Int {
+        let now = Date()
+        let calendar = Calendar.current
+
+        // 获取今天的 5 AM 时间点
+        guard var startOfToday5AM = calendar.date(bySettingHour: 5, minute: 0, second: 0, of: now) else {
+            print("Error: Could not calculate today's 5 AM.")
+            return 0 // 无法计算，返回0
+        }
+
+        // 如果当前时间早于凌晨5点，则"今天"是从昨天凌晨5点开始的
+        if calendar.component(.hour, from: now) < 5 {
+            if let yesterday5AM = calendar.date(byAdding: .day, value: -1, to: startOfToday5AM) {
+                startOfToday5AM = yesterday5AM
+            } else {
+                 print("Error: Could not calculate yesterday's 5 AM.")
+                 return 0 // 无法计算，返回0
+            }
+        }
+
+        // 获取明天的 5 AM 时间点
+        guard let startOfTomorrow5AM = calendar.date(byAdding: .day, value: 1, to: startOfToday5AM) else {
+             print("Error: Could not calculate tomorrow's 5 AM.")
+            return 0 // 无法计算，返回0
+        }
+
+        // 筛选出在今天5AM到明天5AM之间的时间戳
+        let todayTimestamps = completionTimestamps.filter { $0 >= startOfToday5AM && $0 < startOfTomorrow5AM }
+
+        #if DEBUG
+        // print("Calculating completedSessionsToday: Now=\(now), Today5AM=\(startOfToday5AM), Tomorrow5AM=\(startOfTomorrow5AM), Count=\(todayTimestamps.count)")
+        // print("All Timestamps: \(completionTimestamps)")
+        #endif
+
+        return todayTimestamps.count
+    }
 
     // 开始计时器
     func startTimer() {
@@ -86,7 +133,8 @@ class TimerManager: ObservableObject {
                     }
                     self.isWorkMode = false
                     self.minutes = self.breakMinutes
-                    self.completedSessions += 1
+                    self.completionTimestamps.append(Date()) // Add current timestamp
+                    self.saveCompletionTimestamps() // Save updated timestamps
                     self.stopPromptSystem() // 工作结束，停止随机提示音
 
                     // 在模式切换后，如果需要自动开始休息，则启动计时器
@@ -223,6 +271,43 @@ class TimerManager: ObservableObject {
 
         secondPromptTimer?.invalidate()
         secondPromptTimer = nil
+    }
+
+    // Helper function to save timestamps to UserDefaults
+    private func saveCompletionTimestamps() {
+        DispatchQueue.global(qos: .background).async {
+            if let encoded = try? JSONEncoder().encode(self.completionTimestamps) {
+                UserDefaults.standard.set(encoded, forKey: self.completionTimestampsKey)
+                #if DEBUG
+                // print("Saved \(self.completionTimestamps.count) timestamps.")
+                #endif
+            } else {
+                print("Error: Failed to encode completion timestamps.")
+            }
+        }
+    }
+
+    // Helper function to remove old timestamps on init
+    private func cleanupOldTimestampsIfNeeded() {
+        let now = Date()
+        let calendar = Calendar.current
+        guard var startOfCurrentDay5AM = calendar.date(bySettingHour: 5, minute: 0, second: 0, of: now) else { return }
+        if calendar.component(.hour, from: now) < 5 {
+             if let yesterday5AM = calendar.date(byAdding: .day, value: -1, to: startOfCurrentDay5AM) {
+                 startOfCurrentDay5AM = yesterday5AM
+             } else {
+                 return // Error calculating yesterday
+             }
+        }
+
+         let originalCount = completionTimestamps.count
+         // Remove timestamps before the start of the relevant "day"
+         completionTimestamps.removeAll { $0 < startOfCurrentDay5AM }
+
+         if completionTimestamps.count != originalCount {
+            print("Cleaned up \(originalCount - completionTimestamps.count) old timestamps.")
+            // No need to save here, as this is only called during init before potential modifications
+         }
     }
 }
 
