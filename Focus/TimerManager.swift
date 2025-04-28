@@ -13,25 +13,65 @@ class TimerManager: ObservableObject {
     // 单例实例
     static let shared = TimerManager()
 
+    // UserDefaults中存储设置的键
+    private let workMinutesKey = "workMinutes"
+    private let breakMinutesKey = "breakMinutes"
+    private let promptSoundEnabledKey = "promptSoundEnabled"
+    private let promptMinIntervalKey = "promptMinInterval"
+    private let promptMaxIntervalKey = "promptMaxInterval"
+    private let microBreakSecondsKey = "microBreakSeconds"
+    private let completionTimestampsKey = "completionTimestamps" // UserDefaults key
+
     // 发布的属性，当这些属性改变时，所有观察者都会收到通知
     @Published var minutes: Int = 90
     @Published var seconds: Int = 0
     @Published var isWorkMode: Bool = true
     @Published var timerRunning: Bool = false
-    @Published var workMinutes: Int = 90
-    @Published var breakMinutes: Int = 20
+    
+    // 使用重写的属性来自动保存设置的更改
+    @Published var workMinutes: Int {
+        didSet {
+            UserDefaults.standard.set(workMinutes, forKey: workMinutesKey)
+        }
+    }
+    
+    @Published var breakMinutes: Int {
+        didSet {
+            UserDefaults.standard.set(breakMinutes, forKey: breakMinutesKey)
+        }
+    }
+    
+    @Published var promptSoundEnabled: Bool {
+        didSet {
+            UserDefaults.standard.set(promptSoundEnabled, forKey: promptSoundEnabledKey)
+        }
+    }
+    
+    @Published var promptMinInterval: Int {
+        didSet {
+            UserDefaults.standard.set(promptMinInterval, forKey: promptMinIntervalKey)
+        }
+    }
+    
+    @Published var promptMaxInterval: Int {
+        didSet {
+            UserDefaults.standard.set(promptMaxInterval, forKey: promptMaxIntervalKey)
+        }
+    }
+    
+    @Published var microBreakSeconds: Int {
+        didSet {
+            UserDefaults.standard.set(microBreakSeconds, forKey: microBreakSecondsKey)
+        }
+    }
+    
     @Published private var completionTimestamps: [Date] = [] // Store completion timestamps
-    @Published var promptSoundEnabled: Bool = true
-    @Published var promptMinInterval: Int = 3 // 提示音最小间隔（分钟）
-    @Published var promptMaxInterval: Int = 5 // 提示音最大间隔（分钟）
-    @Published var microBreakSeconds: Int = 10 // 微休息时间（秒）
 
     // 计时器
     private var timer: Timer? = nil
     private var promptTimer: Timer? = nil
     private var secondPromptTimer: Timer? = nil
     private var nextPromptInterval: TimeInterval = 0
-    private let completionTimestampsKey = "completionTimestamps" // UserDefaults key
 
     // 格式化时间显示
     var timeString: String {
@@ -50,7 +90,53 @@ class TimerManager: ObservableObject {
 
     // 私有初始化方法，防止外部创建实例
     private init() {
-        // Load saved timestamps
+        // 从UserDefaults加载保存的设置，如果没有则使用默认值
+        // 工作时间设置
+        if UserDefaults.standard.object(forKey: workMinutesKey) != nil {
+            self.workMinutes = UserDefaults.standard.integer(forKey: workMinutesKey)
+        } else {
+            self.workMinutes = 90 // 默认值
+        }
+
+        // 休息时间设置
+        if UserDefaults.standard.object(forKey: breakMinutesKey) != nil {
+            self.breakMinutes = UserDefaults.standard.integer(forKey: breakMinutesKey)
+        } else {
+            self.breakMinutes = 20 // 默认值
+        }
+
+        // 声音启用设置
+        if UserDefaults.standard.object(forKey: promptSoundEnabledKey) != nil {
+            self.promptSoundEnabled = UserDefaults.standard.bool(forKey: promptSoundEnabledKey)
+        } else {
+            self.promptSoundEnabled = true // 默认值
+        }
+
+        // 提示音最小间隔设置
+        if UserDefaults.standard.object(forKey: promptMinIntervalKey) != nil {
+            self.promptMinInterval = UserDefaults.standard.integer(forKey: promptMinIntervalKey)
+        } else {
+            self.promptMinInterval = 3 // 默认值
+        }
+
+        // 提示音最大间隔设置
+        if UserDefaults.standard.object(forKey: promptMaxIntervalKey) != nil {
+            self.promptMaxInterval = UserDefaults.standard.integer(forKey: promptMaxIntervalKey)
+        } else {
+            self.promptMaxInterval = 5 // 默认值
+        }
+
+        // 微休息时间设置
+        if UserDefaults.standard.object(forKey: microBreakSecondsKey) != nil {
+            self.microBreakSeconds = UserDefaults.standard.integer(forKey: microBreakSecondsKey)
+        } else {
+            self.microBreakSeconds = 10 // 默认值
+        }
+
+        // 初始化计时器状态
+        self.minutes = self.workMinutes
+        
+        // 加载完成时间戳
         if let savedTimestampsData = UserDefaults.standard.data(forKey: completionTimestampsKey),
            let decodedTimestamps = try? JSONDecoder().decode([Date].self, from: savedTimestampsData) {
             self.completionTimestamps = decodedTimestamps
