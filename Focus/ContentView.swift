@@ -7,17 +7,29 @@
 
 import SwiftUI
 import UserNotifications
+import AVFoundation
+import AudioToolbox
 
 struct ContentView: View {
     // 状态变量
-    @State private var minutes: Int = 25
+    @State private var minutes: Int = 90
     @State private var seconds: Int = 0
     @State private var timerRunning = false
     @State private var timer: Timer? = nil
     @State private var isWorkMode = true
-    @State private var workMinutes: Int = 25
-    @State private var breakMinutes: Int = 5
+    @State private var workMinutes: Int = 90
+    @State private var breakMinutes: Int = 20
     @State private var completedSessions: Int = 0
+
+    // 提示音系统相关状态
+    @State private var promptSoundEnabled = true
+    @State private var promptTimer: Timer? = nil
+    @State private var secondPromptTimer: Timer? = nil
+    @State private var nextPromptInterval: TimeInterval = 0
+    @State private var audioPlayer: AVAudioPlayer? = nil
+
+    // 设置视图相关状态
+    @State private var showingSettings = false
 
     // 格式化时间显示
     var timeString: String {
@@ -26,104 +38,202 @@ struct ContentView: View {
 
     // 当前模式文本
     var modeText: String {
-        isWorkMode ? "工作时间" : "休息时间"
+        isWorkMode ? "专注时间" : "休息时间"
     }
 
     var body: some View {
-        VStack(spacing: 20) {
-            // 标题和模式
-            VStack {
-                Text("专注时钟")
-                    .font(.largeTitle)
-                    .fontWeight(.bold)
+        ZStack {
+            // 背景颜色
+            Color(NSColor.windowBackgroundColor)
+                .ignoresSafeArea()
 
-                Text(modeText)
-                    .font(.title2)
-                    .foregroundColor(isWorkMode ? .blue : .green)
+            VStack(spacing: 25) {
+                // 顶部栏：标题和设置按钮
+                HStack {
+                    Spacer()
 
-                Text("已完成 \(completedSessions) 个专注周期")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-            }
+                    Text("专注时钟")
+                        .font(.system(size: 36, weight: .bold, design: .rounded))
+                        .foregroundColor(.primary)
 
-            // 时间显示
-            Text(timeString)
-                .font(.system(size: 70, weight: .medium, design: .monospaced))
-                .padding()
-                .background(
+                    Spacer()
+
+                    Button(action: {
+                        showingSettings = true
+                    }) {
+                        Image(systemName: "gearshape.fill")
+                            .font(.title2)
+                            .foregroundColor(.secondary)
+                    }
+                    .buttonStyle(.plain)
+                    .keyboardShortcut(",", modifiers: .command)
+                    .help("设置")
+                }
+                .padding(.horizontal)
+
+                // 模式和完成信息
+                VStack(spacing: 8) {
+                    Text(modeText)
+                        .font(.title2)
+                        .foregroundColor(isWorkMode ? .blue : .green)
+                        .fontWeight(.medium)
+
+                    Text("已完成 \(completedSessions) 个专注周期")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                }
+
+                // 时间显示
+                ZStack {
                     Circle()
-                        .stroke(isWorkMode ? Color.blue : Color.green, lineWidth: 3)
-                        .padding(6)
-                )
+                        .fill(Color(NSColor.controlBackgroundColor))
+                        .shadow(color: Color.black.opacity(0.1), radius: 10, x: 0, y: 5)
 
-            // 控制按钮
-            HStack(spacing: 20) {
-                Button(action: startTimer) {
-                    Text("开始")
-                        .font(.title2)
-                        .padding()
-                        .frame(width: 100)
-                        .background(Color.green)
-                        .foregroundColor(.white)
-                        .cornerRadius(10)
+                    Circle()
+                        .stroke(isWorkMode ? Color.blue : Color.green, lineWidth: 4)
+                        .padding(4)
+
+                    Text(timeString)
+                        .font(.system(size: 70, weight: .medium, design: .rounded))
+                        .foregroundColor(.primary)
+                        .monospacedDigit()
                 }
-                .disabled(timerRunning)
+                .frame(width: 250, height: 250)
 
-                Button(action: stopTimer) {
-                    Text("停止")
-                        .font(.title2)
-                        .padding()
-                        .frame(width: 100)
-                        .background(Color.red)
-                        .foregroundColor(.white)
-                        .cornerRadius(10)
-                }
-                .disabled(!timerRunning)
-
-                Button(action: resetTimer) {
-                    Text("重置")
-                        .font(.title2)
-                        .padding()
-                        .frame(width: 100)
-                        .background(Color.gray)
-                        .foregroundColor(.white)
-                        .cornerRadius(10)
-                }
-            }
-
-            // 时间设置
-            VStack(spacing: 10) {
-                HStack {
-                    Text("工作时间:")
-                    Picker("工作分钟", selection: $workMinutes) {
-                        ForEach(1...60, id: \.self) { minute in
-                            Text("\(minute) 分钟").tag(minute)
-                        }
+                // 控制按钮
+                HStack(spacing: 20) {
+                    Button(action: startTimer) {
+                        Label("开始", systemImage: "play.fill")
+                            .frame(width: 100)
+                            .padding(.vertical, 12)
                     }
-                    .pickerStyle(MenuPickerStyle())
+                    .buttonStyle(.borderedProminent)
+                    .tint(.green)
                     .disabled(timerRunning)
-                    .onChange(of: workMinutes) { newValue in
-                        if isWorkMode && !timerRunning {
-                            minutes = newValue
-                        }
-                    }
-                }
 
-                HStack {
-                    Text("休息时间:")
-                    Picker("休息分钟", selection: $breakMinutes) {
-                        ForEach(1...30, id: \.self) { minute in
-                            Text("\(minute) 分钟").tag(minute)
-                        }
+                    Button(action: stopTimer) {
+                        Label("停止", systemImage: "pause.fill")
+                            .frame(width: 100)
+                            .padding(.vertical, 12)
                     }
-                    .pickerStyle(MenuPickerStyle())
-                    .disabled(timerRunning)
+                    .buttonStyle(.borderedProminent)
+                    .tint(.red)
+                    .disabled(!timerRunning)
+
+                    Button(action: resetTimer) {
+                        Label("重置", systemImage: "arrow.counterclockwise")
+                            .frame(width: 100)
+                            .padding(.vertical, 12)
+                    }
+                    .buttonStyle(.bordered)
+                }
+                .controlSize(.large)
+
+                // 提示音状态指示器（如果启用）
+                if promptSoundEnabled && isWorkMode && timerRunning {
+                    HStack(spacing: 8) {
+                        Image(systemName: "speaker.wave.2")
+                            .foregroundColor(.blue)
+                        Text("提示音已启用")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    .padding(.vertical, 4)
                 }
             }
             .padding()
+            .frame(minWidth: 400, minHeight: 500)
+            .background(Color(NSColor.controlBackgroundColor))
+            .cornerRadius(20)
+            .shadow(color: Color.black.opacity(0.1), radius: 20, x: 0, y: 10)
         }
-        .padding()
-        .frame(minWidth: 400, minHeight: 500)
+        .sheet(isPresented: $showingSettings) {
+            SettingsView(
+                workMinutes: $workMinutes,
+                breakMinutes: $breakMinutes,
+                promptSoundEnabled: $promptSoundEnabled,
+                isWorkMode: $isWorkMode,
+                minutes: $minutes,
+                timerRunning: timerRunning
+            )
+        }
+    }
+
+    // 初始化音频播放器
+    func setupAudioPlayer() {
+        guard audioPlayer == nil else { return }
+
+        // 使用系统声音
+        let systemSoundID = 1005 // 系统声音ID，这是一个提示音
+        let soundURL = URL(fileURLWithPath: "/System/Library/Sounds/Tink.aiff")
+
+        do {
+            audioPlayer = try AVAudioPlayer(contentsOf: soundURL)
+            audioPlayer?.prepareToPlay()
+            audioPlayer?.volume = 0.7 // 设置音量
+        } catch {
+            print("初始化音频播放器失败: \(error.localizedDescription)")
+            // 如果无法使用AVAudioPlayer，则使用系统声音API
+            AudioServicesPlaySystemSound(SystemSoundID(systemSoundID))
+        }
+    }
+
+    // 播放提示音
+    func playPromptSound() {
+        // 如果音频播放器未初始化，则初始化
+        if audioPlayer == nil {
+            setupAudioPlayer()
+        }
+
+        // 播放声音
+        if let player = audioPlayer, player.play() {
+            // 成功播放
+        } else {
+            // 如果播放失败，使用系统声音API
+            let systemSoundID = 1005 // 系统声音ID，这是一个提示音
+            AudioServicesPlaySystemSound(SystemSoundID(systemSoundID))
+        }
+    }
+
+    // 启动随机提示音计时器
+    func startPromptTimer() {
+        guard isWorkMode && promptSoundEnabled else { return }
+
+        // 停止现有计时器
+        promptTimer?.invalidate()
+        secondPromptTimer?.invalidate()
+
+        // 生成3-5分钟的随机间隔（转换为秒）
+        nextPromptInterval = TimeInterval(Int.random(in: 180...300))
+
+        // 创建新的计时器
+        promptTimer = Timer.scheduledTimer(withTimeInterval: nextPromptInterval, repeats: false) { [self] _ in
+            // 播放第一次提示音
+            playPromptSound()
+
+            // 安排10秒后的第二次提示音
+            scheduleSecondPrompt()
+        }
+    }
+
+    // 安排10秒后的第二次提示音
+    func scheduleSecondPrompt() {
+        secondPromptTimer = Timer.scheduledTimer(withTimeInterval: 10, repeats: false) { [self] _ in
+            // 播放第二次提示音
+            playPromptSound()
+
+            // 重新启动随机提示音计时器
+            startPromptTimer()
+        }
+    }
+
+    // 停止提示音系统
+    func stopPromptSystem() {
+        promptTimer?.invalidate()
+        promptTimer = nil
+
+        secondPromptTimer?.invalidate()
+        secondPromptTimer = nil
     }
 
     // 开始计时器
@@ -152,7 +262,17 @@ struct ContentView: View {
                     isWorkMode = true
                     minutes = workMinutes
                 }
+
+                // 如果切换到工作模式，启动提示音系统
+                if isWorkMode && promptSoundEnabled {
+                    startPromptTimer()
+                }
             }
+        }
+
+        // 如果是工作模式且启用了提示音，启动提示音系统
+        if isWorkMode && promptSoundEnabled {
+            startPromptTimer()
         }
     }
 
@@ -161,6 +281,9 @@ struct ContentView: View {
         timerRunning = false
         timer?.invalidate()
         timer = nil
+
+        // 停止提示音系统
+        stopPromptSystem()
     }
 
     // 重置计时器
@@ -179,11 +302,11 @@ struct ContentView: View {
         let content = UNMutableNotificationContent()
 
         if isWorkMode {
-            content.title = "工作时间结束"
+            content.title = "专注时间结束"
             content.body = "休息一下吧！"
         } else {
             content.title = "休息时间结束"
-            content.body = "开始新的工作周期！"
+            content.body = "开始新的专注周期！"
         }
 
         content.sound = UNNotificationSound.default
