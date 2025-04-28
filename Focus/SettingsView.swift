@@ -53,6 +53,7 @@ struct SettingsView: View {
                             .scaleEffect(isHoveringClose ? 1.1 : 1.0)
                     }
                     .buttonStyle(.plain)
+                    .focusEffectDisabled()
                     .onHover { hovering in
                         withAnimation(.easeInOut(duration: 0.1)) {
                             isHoveringClose = hovering
