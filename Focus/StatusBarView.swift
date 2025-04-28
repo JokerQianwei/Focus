@@ -11,6 +11,7 @@ class StatusBarView: NSView {
     private let textField = NSTextField()
     private var text: String = ""
     private var textColor: NSColor = .white
+    private var verticallyAlignedCell = VerticallyAlignedTextFieldCell()
 
     init(frame: NSRect, text: String, textColor: NSColor) {
         self.text = text
@@ -29,47 +30,67 @@ class StatusBarView: NSView {
         wantsLayer = true
         layer?.backgroundColor = NSColor.clear.cgColor
 
+        // 配置自定义Cell
+        verticallyAlignedCell.isEditable = false
+        verticallyAlignedCell.isBordered = false
+        verticallyAlignedCell.backgroundColor = NSColor.clear
+        verticallyAlignedCell.textColor = NSColor.black // 使用黑色文本，不受模式影响
+        verticallyAlignedCell.alignment = .center
+        verticallyAlignedCell.font = NSFont.monospacedDigitSystemFont(ofSize: 12, weight: .medium)
+        verticallyAlignedCell.stringValue = text
+        verticallyAlignedCell.usesSingleLineMode = true
+        verticallyAlignedCell.lineBreakMode = .byClipping
+        verticallyAlignedCell.isScrollable = false
+        verticallyAlignedCell.wraps = false
+        verticallyAlignedCell.truncatesLastVisibleLine = true
+
         // 配置文本字段
         textField.isEditable = false
         textField.isBordered = false
         textField.backgroundColor = NSColor.clear
-        textField.textColor = NSColor.black // 使用黑色文本，不受模式影响
-        textField.alignment = .center
-        textField.font = NSFont.monospacedDigitSystemFont(ofSize: 12, weight: .medium)
-        textField.stringValue = text
+        textField.cell = verticallyAlignedCell // 使用自定义的垂直居中Cell
 
         // 使文本字段的背景透明
         textField.drawsBackground = false
 
         // 设置文本字段的大小，使其填满整个视图
-        textField.frame = bounds
+        textField.frame = NSRect(x: 0, y: 0, width: bounds.width, height: bounds.height)
 
         // 添加文本字段到视图
         addSubview(textField)
 
         // 设置文本字段的约束，使其完全居中，减小左右间距
         textField.translatesAutoresizingMaskIntoConstraints = false
+
+        // 移除所有现有约束
+        NSLayoutConstraint.deactivate(textField.constraints)
+
+        // 添加新约束，确保文本字段完全居中
         NSLayoutConstraint.activate([
+            // 水平居中
             textField.centerXAnchor.constraint(equalTo: centerXAnchor),
+            // 垂直居中
             textField.centerYAnchor.constraint(equalTo: centerYAnchor),
-            textField.widthAnchor.constraint(equalTo: widthAnchor, multiplier: 0.95), // 增加宽度比例，减小左右间距
+            // 设置宽度为视图宽度的98%，进一步减小左右间距
+            textField.widthAnchor.constraint(equalTo: widthAnchor, multiplier: 0.98),
+            // 设置高度等于视图高度
             textField.heightAnchor.constraint(equalTo: heightAnchor)
         ])
 
-        // 调整文本字段的行为
-        if let cell = textField.cell as? NSTextFieldCell {
-            cell.usesSingleLineMode = true
-            cell.lineBreakMode = .byClipping
-            cell.isScrollable = false // 防止文本滚动
-        }
+        // 这段代码已经在上面设置过，这里删除重复的部分
     }
 
     // 更新文本和颜色
     func update(text: String, textColor: NSColor) {
         self.text = text
         self.textColor = textColor
-        textField.stringValue = text
-        textField.textColor = NSColor.black // 保持黑色文本，不受模式影响
+
+        // 更新Cell的文本
+        if let cell = textField.cell as? VerticallyAlignedTextFieldCell {
+            cell.stringValue = text
+            cell.textColor = NSColor.black // 保持黑色文本，不受模式影响
+        }
+
         needsDisplay = true
     }
 

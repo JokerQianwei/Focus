@@ -19,7 +19,7 @@ class StatusBarController {
 
     init() {
         statusBar = NSStatusBar.system
-        statusItem = statusBar.statusItem(withLength: 55) // 进一步减小宽度，使方框更紧凑
+        statusItem = statusBar.statusItem(withLength: 52) // 进一步减小宽度，使方框更紧凑
 
         // 创建一个弹出窗口，用于显示应用程序的主界面
         popover = NSPopover()
@@ -32,7 +32,7 @@ class StatusBarController {
 
         // 创建并设置自定义视图
         if let button = statusItem.button {
-            let frame = NSRect(x: 0, y: 0, width: 55, height: button.frame.height)
+            let frame = NSRect(x: 0, y: 0, width: 52, height: button.frame.height)
             statusBarView = StatusBarView(
                 frame: frame,
                 text: timerManager.timeString,
