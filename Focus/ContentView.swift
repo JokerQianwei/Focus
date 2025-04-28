@@ -16,6 +16,9 @@ struct ContentView: View {
 
     // 设置视图相关状态
     @State private var showingSettings = false
+    @State private var isHoveringPlayPause = false // State for play/pause hover
+    @State private var isHoveringReset = false     // State for reset hover
+    @State private var isHoveringSettings = false // State for settings hover
 
     var body: some View {
         ZStack {
@@ -37,11 +40,17 @@ struct ContentView: View {
                         Spacer()
                         Image(systemName: "gearshape.fill")
                             .font(.title2)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(isHoveringSettings ? .primary : .secondary) // Change color on hover
+                            .scaleEffect(isHoveringSettings ? 1.1 : 1.0) // Scale effect on hover
                             .onTapGesture {
                                 showingSettings = true
                             }
                             .help("设置")
+                            .onHover { hovering in
+                                withAnimation(.easeInOut(duration: 0.1)) {
+                                    isHoveringSettings = hovering
+                                }
+                            }
                     }
                     .keyboardShortcut(",", modifiers: .command)
                 }
@@ -83,12 +92,19 @@ struct ContentView: View {
                             .font(.system(size: 28))
                             .foregroundColor(.white)
                             .frame(width: 65, height: 65)
-                            .background(Circle().fill(timerManager.timerRunning ? Color.red.opacity(0.8) : Color.accentColor))
+                            // Adjust background based on hover state
+                            .background(Circle().fill(timerManager.timerRunning ? Color.red.opacity(isHoveringPlayPause ? 0.9 : 0.8) : Color.accentColor.opacity(isHoveringPlayPause ? 0.9 : 1.0)))
+                            .scaleEffect(isHoveringPlayPause ? 1.05 : 1.0) // Scale effect on hover
                     }
                     .buttonStyle(.plain)
                     .clipShape(Circle())
                     .disabled(timerManager.isWorkMode && timerManager.minutes == 0 && timerManager.seconds == 0)
                     .focusEffectDisabled()
+                    .onHover { hovering in // Add hover effect
+                        withAnimation(.easeInOut(duration: 0.1)) {
+                            isHoveringPlayPause = hovering
+                        }
+                    }
 
                     // 重置按钮
                     Button(action: {
@@ -98,10 +114,17 @@ struct ContentView: View {
                             .font(.system(size: 26))
                             .foregroundColor(.primary)
                             .frame(width: 65, height: 65)
-                            .background(Circle().fill(Color.gray.opacity(0.2)))
+                            // Adjust background based on hover state
+                            .background(Circle().fill(Color.gray.opacity(isHoveringReset ? 0.3 : 0.2)))
+                            .scaleEffect(isHoveringReset ? 1.05 : 1.0) // Scale effect on hover
                     }
                     .buttonStyle(.plain)
                     .clipShape(Circle())
+                    .onHover { hovering in // Add hover effect
+                        withAnimation(.easeInOut(duration: 0.1)) {
+                            isHoveringReset = hovering
+                        }
+                    }
                 }
 
                 // 移除了提示音状态指示器
