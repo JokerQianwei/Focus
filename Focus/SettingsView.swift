@@ -130,6 +130,7 @@ struct SettingsView: View {
                 } header: { 
                     Text("计时")
                         .font(.title3) // Adjusted font size
+                        .fontWeight(.bold) // Make header bold
                         .padding(.bottom, 5) // Increased padding
                 }
 
@@ -224,6 +225,7 @@ struct SettingsView: View {
                 } header: { 
                     Text("随机提示音间隔 (专注期间)")
                         .font(.title3) // Adjusted font size
+                        .fontWeight(.bold) // Make header bold
                         .padding(.bottom, 5) // Increased padding
                 }
 
@@ -248,6 +250,7 @@ struct SettingsView: View {
                 } header: { 
                     Text("提示音")
                         .font(.title3) // Adjusted font size
+                        .fontWeight(.bold) // Make header bold
                         .padding(.bottom, 5) // Increased padding
                 }
 
