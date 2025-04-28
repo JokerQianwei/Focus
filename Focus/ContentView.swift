@@ -102,7 +102,6 @@ struct ContentView: View {
                     }
                     .buttonStyle(.plain)
                     .clipShape(Circle())
-                    .disabled(timerManager.timerRunning && timerManager.isWorkMode)
                 }
 
                 // 移除了提示音状态指示器
