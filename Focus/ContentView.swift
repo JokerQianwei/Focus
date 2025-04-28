@@ -81,6 +81,7 @@ struct ContentView: View {
                     .buttonStyle(.borderedProminent)
                     .tint(.green)
                     .disabled(timerManager.timerRunning)
+                    .focusEffectDisabled()
 
                     Button(action: {
                         timerManager.stopTimer()
