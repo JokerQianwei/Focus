@@ -99,6 +99,8 @@ struct SettingsView: View {
                             }
                         }
 
+                        Divider() // Add divider between rows
+
                         // 休息时间
                         GridRow {
                             Text("休息时间")
@@ -126,6 +128,8 @@ struct SettingsView: View {
                                     .frame(width: 30, alignment: .leading)
                             }
                         }
+
+                        // Divider() // Remove divider after the last row in this section
                     }
                 } header: { 
                     Text("计时")
@@ -165,6 +169,8 @@ struct SettingsView: View {
                             }
                         }
 
+                        Divider() // Add divider between rows
+
                         // 最大间隔
                         GridRow {
                             Text("最大间隔")
@@ -192,6 +198,8 @@ struct SettingsView: View {
                                     .frame(width: 30, alignment: .leading)
                             }
                         }
+
+                        Divider() // Add divider between rows
 
                         // 微休息
                         GridRow {
@@ -228,7 +236,6 @@ struct SettingsView: View {
                         .fontWeight(.bold) // Make header bold
                         .padding(.bottom, 5) // Increased padding
                 }
-
 
                 // 提示音开关 Section
                 Section { 
