@@ -7,15 +7,19 @@
 
 import SwiftUI
 import UserNotifications
+import AVFoundation
+import AudioToolbox
 
 @main
 struct FocusApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+    @StateObject private var timerManager = TimerManager.shared
 
     var body: some Scene {
         WindowGroup {
             ContentView()
                 .frame(minWidth: 400, minHeight: 400)
+                .environmentObject(timerManager)
         }
         .windowStyle(HiddenTitleBarWindowStyle())
         .commands {
@@ -39,6 +43,9 @@ struct FocusApp: App {
 
 // 应用程序代理，用于处理应用程序级别的事件
 class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDelegate {
+    private var statusBarController: StatusBarController?
+    private var audioPlayer: AVAudioPlayer?
+
     func applicationDidFinishLaunching(_ notification: Notification) {
         // 请求通知权限
         let center = UNUserNotificationCenter.current()
@@ -48,6 +55,93 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
                 print("通知权限已获取")
             } else if let error = error {
                 print("通知权限请求失败: \(error.localizedDescription)")
+            }
+        }
+
+        // 初始化菜单栏控制器
+        statusBarController = StatusBarController()
+
+        // 设置音频播放器
+        setupAudioPlayer()
+
+        // 监听提示音播放请求
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(playPromptSound),
+            name: .playPromptSound,
+            object: nil
+        )
+
+        // 监听计时器模式变化，发送通知
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(sendTimerNotification),
+            name: .timerModeChanged,
+            object: nil
+        )
+    }
+
+    // 初始化音频播放器
+    private func setupAudioPlayer() {
+        // 使用系统声音
+        let systemSoundID = 1005 // 系统声音ID，这是一个提示音
+        let soundURL = URL(fileURLWithPath: "/System/Library/Sounds/Tink.aiff")
+
+        do {
+            audioPlayer = try AVAudioPlayer(contentsOf: soundURL)
+            audioPlayer?.prepareToPlay()
+            audioPlayer?.volume = 0.7 // 设置音量
+        } catch {
+            print("初始化音频播放器失败: \(error.localizedDescription)")
+        }
+    }
+
+    // 播放提示音
+    @objc private func playPromptSound() {
+        // 如果音频播放器未初始化，则初始化
+        if audioPlayer == nil {
+            setupAudioPlayer()
+        }
+
+        // 播放声音
+        if let player = audioPlayer, player.play() {
+            // 成功播放
+        } else {
+            // 如果播放失败，使用系统声音API
+            let systemSoundID = 1005 // 系统声音ID，这是一个提示音
+            AudioServicesPlaySystemSound(SystemSoundID(systemSoundID))
+        }
+    }
+
+    // 发送计时器通知
+    @objc private func sendTimerNotification() {
+        let timerManager = TimerManager.shared
+        let content = UNMutableNotificationContent()
+
+        if timerManager.isWorkMode {
+            content.title = "专注时间结束"
+            content.body = "休息一下吧！"
+        } else {
+            content.title = "休息时间结束"
+            content.body = "开始新的专注周期！"
+        }
+
+        content.sound = UNNotificationSound.default
+
+        // 立即触发通知
+        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)
+
+        // 创建通知请求
+        let request = UNNotificationRequest(
+            identifier: UUID().uuidString,
+            content: content,
+            trigger: trigger
+        )
+
+        // 添加通知请求
+        UNUserNotificationCenter.current().add(request) { error in
+            if let error = error {
+                print("通知发送失败: \(error.localizedDescription)")
             }
         }
     }
