@@ -73,29 +73,32 @@ class StatusBarController {
 
         // 监听开始声音通知
         NotificationCenter.default.publisher(for: .playStartSound)
-            .sink { [weak self] _ in
-                self?.playSound(named: "Glass") // Glass
+            .sink { [weak self] notification in
+                print("收到开始声音通知: .playStartSound")
+                self?.playSound(named: "Glass")
             }
             .store(in: &cancellables)
 
         // 监听结束声音通知
         NotificationCenter.default.publisher(for: .playEndSound)
-            .sink { [weak self] _ in
-                self?.playSound(named: "Funk") // Funk
+            .sink { [weak self] notification in
+                print("收到结束声音通知: .playEndSound")
+                self?.playSound(named: "Funk")
             }
             .store(in: &cancellables)
 
-        // 监听随机提示音通知 (如果也想在这里处理)
-         NotificationCenter.default.publisher(for: .playPromptSound)
-             .sink { [weak self] _ in
-                 self?.playSound(named: "Blow") // Blow
-             }
-             .store(in: &cancellables)
+        // 监听随机提示音通知
+        NotificationCenter.default.publisher(for: .playPromptSound)
+            .sink { [weak self] notification in
+                print("收到提示音通知: .playPromptSound")
+                self?.playSound(named: "Blow")
+            }
+            .store(in: &cancellables)
     }
 
     // 播放声音的辅助函数
     private func playSound(named soundName: String) {
-        print("尝试播放声音: \(soundName)")
+        print("尝试播放声音: \(soundName)，来自通知: \(Thread.callStackSymbols[1])")
         
         // 确保在主线程播放声音
         DispatchQueue.main.async {
@@ -116,7 +119,7 @@ class StatusBarController {
                 
                 for backupSound in backupSounds {
                     if let sound = NSSound(named: backupSound) {
-                        print("使用后备声音: \(backupSound)")
+                        print("使用后备声音: \(backupSound) 替代: \(soundName)")
                         self.soundPlayer?.stop()
                         self.soundPlayer = sound
                         self.soundPlayer?.volume = 1.0
