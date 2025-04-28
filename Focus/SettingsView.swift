@@ -32,199 +32,229 @@ struct SettingsView: View {
     }
 
     var body: some View {
-        VStack(spacing: 20) {
-            // 标题
+        // Use a consistent padding for the main VStack
+        VStack(spacing: 16) { // Slightly reduced spacing
+            // 标题和关闭按钮
             HStack {
                 Text("设置")
-                    .font(.title)
+                    .font(.largeTitle) // Use largeTitle for main view title
                     .fontWeight(.bold)
 
                 Spacer()
 
-                Image(systemName: "xmark.circle.fill")
-                    .font(.title2)
-                    .foregroundColor(isHoveringClose ? .primary : .secondary) // Change color on hover
-                    .scaleEffect(isHoveringClose ? 1.1 : 1.0) // Scale effect on hover
-                    .onTapGesture {
-                        dismiss()
+                // Close button styling
+                Button {
+                    dismiss()
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.title2)
+                        .foregroundColor(isHoveringClose ? .primary.opacity(0.8) : .secondary.opacity(0.8))
+                        .scaleEffect(isHoveringClose ? 1.1 : 1.0)
+                }
+                .buttonStyle(.plain) // Use plain button style for icon buttons
+                .onHover { hovering in
+                    withAnimation(.easeInOut(duration: 0.1)) {
+                        isHoveringClose = hovering
                     }
-                    .onHover { hovering in // Add hover effect
-                        withAnimation(.easeInOut(duration: 0.1)) {
-                            isHoveringClose = hovering
-                        }
-                    }
+                }
             }
-            .padding(.bottom, 10)
+            .padding(.bottom, 8) // Reduced bottom padding for title
 
             // 设置内容
             Form {
-                // 计时选项
-                Section(header: Text("计时选项").font(.headline)) {
-                    // 使用 Grid 布局替代 VStack 和 HStack+Spacer
-                    Grid(alignment: .leading, horizontalSpacing: 10, verticalSpacing: 12) {
-                        // 专注时间设置
+                // 计时选项 Section
+                Section { // Use Section without explicit header text for better grouping
+                    Grid(alignment: .leadingFirstTextBaseline, horizontalSpacing: 12, verticalSpacing: 10) {
+                        // 专注时间
                         GridRow {
-                            Text("专注时间：")
-                                .fontWeight(.medium)
-                                .gridColumnAlignment(.trailing) // 标签右对齐
+                            Text("专注时间")
+                                .gridColumnAlignment(.leading)
 
-                            TextField("", text: $workMinutesInput)
-                                .textFieldStyle(RoundedBorderTextFieldStyle())
-                                .frame(maxWidth: 80) // 限制输入框最大宽度
-                                .multilineTextAlignment(.center)
-                                .disabled(timerManager.timerRunning)
-                                .onChange(of: workMinutesInput) { newValue in
-                                    let filtered = newValue.filter { "0123456789".contains($0) }
-                                    if filtered != newValue { workMinutesInput = filtered }
-                                    if let minutes = Int(filtered), minutes > 0 {
-                                        timerManager.workMinutes = minutes
-                                        if timerManager.isWorkMode && !timerManager.timerRunning {
-                                            timerManager.minutes = minutes
+                            HStack {
+                                Spacer()
+                                TextField("", text: $workMinutesInput)
+                                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                                    .frame(width: 60) // Adjusted width
+                                    .multilineTextAlignment(.trailing)
+                                    .disabled(timerManager.timerRunning)
+                                    .onChange(of: workMinutesInput) { newValue in
+                                        let filtered = newValue.filter { "0123456789".contains($0) }
+                                        if filtered != newValue { workMinutesInput = filtered }
+                                        if let minutes = Int(filtered), minutes > 0 {
+                                            timerManager.workMinutes = minutes
+                                            if timerManager.isWorkMode && !timerManager.timerRunning {
+                                                timerManager.minutes = minutes
+                                            }
                                         }
                                     }
-                                }
-                                .focusEffectDisabled()
+                                    .focusEffectDisabled()
 
-                            Text("分钟")
-                        }
-
-                        // 休息时间设置 (调整顺序，放在专注时间下面)
-                        GridRow {
-                            Text("休息时间：")
-                                .fontWeight(.medium)
-                                .gridColumnAlignment(.trailing)
-
-                            TextField("", text: $breakMinutesInput)
-                                .textFieldStyle(RoundedBorderTextFieldStyle())
-                                .frame(maxWidth: 80)
-                                .multilineTextAlignment(.center)
-                                .disabled(timerManager.timerRunning)
-                                .onChange(of: breakMinutesInput) { newValue in
-                                    let filtered = newValue.filter { "0123456789".contains($0) }
-                                    if filtered != newValue { breakMinutesInput = filtered }
-                                    if let minutes = Int(filtered), minutes > 0 {
-                                        timerManager.breakMinutes = minutes
-                                    }
-                                }
-
-                            Text("分钟")
-                        }
-
-                        // 提示音设置 (放在一起)
-                        Divider() // 添加分隔线
-
-                        GridRow {
-                            // 使用 VStack 容纳多个控件，并跨越后面两列
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text("随机提示音间隔：")
-                                    .fontWeight(.medium)
-                                Text("(专注期间触发)")
-                                     .font(.caption)
-                                     .foregroundColor(.secondary)
+                                Text("分钟")
+                                    .foregroundColor(.secondary)
+                                    .frame(width: 30, alignment: .leading) // Ensure alignment
                             }
-                            .gridCellColumns(3) // 让这个 VStack 占据 GridRow 的所有列
                         }
 
-                        // 最小间隔
-                        GridRow(alignment: .firstTextBaseline) {
-                            Text("最小：")
-                                .fontWeight(.medium)
-                                .gridColumnAlignment(.trailing)
-                                .padding(.leading, 20) // 增加缩进
+                        // 休息时间
+                        GridRow {
+                            Text("休息时间")
+                                .gridColumnAlignment(.leading)
 
-                            TextField("", text: $promptMinInput)
-                                .textFieldStyle(RoundedBorderTextFieldStyle())
-                                .frame(maxWidth: 80)
-                                .multilineTextAlignment(.center)
-                                .disabled(timerManager.timerRunning)
-                                .onChange(of: promptMinInput) { newValue in
-                                    let filtered = newValue.filter { "0123456789".contains($0) }
-                                    if filtered != newValue { promptMinInput = filtered }
-                                    if let minutes = Int(filtered), minutes > 0 {
-                                        timerManager.promptMinInterval = minutes
+                            HStack {
+                                Spacer()
+                                TextField("", text: $breakMinutesInput)
+                                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                                    .frame(width: 60)
+                                    .multilineTextAlignment(.trailing)
+                                    .disabled(timerManager.timerRunning)
+                                    .onChange(of: breakMinutesInput) { newValue in
+                                        let filtered = newValue.filter { "0123456789".contains($0) }
+                                        if filtered != newValue { breakMinutesInput = filtered }
+                                        if let minutes = Int(filtered), minutes > 0 {
+                                            timerManager.breakMinutes = minutes
+                                        }
                                     }
-                                }
+                                    // Keep focus effect disabled for consistency if needed
+                                    .focusEffectDisabled()
 
-                            Text("分钟")
+                                Text("分钟")
+                                    .foregroundColor(.secondary)
+                                    .frame(width: 30, alignment: .leading)
+                            }
+                        }
+                    }
+                } header: { // Add header text here for better structure
+                    Text("计时")
+                        .font(.headline)
+                        .padding(.bottom, 4)
+                }
+
+                // 提示音间隔 Section
+                Section { // Use Section without explicit header text
+                    Grid(alignment: .leadingFirstTextBaseline, horizontalSpacing: 12, verticalSpacing: 10) {
+                        // 最小间隔
+                        GridRow {
+                            Text("最小间隔")
+                                .gridColumnAlignment(.leading)
+
+                            HStack {
+                                Spacer()
+                                TextField("", text: $promptMinInput)
+                                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                                    .frame(width: 60)
+                                    .multilineTextAlignment(.trailing)
+                                    .disabled(timerManager.timerRunning)
+                                    .onChange(of: promptMinInput) { newValue in
+                                        let filtered = newValue.filter { "0123456789".contains($0) }
+                                        if filtered != newValue { promptMinInput = filtered }
+                                        if let minutes = Int(filtered), minutes > 0 {
+                                            timerManager.promptMinInterval = minutes
+                                        }
+                                    }
+                                    .focusEffectDisabled()
+
+                                Text("分钟")
+                                    .foregroundColor(.secondary)
+                                    .frame(width: 30, alignment: .leading)
+                            }
                         }
 
                         // 最大间隔
-                        GridRow(alignment: .firstTextBaseline) {
-                            Text("最大：")
-                                .fontWeight(.medium)
-                                .gridColumnAlignment(.trailing)
-                                .padding(.leading, 20) // 增加缩进
+                        GridRow {
+                            Text("最大间隔")
+                                .gridColumnAlignment(.leading)
 
-                            TextField("", text: $promptMaxInput)
-                                .textFieldStyle(RoundedBorderTextFieldStyle())
-                                .frame(maxWidth: 80)
-                                .multilineTextAlignment(.center)
-                                .disabled(timerManager.timerRunning)
-                                .onChange(of: promptMaxInput) { newValue in
-                                    let filtered = newValue.filter { "0123456789".contains($0) }
-                                    if filtered != newValue { promptMaxInput = filtered }
-                                    if let minutes = Int(filtered), minutes > 0 {
-                                        timerManager.promptMaxInterval = minutes
-                                    }
-                                }
-
-                            Text("分钟")
-                        }
-
-                        // 微休息时间设置
-                        GridRow(alignment: .firstTextBaseline) {
-                             Text("微休息：")
-                                 .fontWeight(.medium)
-                                 .gridColumnAlignment(.trailing)
-                                 .padding(.leading, 20) // 增加缩进
-
-                            TextField("", text: $microBreakInput)
-                                .textFieldStyle(RoundedBorderTextFieldStyle())
-                                .frame(maxWidth: 80)
-                                .multilineTextAlignment(.center)
-                                .disabled(timerManager.timerRunning)
-                                .onChange(of: microBreakInput) { newValue in
-                                    let filtered = newValue.filter { "0123456789".contains($0) }
-                                    if filtered != newValue { microBreakInput = filtered }
-                                    if let seconds = Int(filtered), seconds > 0 {
-                                        timerManager.microBreakSeconds = seconds
-                                    }
-                                }
-                            Text("秒")
-                        }
-                    }
-                }
-
-                // 提示音开关设置 (保持不变)
-                Section(header: Text("提示音设置").font(.headline)) {
-                    VStack(alignment: .leading, spacing: 12) {
-                        Toggle(isOn: $timerManager.promptSoundEnabled) {
                             HStack {
-                                Image(systemName: "speaker.wave.2")
-                                    .foregroundColor(.blue)
-                                Text("专注期间提示音")
-                                    .fontWeight(.medium)
+                                Spacer()
+                                TextField("", text: $promptMaxInput)
+                                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                                    .frame(width: 60)
+                                    .multilineTextAlignment(.trailing)
+                                    .disabled(timerManager.timerRunning)
+                                    .onChange(of: promptMaxInput) { newValue in
+                                        let filtered = newValue.filter { "0123456789".contains($0) }
+                                        if filtered != newValue { promptMaxInput = filtered }
+                                        if let minutes = Int(filtered), minutes > 0 {
+                                            timerManager.promptMaxInterval = minutes
+                                        }
+                                    }
+                                    .focusEffectDisabled()
+
+                                Text("分钟")
+                                    .foregroundColor(.secondary)
+                                    .frame(width: 30, alignment: .leading)
                             }
                         }
-                        .toggleStyle(.switch)
-                        .disabled(timerManager.timerRunning)
 
-                        if timerManager.promptSoundEnabled {
-                            Text("在专注期间，每隔\(timerManager.promptMinInterval)-\(timerManager.promptMaxInterval)分钟播放提示音，\(timerManager.microBreakSeconds)秒后再次响起")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                                .padding(.leading, 24)
+                        // 微休息
+                        GridRow {
+                            Text("微休息")
+                                .gridColumnAlignment(.leading)
+
+                            HStack {
+                                Spacer()
+                                TextField("", text: $microBreakInput)
+                                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                                    .frame(width: 60)
+                                    .multilineTextAlignment(.trailing)
+                                    .disabled(timerManager.timerRunning)
+                                    .onChange(of: microBreakInput) { newValue in
+                                        let filtered = newValue.filter { "0123456789".contains($0) }
+                                        if filtered != newValue { microBreakInput = filtered }
+                                        if let seconds = Int(filtered), seconds > 0 {
+                                            timerManager.microBreakSeconds = seconds
+                                        }
+                                    }
+                                    .focusEffectDisabled()
+
+                                Text("秒")
+                                    .foregroundColor(.secondary)
+                                    .frame(width: 30, alignment: .leading)
+                            }
                         }
                     }
+
+                } header: { // Add header text here
+                    Text("随机提示音间隔 (专注期间)")
+                        .font(.headline)
+                        .padding(.bottom, 4)
                 }
+
+
+                // 提示音开关 Section
+                Section { // Use Section without explicit header text
+                    Toggle(isOn: $timerManager.promptSoundEnabled) {
+                        Text("专注期间提示音")
+                            // Removed icon from here for cleaner toggle label
+                    }
+                    .toggleStyle(.switch)
+                    .disabled(timerManager.timerRunning)
+                    .padding(.vertical, 4) // Add padding for toggle
+
+                    // Conditionally show description text
+                    if timerManager.promptSoundEnabled {
+                        Text("每隔 \(timerManager.promptMinInterval)-\(timerManager.promptMaxInterval) 分钟播放提示音，并在 \(timerManager.microBreakSeconds) 秒后再次响起。")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .padding(.top, 2) // Add small top padding
+                    }
+                } header: { // Add header text here
+                    Text("提示音")
+                        .font(.headline)
+                        .padding(.bottom, 4)
+                }
+
             }
-            .formStyle(.grouped)
+            .formStyle(.grouped) // Keep grouped style for macOS
+            .frame(maxWidth: 480) // Constrain form width slightly
+            // Remove explicit frame height, let content define height
         }
-        .padding()
-        .frame(width: 500, height: 600)
+        .padding() // Apply padding to the outer VStack
+        // Remove frame modifier from here, apply padding instead
     }
 }
 
 #Preview {
     SettingsView(timerManager: TimerManager.shared)
+        .frame(width: 500, height: 600) // Keep frame for preview
 }
