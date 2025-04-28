@@ -58,10 +58,14 @@ struct SettingsView: View {
                         HStack {
                             Text("专注时间：")
                                 .fontWeight(.medium)
+                                .frame(width: 80, alignment: .leading)
 
-                            TextField("90", text: $workMinutesInput)
+                            Spacer()
+
+                            TextField("", text: $workMinutesInput)
                                 .textFieldStyle(RoundedBorderTextFieldStyle())
                                 .frame(width: 100)
+                                .multilineTextAlignment(.center)
                                 .disabled(timerManager.timerRunning)
                                 .onChange(of: workMinutesInput) { newValue in
                                     // 只保留数字
@@ -79,18 +83,25 @@ struct SettingsView: View {
                                 }
 
                             Text("分钟")
+                                .frame(width: 40, alignment: .leading)
                         }
 
                         // 随机范围设置
                         VStack(alignment: .leading, spacing: 12) {
                             Text("随机范围：")
                                 .fontWeight(.medium)
+                                .padding(.bottom, 5)
 
                             HStack {
-                                Text("(a):")
-                                TextField("3", text: $promptMinInput)
+                                Text("(a)：")
+                                    .frame(width: 40, alignment: .leading)
+
+                                Spacer()
+
+                                TextField("", text: $promptMinInput)
                                     .textFieldStyle(RoundedBorderTextFieldStyle())
                                     .frame(width: 100)
+                                    .multilineTextAlignment(.center)
                                     .disabled(timerManager.timerRunning)
                                     .onChange(of: promptMinInput) { newValue in
                                         // 只保留数字
@@ -105,13 +116,20 @@ struct SettingsView: View {
                                     }
 
                                 Text("分钟")
+                                    .frame(width: 40, alignment: .leading)
                             }
+                            .padding(.leading, 10)
 
                             HStack {
-                                Text("(b):")
-                                TextField("5", text: $promptMaxInput)
+                                Text("(b)：")
+                                    .frame(width: 40, alignment: .leading)
+
+                                Spacer()
+
+                                TextField("", text: $promptMaxInput)
                                     .textFieldStyle(RoundedBorderTextFieldStyle())
                                     .frame(width: 100)
+                                    .multilineTextAlignment(.center)
                                     .disabled(timerManager.timerRunning)
                                     .onChange(of: promptMaxInput) { newValue in
                                         // 只保留数字
@@ -126,17 +144,23 @@ struct SettingsView: View {
                                     }
 
                                 Text("分钟")
+                                    .frame(width: 40, alignment: .leading)
                             }
+                            .padding(.leading, 10)
                         }
 
                         // 微休息时间设置
                         HStack {
                             Text("微休息时间：")
                                 .fontWeight(.medium)
+                                .frame(width: 90, alignment: .leading)
 
-                            TextField("10", text: $microBreakInput)
+                            Spacer()
+
+                            TextField("", text: $microBreakInput)
                                 .textFieldStyle(RoundedBorderTextFieldStyle())
                                 .frame(width: 100)
+                                .multilineTextAlignment(.center)
                                 .disabled(timerManager.timerRunning)
                                 .onChange(of: microBreakInput) { newValue in
                                     // 只保留数字
@@ -151,16 +175,21 @@ struct SettingsView: View {
                                 }
 
                             Text("秒")
+                                .frame(width: 40, alignment: .leading)
                         }
 
                         // 休息时间设置
                         HStack {
                             Text("休息时间：")
                                 .fontWeight(.medium)
+                                .frame(width: 80, alignment: .leading)
 
-                            TextField("20", text: $breakMinutesInput)
+                            Spacer()
+
+                            TextField("", text: $breakMinutesInput)
                                 .textFieldStyle(RoundedBorderTextFieldStyle())
                                 .frame(width: 100)
+                                .multilineTextAlignment(.center)
                                 .disabled(timerManager.timerRunning)
                                 .onChange(of: breakMinutesInput) { newValue in
                                     // 只保留数字
@@ -175,6 +204,7 @@ struct SettingsView: View {
                                 }
 
                             Text("分钟")
+                                .frame(width: 40, alignment: .leading)
                         }
                     }
                 }
