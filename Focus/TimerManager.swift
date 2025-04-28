@@ -152,16 +152,29 @@ class TimerManager: ObservableObject {
 
     // 重置计时器
     func resetTimer() {
-        stopTimer()
-        if isWorkMode {
-            minutes = workMinutes
-        } else {
-            minutes = breakMinutes
-        }
+        let wasRunning = timerRunning // 记录重置前是否在运行
+        stopTimer() // 停止当前计时器和提示音
+
+        let needsModeChange = !isWorkMode // 检查是否处于休息模式
+
+        // 总是重置回工作模式
+        isWorkMode = true
+        minutes = workMinutes
         seconds = 0
 
-        // 发送通知，计时器已更新
+        // 发送通知，告知UI更新
         NotificationCenter.default.post(name: .timerUpdated, object: nil)
+        if needsModeChange {
+            // 如果之前是休息模式，额外发送模式改变通知
+            NotificationCenter.default.post(name: .timerModeChanged, object: nil)
+        }
+        // 总是发送状态改变通知，因为计时器停止了
+        NotificationCenter.default.post(name: .timerStateChanged, object: nil)
+
+        // 可选：如果重置前计时器在运行，则自动开始新的工作计时
+        // if wasRunning {
+        //     startTimer()
+        // }
     }
 
     // 启动随机提示音计时器
