@@ -23,14 +23,12 @@ struct SettingsView: View {
 
                 Spacer()
 
-                Button(action: {
-                    dismiss()
-                }) {
-                    Image(systemName: "xmark.circle.fill")
-                        .font(.title2)
-                        .foregroundColor(.secondary)
-                }
-                .buttonStyle(.plain)
+                Image(systemName: "xmark.circle.fill")
+                    .font(.title2)
+                    .foregroundColor(.secondary)
+                    .onTapGesture {
+                        dismiss()
+                    }
             }
             .padding(.bottom, 10)
 

@@ -35,17 +35,15 @@ struct ContentView: View {
                     // 设置按钮靠右
                     HStack {
                         Spacer()
-                        Button(action: {
-                            showingSettings = true
-                        }) {
-                            Image(systemName: "gearshape.fill")
-                                .font(.title2)
-                                .foregroundColor(.secondary)
-                        }
-                        .buttonStyle(.plain)
-                        .keyboardShortcut(",", modifiers: .command)
-                        .help("设置")
+                        Image(systemName: "gearshape.fill")
+                            .font(.title2)
+                            .foregroundColor(.secondary)
+                            .onTapGesture {
+                                showingSettings = true
+                            }
+                            .help("设置")
                     }
+                    .keyboardShortcut(",", modifiers: .command)
                 }
                 .padding(.horizontal)
 
