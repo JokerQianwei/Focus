@@ -70,40 +70,40 @@ struct ContentView: View {
                 .frame(width: 250, height: 250)
 
                 // 控制按钮
-                HStack(spacing: 20) {
+                HStack(spacing: 40) {
+                    // 合并后的 Play/Pause 按钮
                     Button(action: {
-                        timerManager.startTimer()
+                        if timerManager.timerRunning {
+                            timerManager.stopTimer()
+                        } else {
+                            timerManager.startTimer()
+                        }
                     }) {
-                        Label("开始", systemImage: "play.fill")
-                            .frame(width: 100)
-                            .padding(.vertical, 12)
+                        Image(systemName: timerManager.timerRunning ? "pause.fill" : "play.fill")
+                            .font(.system(size: 28))
+                            .foregroundColor(.white)
+                            .frame(width: 65, height: 65)
+                            .background(Circle().fill(timerManager.timerRunning ? Color.red : Color.green))
                     }
-                    .buttonStyle(.borderedProminent)
-                    .tint(.green)
-                    .disabled(timerManager.timerRunning)
+                    .buttonStyle(.plain)
+                    .clipShape(Circle())
+                    .disabled(timerManager.isWorkMode && timerManager.minutes == 0 && timerManager.seconds == 0)
                     .focusEffectDisabled()
 
-                    Button(action: {
-                        timerManager.stopTimer()
-                    }) {
-                        Label("停止", systemImage: "pause.fill")
-                            .frame(width: 100)
-                            .padding(.vertical, 12)
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .tint(.red)
-                    .disabled(!timerManager.timerRunning)
-
+                    // 重置按钮
                     Button(action: {
                         timerManager.resetTimer()
                     }) {
-                        Label("重置", systemImage: "arrow.counterclockwise")
-                            .frame(width: 100)
-                            .padding(.vertical, 12)
+                        Image(systemName: "arrow.counterclockwise")
+                            .font(.system(size: 22))
+                            .foregroundColor(.primary)
+                            .frame(width: 55, height: 55)
+                            .background(Circle().fill(Color.gray.opacity(0.2)))
                     }
-                    .buttonStyle(.bordered)
+                    .buttonStyle(.plain)
+                    .clipShape(Circle())
+                    .disabled(timerManager.timerRunning && timerManager.isWorkMode)
                 }
-                .controlSize(.large)
 
                 // 移除了提示音状态指示器
             }
