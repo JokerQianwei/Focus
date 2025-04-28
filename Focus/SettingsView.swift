@@ -19,6 +19,7 @@ struct SettingsView: View {
     @State private var promptMinInput: String
     @State private var promptMaxInput: String
     @State private var microBreakInput: String
+    @State private var isHoveringClose = false // State for close button hover
 
     init(timerManager: TimerManager) {
         self.timerManager = timerManager
@@ -42,9 +43,15 @@ struct SettingsView: View {
 
                 Image(systemName: "xmark.circle.fill")
                     .font(.title2)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(isHoveringClose ? .primary : .secondary) // Change color on hover
+                    .scaleEffect(isHoveringClose ? 1.1 : 1.0) // Scale effect on hover
                     .onTapGesture {
                         dismiss()
+                    }
+                    .onHover { hovering in // Add hover effect
+                        withAnimation(.easeInOut(duration: 0.1)) {
+                            isHoveringClose = hovering
+                        }
                     }
             }
             .padding(.bottom, 10)
