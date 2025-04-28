@@ -105,7 +105,6 @@ class TimerManager: ObservableObject {
         timerRunning = true
         // 在计时器实际启动后发送开始声音通知
         if promptSoundEnabled { // 检查是否启用声音
-            print("开始计时器，发送开始声音通知(.playStartSound)")
             NotificationCenter.default.post(name: .playStartSound, object: nil)
         }
 
@@ -130,7 +129,6 @@ class TimerManager: ObservableObject {
                 if wasWorkMode {
                     // 工作模式结束，发送结束声音通知，然后切换到休息模式
                     if self.promptSoundEnabled {
-                        print("工作模式结束，发送结束声音通知(.playEndSound)")
                         NotificationCenter.default.post(name: .playEndSound, object: nil)
                     }
                     self.isWorkMode = false
@@ -157,7 +155,6 @@ class TimerManager: ObservableObject {
                 } else {
                     // 休息模式结束，发送开始声音通知，然后切换到工作模式
                     if self.promptSoundEnabled {
-                        print("休息模式结束，发送开始声音通知(.playStartSound)")
                         NotificationCenter.default.post(name: .playStartSound, object: nil)
                     }
                     self.isWorkMode = true
@@ -259,7 +256,6 @@ class TimerManager: ObservableObject {
             guard let self = self else { return }
 
             // 播放第一次提示音
-            print("发送第一次提示音通知(.playPromptSound)")
             NotificationCenter.default.post(name: .playPromptSound, object: nil)
 
             // 安排微休息时间后的第二次提示音
@@ -273,7 +269,6 @@ class TimerManager: ObservableObject {
             guard let self = self else { return }
 
             // 播放第二次提示音
-            print("发送第二次提示音通知(.playPromptSound)")
             NotificationCenter.default.post(name: .playPromptSound, object: nil)
 
             // 重新启动随机提示音计时器
