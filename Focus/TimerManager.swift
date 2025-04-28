@@ -22,6 +22,9 @@ class TimerManager: ObservableObject {
     @Published var breakMinutes: Int = 20
     @Published var completedSessions: Int = 0
     @Published var promptSoundEnabled: Bool = true
+    @Published var promptMinInterval: Int = 3 // 提示音最小间隔（分钟）
+    @Published var promptMaxInterval: Int = 5 // 提示音最大间隔（分钟）
+    @Published var microBreakSeconds: Int = 10 // 微休息时间（秒）
 
     // 计时器
     private var timer: Timer? = nil
@@ -130,8 +133,10 @@ class TimerManager: ObservableObject {
         promptTimer?.invalidate()
         secondPromptTimer?.invalidate()
 
-        // 生成3-5分钟的随机间隔（转换为秒）
-        nextPromptInterval = TimeInterval(Int.random(in: 180...300))
+        // 生成随机间隔（转换为秒）
+        let minSeconds = promptMinInterval * 60
+        let maxSeconds = promptMaxInterval * 60
+        nextPromptInterval = TimeInterval(Int.random(in: minSeconds...maxSeconds))
 
         // 创建新的计时器
         promptTimer = Timer.scheduledTimer(withTimeInterval: nextPromptInterval, repeats: false) { [weak self] _ in
@@ -140,14 +145,14 @@ class TimerManager: ObservableObject {
             // 播放第一次提示音
             NotificationCenter.default.post(name: .playPromptSound, object: nil)
 
-            // 安排10秒后的第二次提示音
+            // 安排微休息时间后的第二次提示音
             self.scheduleSecondPrompt()
         }
     }
 
-    // 安排10秒后的第二次提示音
+    // 安排微休息时间后的第二次提示音
     func scheduleSecondPrompt() {
-        secondPromptTimer = Timer.scheduledTimer(withTimeInterval: 10, repeats: false) { [weak self] _ in
+        secondPromptTimer = Timer.scheduledTimer(withTimeInterval: TimeInterval(microBreakSeconds), repeats: false) { [weak self] _ in
             guard let self = self else { return }
 
             // 播放第二次提示音

@@ -13,6 +13,23 @@ struct SettingsView: View {
     // 使用TimerManager
     @ObservedObject var timerManager: TimerManager
 
+    // 临时存储输入值的状态
+    @State private var workMinutesInput: String
+    @State private var breakMinutesInput: String
+    @State private var promptMinInput: String
+    @State private var promptMaxInput: String
+    @State private var microBreakInput: String
+
+    init(timerManager: TimerManager) {
+        self.timerManager = timerManager
+        // 初始化输入字段
+        _workMinutesInput = State(initialValue: String(timerManager.workMinutes))
+        _breakMinutesInput = State(initialValue: String(timerManager.breakMinutes))
+        _promptMinInput = State(initialValue: String(timerManager.promptMinInterval))
+        _promptMaxInput = State(initialValue: String(timerManager.promptMaxInterval))
+        _microBreakInput = State(initialValue: String(timerManager.microBreakSeconds))
+    }
+
     var body: some View {
         VStack(spacing: 20) {
             // 标题
@@ -34,52 +51,130 @@ struct SettingsView: View {
 
             // 设置内容
             Form {
-                // 时间设置
-                Section(header: Text("时间设置").font(.headline)) {
-                    VStack(spacing: 16) {
+                // 计时选项
+                Section(header: Text("计时选项").font(.headline)) {
+                    VStack(spacing: 20) {
                         // 专注时间设置
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("专注时间")
+                        HStack {
+                            Text("专注时间：")
                                 .fontWeight(.medium)
 
-                            HStack(spacing: 8) {
-                                ForEach([25, 45, 60, 90, 120], id: \.self) { minute in
-                                    Button(action: {
-                                        timerManager.workMinutes = minute
-                                        if timerManager.isWorkMode && !timerManager.timerRunning {
-                                            timerManager.minutes = minute
-                                        }
-                                    }) {
-                                        Text("\(minute) 分钟")
-                                            .frame(maxWidth: .infinity)
-                                            .padding(.vertical, 8)
+                            TextField("90", text: $workMinutesInput)
+                                .textFieldStyle(RoundedBorderTextFieldStyle())
+                                .frame(width: 100)
+                                .disabled(timerManager.timerRunning)
+                                .onChange(of: workMinutesInput) { newValue in
+                                    // 只保留数字
+                                    let filtered = newValue.filter { "0123456789".contains($0) }
+                                    if filtered != newValue {
+                                        workMinutesInput = filtered
                                     }
-                                    .buttonStyle(.bordered)
-                                    .tint(timerManager.workMinutes == minute ? .blue : .secondary)
-                                    .disabled(timerManager.timerRunning)
+
+                                    if let minutes = Int(filtered), minutes > 0 {
+                                        timerManager.workMinutes = minutes
+                                        if timerManager.isWorkMode && !timerManager.timerRunning {
+                                            timerManager.minutes = minutes
+                                        }
+                                    }
                                 }
+
+                            Text("分钟")
+                        }
+
+                        // 随机范围设置
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("随机范围：")
+                                .fontWeight(.medium)
+
+                            HStack {
+                                Text("(a):")
+                                TextField("3", text: $promptMinInput)
+                                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                                    .frame(width: 100)
+                                    .disabled(timerManager.timerRunning)
+                                    .onChange(of: promptMinInput) { newValue in
+                                        // 只保留数字
+                                        let filtered = newValue.filter { "0123456789".contains($0) }
+                                        if filtered != newValue {
+                                            promptMinInput = filtered
+                                        }
+
+                                        if let minutes = Int(filtered), minutes > 0 {
+                                            timerManager.promptMinInterval = minutes
+                                        }
+                                    }
+
+                                Text("分钟")
+                            }
+
+                            HStack {
+                                Text("(b):")
+                                TextField("5", text: $promptMaxInput)
+                                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                                    .frame(width: 100)
+                                    .disabled(timerManager.timerRunning)
+                                    .onChange(of: promptMaxInput) { newValue in
+                                        // 只保留数字
+                                        let filtered = newValue.filter { "0123456789".contains($0) }
+                                        if filtered != newValue {
+                                            promptMaxInput = filtered
+                                        }
+
+                                        if let minutes = Int(filtered), minutes > 0 {
+                                            timerManager.promptMaxInterval = minutes
+                                        }
+                                    }
+
+                                Text("分钟")
                             }
                         }
 
-                        // 休息时间设置
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("休息时间")
+                        // 微休息时间设置
+                        HStack {
+                            Text("微休息时间：")
                                 .fontWeight(.medium)
 
-                            HStack(spacing: 8) {
-                                ForEach([5, 10, 15, 20, 30], id: \.self) { minute in
-                                    Button(action: {
-                                        timerManager.breakMinutes = minute
-                                    }) {
-                                        Text("\(minute) 分钟")
-                                            .frame(maxWidth: .infinity)
-                                            .padding(.vertical, 8)
+                            TextField("10", text: $microBreakInput)
+                                .textFieldStyle(RoundedBorderTextFieldStyle())
+                                .frame(width: 100)
+                                .disabled(timerManager.timerRunning)
+                                .onChange(of: microBreakInput) { newValue in
+                                    // 只保留数字
+                                    let filtered = newValue.filter { "0123456789".contains($0) }
+                                    if filtered != newValue {
+                                        microBreakInput = filtered
                                     }
-                                    .buttonStyle(.bordered)
-                                    .tint(timerManager.breakMinutes == minute ? .green : .secondary)
-                                    .disabled(timerManager.timerRunning)
+
+                                    if let seconds = Int(filtered), seconds > 0 {
+                                        timerManager.microBreakSeconds = seconds
+                                    }
                                 }
-                            }
+
+                            Text("秒")
+                        }
+
+                        // 休息时间设置
+                        HStack {
+                            Text("休息时间：")
+                                .fontWeight(.medium)
+
+                            TextField("20", text: $breakMinutesInput)
+                                .textFieldStyle(RoundedBorderTextFieldStyle())
+                                .frame(width: 100)
+                                .disabled(timerManager.timerRunning)
+                                .onChange(of: breakMinutesInput) { newValue in
+                                    // 只保留数字
+                                    let filtered = newValue.filter { "0123456789".contains($0) }
+                                    if filtered != newValue {
+                                        breakMinutesInput = filtered
+                                    }
+
+                                    if let minutes = Int(filtered), minutes > 0 {
+                                        timerManager.breakMinutes = minutes
+                                    }
+                                }
+
+                            Text("分钟")
                         }
                     }
                 }
@@ -99,30 +194,12 @@ struct SettingsView: View {
                         .disabled(timerManager.timerRunning)
 
                         if timerManager.promptSoundEnabled {
-                            Text("在专注期间，每隔3-5分钟播放提示音，10秒后再次响起")
+                            Text("在专注期间，每隔\(timerManager.promptMinInterval)-\(timerManager.promptMaxInterval)分钟播放提示音，\(timerManager.microBreakSeconds)秒后再次响起")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                                 .padding(.leading, 24)
                         }
                     }
-                }
-
-                // 关于
-                Section(header: Text("关于").font(.headline)) {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("专注时钟")
-                            .font(.headline)
-
-                        Text("版本 1.0")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-
-                        Text("一个简单的专注时钟应用，帮助您提高工作效率。")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                            .padding(.top, 4)
-                    }
-                    .padding(.vertical, 8)
                 }
             }
             .formStyle(.grouped)
