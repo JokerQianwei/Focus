@@ -16,6 +16,7 @@ class StatusBarController {
     private var timerManager: TimerManager
     private var cancellables = Set<AnyCancellable>()
     private var statusBarView: StatusBarView?
+    private var soundPlayer: NSSound?
 
     init() {
         statusBar = NSStatusBar.system
@@ -69,6 +70,39 @@ class StatusBarController {
                 self?.updateStatusBarText()
             }
             .store(in: &cancellables)
+
+        // 监听开始声音通知
+        NotificationCenter.default.publisher(for: .playStartSound)
+            .sink { [weak self] _ in
+                self?.playSound(named: "Hero")
+            }
+            .store(in: &cancellables)
+
+        // 监听结束声音通知
+        NotificationCenter.default.publisher(for: .playEndSound)
+            .sink { [weak self] _ in
+                self?.playSound(named: "Glass")
+            }
+            .store(in: &cancellables)
+
+        // 监听随机提示音通知 (如果也想在这里处理)
+         NotificationCenter.default.publisher(for: .playPromptSound)
+             .sink { [weak self] _ in
+                 // 选择一个与开始/结束不同的随机提示音
+                 self?.playSound(named: "Tink") // 例如，使用 "Tink"
+             }
+             .store(in: &cancellables)
+    }
+
+    // 播放声音的辅助函数
+    private func playSound(named soundName: String) {
+        // 确保在主线程播放声音
+        DispatchQueue.main.async {
+            // 停止当前可能正在播放的声音，以防重叠
+            self.soundPlayer?.stop()
+            self.soundPlayer = NSSound(named: soundName)
+            self.soundPlayer?.play()
+        }
     }
 
     // 更新菜单栏项的文本
