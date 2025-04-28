@@ -68,7 +68,7 @@ struct ContentView: View {
                         .shadow(color: Color.black.opacity(0.1), radius: 10, x: 0, y: 5)
 
                     Circle()
-                        .stroke(timerManager.isWorkMode ? Color.blue : Color.green, lineWidth: 4)
+                        .stroke(timerManager.isWorkMode ? Color.blue : Color(red: 0.4, green: 0.8, blue: 0.6), lineWidth: 4)
                         .padding(4)
 
                     Text(timerManager.timeString)
