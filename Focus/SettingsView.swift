@@ -32,49 +32,53 @@ struct SettingsView: View {
     }
 
     var body: some View {
-        // Use a consistent padding for the main VStack
-        VStack(spacing: 16) { // Slightly reduced spacing
-            // 标题和关闭按钮
-            HStack {
+        // Apply width constraint and padding
+        VStack(spacing: 20) { // Increased spacing slightly for larger fonts
+            // 标题和关闭按钮 - Use ZStack for centering title
+            ZStack {
+                // Centered Title
                 Text("设置")
-                    .font(.largeTitle) // Use largeTitle for main view title
-                    .fontWeight(.bold)
+                    .font(.title) // Adjusted font size
+                    .fontWeight(.semibold)
 
-                Spacer()
-
-                // Close button styling
-                Button {
-                    dismiss()
-                } label: {
-                    Image(systemName: "xmark.circle.fill")
-                        .font(.title2)
-                        .foregroundColor(isHoveringClose ? .primary.opacity(0.8) : .secondary.opacity(0.8))
-                        .scaleEffect(isHoveringClose ? 1.1 : 1.0)
-                }
-                .buttonStyle(.plain) // Use plain button style for icon buttons
-                .onHover { hovering in
-                    withAnimation(.easeInOut(duration: 0.1)) {
-                        isHoveringClose = hovering
+                // Close button on the right
+                HStack {
+                    Spacer()
+                    Button {
+                        dismiss()
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.title2) // Keep button size reasonable
+                            .foregroundColor(isHoveringClose ? .primary.opacity(0.8) : .secondary.opacity(0.8))
+                            .scaleEffect(isHoveringClose ? 1.1 : 1.0)
+                    }
+                    .buttonStyle(.plain)
+                    .onHover { hovering in
+                        withAnimation(.easeInOut(duration: 0.1)) {
+                            isHoveringClose = hovering
+                        }
                     }
                 }
             }
-            .padding(.bottom, 8) // Reduced bottom padding for title
+            .padding(.horizontal)
+            .padding(.bottom, 10) // Adjusted padding
 
             // 设置内容
             Form {
                 // 计时选项 Section
-                Section { // Use Section without explicit header text for better grouping
-                    Grid(alignment: .leadingFirstTextBaseline, horizontalSpacing: 12, verticalSpacing: 10) {
+                Section { 
+                    Grid(alignment: .leadingFirstTextBaseline, horizontalSpacing: 15, verticalSpacing: 12) { // Increased spacing
                         // 专注时间
                         GridRow {
                             Text("专注时间")
+                                .font(.body.weight(.medium)) // Adjusted font
                                 .gridColumnAlignment(.leading)
 
                             HStack {
                                 Spacer()
                                 TextField("", text: $workMinutesInput)
                                     .textFieldStyle(RoundedBorderTextFieldStyle())
-                                    .frame(width: 60) // Adjusted width
+                                    .frame(width: 60) 
                                     .multilineTextAlignment(.trailing)
                                     .disabled(timerManager.timerRunning)
                                     .onChange(of: workMinutesInput) { newValue in
@@ -91,13 +95,14 @@ struct SettingsView: View {
 
                                 Text("分钟")
                                     .foregroundColor(.secondary)
-                                    .frame(width: 30, alignment: .leading) // Ensure alignment
+                                    .frame(width: 30, alignment: .leading) 
                             }
                         }
 
                         // 休息时间
                         GridRow {
                             Text("休息时间")
+                                .font(.body.weight(.medium)) // Adjusted font
                                 .gridColumnAlignment(.leading)
 
                             HStack {
@@ -114,7 +119,6 @@ struct SettingsView: View {
                                             timerManager.breakMinutes = minutes
                                         }
                                     }
-                                    // Keep focus effect disabled for consistency if needed
                                     .focusEffectDisabled()
 
                                 Text("分钟")
@@ -123,18 +127,19 @@ struct SettingsView: View {
                             }
                         }
                     }
-                } header: { // Add header text here for better structure
+                } header: { 
                     Text("计时")
-                        .font(.headline)
-                        .padding(.bottom, 4)
+                        .font(.title3) // Adjusted font size
+                        .padding(.bottom, 5) // Increased padding
                 }
 
                 // 提示音间隔 Section
-                Section { // Use Section without explicit header text
-                    Grid(alignment: .leadingFirstTextBaseline, horizontalSpacing: 12, verticalSpacing: 10) {
+                Section { 
+                    Grid(alignment: .leadingFirstTextBaseline, horizontalSpacing: 15, verticalSpacing: 12) { // Increased spacing
                         // 最小间隔
                         GridRow {
                             Text("最小间隔")
+                                .font(.body.weight(.medium)) // Adjusted font
                                 .gridColumnAlignment(.leading)
 
                             HStack {
@@ -162,6 +167,7 @@ struct SettingsView: View {
                         // 最大间隔
                         GridRow {
                             Text("最大间隔")
+                                .font(.body.weight(.medium)) // Adjusted font
                                 .gridColumnAlignment(.leading)
 
                             HStack {
@@ -189,6 +195,7 @@ struct SettingsView: View {
                         // 微休息
                         GridRow {
                             Text("微休息")
+                                .font(.body.weight(.medium)) // Adjusted font
                                 .gridColumnAlignment(.leading)
 
                             HStack {
@@ -214,47 +221,48 @@ struct SettingsView: View {
                         }
                     }
 
-                } header: { // Add header text here
+                } header: { 
                     Text("随机提示音间隔 (专注期间)")
-                        .font(.headline)
-                        .padding(.bottom, 4)
+                        .font(.title3) // Adjusted font size
+                        .padding(.bottom, 5) // Increased padding
                 }
 
 
                 // 提示音开关 Section
-                Section { // Use Section without explicit header text
+                Section { 
                     Toggle(isOn: $timerManager.promptSoundEnabled) {
                         Text("专注期间提示音")
-                            // Removed icon from here for cleaner toggle label
+                            .font(.body.weight(.medium)) // Adjusted font
                     }
                     .toggleStyle(.switch)
                     .disabled(timerManager.timerRunning)
-                    .padding(.vertical, 4) // Add padding for toggle
+                    .padding(.vertical, 6) // Increased padding
 
                     // Conditionally show description text
                     if timerManager.promptSoundEnabled {
                         Text("每隔 \(timerManager.promptMinInterval)-\(timerManager.promptMaxInterval) 分钟播放提示音，并在 \(timerManager.microBreakSeconds) 秒后再次响起。")
-                            .font(.caption)
+                            .font(.callout) // Adjusted font size
                             .foregroundColor(.secondary)
-                            .padding(.top, 2) // Add small top padding
+                            .padding(.top, 4) // Increased padding
                     }
-                } header: { // Add header text here
+                } header: { 
                     Text("提示音")
-                        .font(.headline)
-                        .padding(.bottom, 4)
+                        .font(.title3) // Adjusted font size
+                        .padding(.bottom, 5) // Increased padding
                 }
 
             }
-            .formStyle(.grouped) // Keep grouped style for macOS
-            .frame(maxWidth: 480) // Constrain form width slightly
-            // Remove explicit frame height, let content define height
+            .formStyle(.grouped) 
+            .frame(maxWidth: .infinity) // Let Form manage its internal width
+            .padding(.horizontal, 5) // Add slight horizontal padding to the Form itself
+            
         }
-        .padding() // Apply padding to the outer VStack
-        // Remove frame modifier from here, apply padding instead
+        .padding() // Add padding to the outermost VStack
+        .frame(width: 350) // Set the desired width for the entire view
     }
 }
 
 #Preview {
     SettingsView(timerManager: TimerManager.shared)
-        .frame(width: 500, height: 600) // Keep frame for preview
+        .frame(width: 350, height: 550) // Set frame for preview canvas
 }
