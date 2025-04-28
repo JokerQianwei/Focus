@@ -20,7 +20,7 @@ struct ContentView: View {
     var body: some View {
         ZStack {
             // 背景颜色
-            Color(NSColor.windowBackgroundColor)
+            Color(NSColor.controlBackgroundColor)
                 .ignoresSafeArea()
 
             VStack(spacing: 25) {
@@ -109,10 +109,7 @@ struct ContentView: View {
                 // 移除了提示音状态指示器
             }
             .padding()
-            .frame(minWidth: 400, minHeight: 500)
-            .background(Color(NSColor.controlBackgroundColor))
-            .cornerRadius(20)
-            .shadow(color: Color.black.opacity(0.1), radius: 20, x: 0, y: 10)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .sheet(isPresented: $showingSettings) {
             SettingsView(timerManager: timerManager)
