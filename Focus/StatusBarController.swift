@@ -74,34 +74,57 @@ class StatusBarController {
         // 监听开始声音通知
         NotificationCenter.default.publisher(for: .playStartSound)
             .sink { [weak self] _ in
-                self?.playSound(named: "Hero")
+                self?.playSound(named: "Glass") // Glass
             }
             .store(in: &cancellables)
 
         // 监听结束声音通知
         NotificationCenter.default.publisher(for: .playEndSound)
             .sink { [weak self] _ in
-                self?.playSound(named: "Glass")
+                self?.playSound(named: "Funk") // Funk
             }
             .store(in: &cancellables)
 
         // 监听随机提示音通知 (如果也想在这里处理)
          NotificationCenter.default.publisher(for: .playPromptSound)
              .sink { [weak self] _ in
-                 // 选择一个与开始/结束不同的随机提示音
-                 self?.playSound(named: "Tink") // 例如，使用 "Tink"
+                 self?.playSound(named: "Blow") // Blow
              }
              .store(in: &cancellables)
     }
 
     // 播放声音的辅助函数
     private func playSound(named soundName: String) {
+        print("尝试播放声音: \(soundName)")
+        
         // 确保在主线程播放声音
         DispatchQueue.main.async {
-            // 停止当前可能正在播放的声音，以防重叠
-            self.soundPlayer?.stop()
-            self.soundPlayer = NSSound(named: soundName)
-            self.soundPlayer?.play()
+            // 尝试作为系统声音播放
+            if let systemSound = NSSound(named: soundName) {
+                print("找到系统声音: \(soundName)")
+                // 停止当前可能正在播放的声音，以防重叠
+                self.soundPlayer?.stop()
+                self.soundPlayer = systemSound
+                self.soundPlayer?.volume = 1.0 // 确保音量足够
+                self.soundPlayer?.play()
+                print("开始播放声音: \(soundName)")
+            } else {
+                print("错误：未找到系统声音: \(soundName)")
+                
+                // 尝试播放后备声音
+                let backupSounds = ["Ping", "Tink", "Bottle", "Glass", "Hero", "Pop", "Blow", "Submarine", "Funk"]
+                
+                for backupSound in backupSounds {
+                    if let sound = NSSound(named: backupSound) {
+                        print("使用后备声音: \(backupSound)")
+                        self.soundPlayer?.stop()
+                        self.soundPlayer = sound
+                        self.soundPlayer?.volume = 1.0
+                        self.soundPlayer?.play()
+                        break // 找到可用声音后退出循环
+                    }
+                }
+            }
         }
     }
 
