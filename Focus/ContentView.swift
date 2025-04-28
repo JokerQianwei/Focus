@@ -83,7 +83,7 @@ struct ContentView: View {
                             .font(.system(size: 28))
                             .foregroundColor(.white)
                             .frame(width: 65, height: 65)
-                            .background(Circle().fill(timerManager.timerRunning ? Color.red : Color.green))
+                            .background(Circle().fill(timerManager.timerRunning ? Color.red.opacity(0.8) : Color.accentColor))
                     }
                     .buttonStyle(.plain)
                     .clipShape(Circle())
@@ -95,9 +95,9 @@ struct ContentView: View {
                         timerManager.resetTimer()
                     }) {
                         Image(systemName: "arrow.counterclockwise")
-                            .font(.system(size: 22))
+                            .font(.system(size: 26))
                             .foregroundColor(.primary)
-                            .frame(width: 55, height: 55)
+                            .frame(width: 65, height: 65)
                             .background(Circle().fill(Color.gray.opacity(0.2)))
                     }
                     .buttonStyle(.plain)
