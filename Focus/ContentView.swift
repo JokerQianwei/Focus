@@ -25,39 +25,34 @@ struct ContentView: View {
 
             VStack(spacing: 25) {
                 // 顶部栏：标题和设置按钮
-                HStack {
-                    Spacer()
-
-                    Text("专注时钟")
+                ZStack {
+                    // 标题居中
+                    Text("Focus")
                         .font(.system(size: 36, weight: .bold, design: .rounded))
                         .foregroundColor(.primary)
+                        .frame(maxWidth: .infinity)
 
-                    Spacer()
-
-                    Button(action: {
-                        showingSettings = true
-                    }) {
-                        Image(systemName: "gearshape.fill")
-                            .font(.title2)
-                            .foregroundColor(.secondary)
+                    // 设置按钮靠右
+                    HStack {
+                        Spacer()
+                        Button(action: {
+                            showingSettings = true
+                        }) {
+                            Image(systemName: "gearshape.fill")
+                                .font(.title2)
+                                .foregroundColor(.secondary)
+                        }
+                        .buttonStyle(.plain)
+                        .keyboardShortcut(",", modifiers: .command)
+                        .help("设置")
                     }
-                    .buttonStyle(.plain)
-                    .keyboardShortcut(",", modifiers: .command)
-                    .help("设置")
                 }
                 .padding(.horizontal)
 
-                // 模式和完成信息
-                VStack(spacing: 8) {
-                    Text(timerManager.modeText)
-                        .font(.title2)
-                        .foregroundColor(timerManager.isWorkMode ? .blue : .green)
-                        .fontWeight(.medium)
-
-                    Text("已完成 \(timerManager.completedSessions) 个专注周期")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                }
+                // 完成信息
+                Text("已完成 \(timerManager.completedSessions) 个专注周期")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
 
                 // 时间显示
                 ZStack {
@@ -111,17 +106,7 @@ struct ContentView: View {
                 }
                 .controlSize(.large)
 
-                // 提示音状态指示器（如果启用）
-                if timerManager.promptSoundEnabled && timerManager.isWorkMode && timerManager.timerRunning {
-                    HStack(spacing: 8) {
-                        Image(systemName: "speaker.wave.2")
-                            .foregroundColor(.blue)
-                        Text("提示音已启用")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-                    .padding(.vertical, 4)
-                }
+                // 移除了提示音状态指示器
             }
             .padding()
             .frame(minWidth: 400, minHeight: 500)
