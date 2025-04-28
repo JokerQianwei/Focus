@@ -71,15 +71,12 @@ class TimerManager: ObservableObject {
                 self.seconds = 59
             } else {
                 // 计时器归零，先停止计时器，再处理模式切换和声音
-                // self.stopTimer() // 移动到模式切换逻辑之后，确保声音能播放
-
-                // 记录当前模式，用于判断播放哪个声音
-                let wasWorkMode = self.isWorkMode
-
-                // 停止计时器本身，但不停止提示音系统（如果正在休息）
                 self.timer?.invalidate()
                 self.timer = nil
                 self.timerRunning = false // 更新状态
+
+                // 记录当前模式，用于判断播放哪个声音
+                let wasWorkMode = self.isWorkMode
 
                 // 切换模式
                 if wasWorkMode {
@@ -91,6 +88,10 @@ class TimerManager: ObservableObject {
                     self.minutes = self.breakMinutes
                     self.completedSessions += 1
                     self.stopPromptSystem() // 工作结束，停止随机提示音
+
+                    // 在模式切换后，如果需要自动开始休息，则启动计时器
+                    self.startTimer() // 自动开始休息计时
+
                 } else {
                     // 休息模式结束，发送开始声音通知，然后切换到工作模式
                     if self.promptSoundEnabled {
@@ -98,26 +99,26 @@ class TimerManager: ObservableObject {
                     }
                     self.isWorkMode = true
                     self.minutes = self.workMinutes
+                    // 休息结束后不再自动启动计时器
                 }
 
                 self.seconds = 0 // 重置秒数
 
                 // 如果切换回工作模式且启用了提示音，则启动随机提示音系统
                 if self.isWorkMode && self.promptSoundEnabled {
-                    self.startPromptTimer()
+                    // startPromptTimer() // 考虑是否在这里启动，或者在 startTimer 手动调用时启动
+                    // 保留，因为如果用户手动开始专注，提示音应该启动
                 }
 
                 // 发送通知
                 NotificationCenter.default.post(name: .timerModeChanged, object: nil)
                 // 确保状态栏也更新模式切换后的初始时间
                 NotificationCenter.default.post(name: .timerUpdated, object: nil)
-                // 状态改变通知
+                // 状态改变通知 (因为计时器状态变为停止或开始休息)
                 NotificationCenter.default.post(name: .timerStateChanged, object: nil)
 
-                // 在模式切换后重新启动计时器（如果需要连续运行）
-                // 如果不需要自动开始下一轮，则注释掉下面这行
-                 self.startTimer() // 自动开始下一轮计时
-
+                // // 在模式切换后重新启动计时器（如果需要连续运行） - 已移动到 if wasWorkMode 块内
+                //  self.startTimer() // 自动开始下一轮计时
             }
 
             // 发送通知，计时器已更新
