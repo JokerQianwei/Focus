@@ -19,7 +19,7 @@ struct FocusApp: App {
         WindowGroup {
             ContentView()
                 .environmentObject(timerManager)
-                .frame(width: 320, height: 420)
+                .frame(width: 320, height: 490)
                 .fixedSize(horizontal: true, vertical: true)
         }
         .windowStyle(HiddenTitleBarWindowStyle())
@@ -99,7 +99,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
     private func ensureFixedWindowSize() {
         if let window = NSApplication.shared.windows.first {
             window.styleMask.remove(.resizable)
-            window.setContentSize(NSSize(width: 320, height: 420))
+            window.setContentSize(NSSize(width: 320, height: 490))
             
             // 如果窗口处于缩放状态，则取消缩放
             if window.isZoomed {
