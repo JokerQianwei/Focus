@@ -29,8 +29,8 @@ struct ContentView: View {
             VStack(spacing: 15) {
                 // 顶部栏：标题和设置按钮
                 ZStack {
-                    // 标题居中
-                    Text("Focus")
+                    // 标题居中，根据模式改变文本
+                    Text(timerManager.isWorkMode ? "Focus" : "Break")
                         .font(.system(size: 36, weight: .bold, design: .rounded))
                         .foregroundColor(.primary)
                         .frame(maxWidth: .infinity)
