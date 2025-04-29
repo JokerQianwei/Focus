@@ -82,7 +82,7 @@ struct SettingsView: View {
                                     .frame(width: 60) 
                                     .multilineTextAlignment(.trailing)
                                     .disabled(timerManager.timerRunning)
-                                    .onChange(of: workMinutesInput) { newValue in
+                                    .onChange(of: workMinutesInput) { _, newValue in
                                         let filtered = newValue.filter { "0123456789".contains($0) }
                                         if filtered != newValue { workMinutesInput = filtered }
                                         if let minutes = Int(filtered), minutes > 0 {
@@ -115,7 +115,7 @@ struct SettingsView: View {
                                     .frame(width: 60)
                                     .multilineTextAlignment(.trailing)
                                     .disabled(timerManager.timerRunning)
-                                    .onChange(of: breakMinutesInput) { newValue in
+                                    .onChange(of: breakMinutesInput) { _, newValue in
                                         let filtered = newValue.filter { "0123456789".contains($0) }
                                         if filtered != newValue { breakMinutesInput = filtered }
                                         if let minutes = Int(filtered), minutes > 0 {
@@ -155,7 +155,7 @@ struct SettingsView: View {
                                     .frame(width: 60)
                                     .multilineTextAlignment(.trailing)
                                     .disabled(timerManager.timerRunning)
-                                    .onChange(of: promptMinInput) { newValue in
+                                    .onChange(of: promptMinInput) { _, newValue in
                                         let filtered = newValue.filter { "0123456789".contains($0) }
                                         if filtered != newValue { promptMinInput = filtered }
                                         if let minutes = Int(filtered), minutes > 0 {
@@ -185,7 +185,7 @@ struct SettingsView: View {
                                     .frame(width: 60)
                                     .multilineTextAlignment(.trailing)
                                     .disabled(timerManager.timerRunning)
-                                    .onChange(of: promptMaxInput) { newValue in
+                                    .onChange(of: promptMaxInput) { _, newValue in
                                         let filtered = newValue.filter { "0123456789".contains($0) }
                                         if filtered != newValue { promptMaxInput = filtered }
                                         if let minutes = Int(filtered), minutes > 0 {
@@ -215,7 +215,7 @@ struct SettingsView: View {
                                     .frame(width: 60)
                                     .multilineTextAlignment(.trailing)
                                     .disabled(timerManager.timerRunning)
-                                    .onChange(of: microBreakInput) { newValue in
+                                    .onChange(of: microBreakInput) { _, newValue in
                                         let filtered = newValue.filter { "0123456789".contains($0) }
                                         if filtered != newValue { microBreakInput = filtered }
                                         if let seconds = Int(filtered), seconds > 0 {
