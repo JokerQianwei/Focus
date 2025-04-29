@@ -18,10 +18,12 @@ struct FocusApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
-                .frame(minWidth: 400, minHeight: 400)
                 .environmentObject(timerManager)
+                .frame(width: 320, height: 420)
+                .fixedSize(horizontal: true, vertical: true)
         }
         .windowStyle(HiddenTitleBarWindowStyle())
+        .windowResizability(.contentSize)
         .commands {
             // 添加自定义菜单命令
             CommandGroup(replacing: .appInfo) {
@@ -63,6 +65,13 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
 
         // 设置音频播放器
         setupAudioPlayer()
+        
+        // 禁用窗口状态恢复
+        NSWindow.allowsAutomaticWindowTabbing = false
+        UserDefaults.standard.set(false, forKey: "NSQuitAlwaysKeepsWindows")
+
+        // 确保窗口尺寸固定
+        ensureFixedWindowSize()
 
         // 监听提示音播放请求
         NotificationCenter.default.addObserver(
@@ -79,6 +88,26 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
             name: .timerModeChanged,
             object: nil
         )
+    }
+    
+    // 当应用程序激活时也确保窗口尺寸
+    func applicationDidBecomeActive(_ notification: Notification) {
+        ensureFixedWindowSize()
+    }
+    
+    // 确保窗口尺寸固定的方法
+    private func ensureFixedWindowSize() {
+        if let window = NSApplication.shared.windows.first {
+            window.styleMask.remove(.resizable)
+            window.setContentSize(NSSize(width: 320, height: 420))
+            
+            // 如果窗口处于缩放状态，则取消缩放
+            if window.isZoomed {
+                window.zoom(nil)
+            }
+            
+            window.setFrameAutosaveName("") // 清除自动保存的名称，防止系统恢复
+        }
     }
 
     // 初始化音频播放器
