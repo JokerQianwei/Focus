@@ -299,7 +299,6 @@ class TimerManager: ObservableObject {
 
     // 重置计时器
     func resetTimer() {
-        let wasRunning = timerRunning // 记录重置前是否在运行
         stopTimer() // 停止当前计时器和提示音
 
         let needsModeChange = !isWorkMode // 检查是否处于休息模式
