@@ -130,7 +130,7 @@ struct ContentView: View {
 
                 // 移除了提示音状态指示器
             }
-            .padding(.top, -15)
+            .padding(.top, 15)
             .padding([.leading, .trailing, .bottom])
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
