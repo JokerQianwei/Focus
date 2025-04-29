@@ -113,7 +113,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
     // 初始化音频播放器
     private func setupAudioPlayer() {
         // 使用系统声音
-        let systemSoundID = 1005 // 系统声音ID，这是一个提示音
         let soundURL = URL(fileURLWithPath: "/System/Library/Sounds/Tink.aiff")
 
         do {
