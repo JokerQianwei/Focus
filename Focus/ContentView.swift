@@ -26,7 +26,7 @@ struct ContentView: View {
             Color(NSColor.controlBackgroundColor)
                 .ignoresSafeArea()
 
-            VStack(spacing: 25) {
+            VStack(spacing: 15) {
                 // 顶部栏：标题和设置按钮
                 ZStack {
                     // 标题居中
@@ -55,6 +55,7 @@ struct ContentView: View {
                     .keyboardShortcut(",", modifiers: .command)
                 }
                 .padding(.horizontal)
+                .padding(.top, -10)
 
                 // 完成信息
                 Text("今天已完成 \(timerManager.completedSessionsToday) 个专注周期")
@@ -129,7 +130,8 @@ struct ContentView: View {
 
                 // 移除了提示音状态指示器
             }
-            .padding()
+            .padding(.top, -15)
+            .padding([.leading, .trailing, .bottom])
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .sheet(isPresented: $showingSettings) {

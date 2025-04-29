@@ -19,7 +19,7 @@ struct FocusApp: App {
         WindowGroup {
             ContentView()
                 .environmentObject(timerManager)
-                .frame(width: 320, height: 490)
+                .frame(width: 320, height: 470)
                 .fixedSize(horizontal: true, vertical: true)
         }
         .windowStyle(HiddenTitleBarWindowStyle())
