@@ -12,11 +12,11 @@ import Combine
 class StatusBarController {
     private var statusBar: NSStatusBar
     private var statusItem: NSStatusItem
-    private var window: NSWindow?
     private var timerManager: TimerManager
     private var cancellables = Set<AnyCancellable>()
     private var statusBarView: StatusBarView?
     private var soundPlayer: NSSound?
+    private var mainWindowController: NSWindowController?
 
     init() {
         statusBar = NSStatusBar.system
@@ -24,21 +24,6 @@ class StatusBarController {
 
         // 获取TimerManager实例
         timerManager = TimerManager.shared
-
-        // 创建主窗口
-        let contentView = ContentView()
-            .environmentObject(timerManager)  // 注入 TimerManager 环境对象
-        let hostingView = NSHostingView(rootView: contentView)
-        window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 400, height: 500),
-            styleMask: [.titled, .closable, .miniaturizable, .resizable],
-            backing: .buffered,
-            defer: false
-        )
-        window?.contentView = hostingView
-        window?.title = "Focus"
-        window?.center()
-        window?.isReleasedWhenClosed = false
 
         // 创建并设置自定义视图
         if let button = statusItem.button {
@@ -57,9 +42,35 @@ class StatusBarController {
 
         // 设置菜单栏项的点击事件
         if let button = statusItem.button {
-            button.action = #selector(toggleWindow(_:))
+            button.action = #selector(toggleMainWindow(_:))
             button.target = self
         }
+
+        // 确保应用程序不会在所有窗口关闭时退出
+        NSApp.setActivationPolicy(.accessory)
+        
+        // 添加应用程序生命周期相关通知观察者
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(applicationWillBecomeActive(_:)),
+            name: NSApplication.willBecomeActiveNotification,
+            object: nil
+        )
+        
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(applicationDidResignActive(_:)),
+            name: NSApplication.didResignActiveNotification,
+            object: nil
+        )
+
+        // 监听应用程序启动完成通知，以便在启动后获取主窗口控制器
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(applicationDidFinishLaunching(_:)),
+            name: NSApplication.didFinishLaunchingNotification,
+            object: nil
+        )
 
         // 订阅TimerManager的通知
         NotificationCenter.default.publisher(for: .timerUpdated)
@@ -100,6 +111,57 @@ class StatusBarController {
                 self?.playSound(named: "Blow")
             }
             .store(in: &cancellables)
+    }
+
+    @objc private func applicationWillBecomeActive(_ notification: Notification) {
+        // 应用程序即将变为活跃状态，确保状态栏项存在
+        if statusItem.length == 0 {
+            statusItem = statusBar.statusItem(withLength: 52)
+            
+            // 重新设置自定义视图
+            if let button = statusItem.button {
+                let frame = NSRect(x: 0, y: 0, width: 52, height: button.frame.height)
+                statusBarView = StatusBarView(
+                    frame: frame,
+                    text: timerManager.timeString,
+                    textColor: NSColor.black
+                )
+                button.subviews.forEach { $0.removeFromSuperview() }
+                button.addSubview(statusBarView!)
+                
+                // 重新设置点击事件
+                button.action = #selector(toggleMainWindow(_:))
+                button.target = self
+            }
+            
+            // 更新状态栏文本
+            updateStatusBarText()
+        }
+    }
+    
+    @objc private func applicationDidResignActive(_ notification: Notification) {
+        // 应用程序失去活跃状态，记录状态
+        // 这里不做任何操作，但保留方法以便将来可能的扩展
+    }
+
+    @objc private func applicationDidFinishLaunching(_ notification: Notification) {
+        // 找到并存储主窗口控制器
+        if let mainWindow = findMainWindow() {
+            mainWindowController = NSWindowController(window: mainWindow)
+        }
+    }
+    
+    // 查找主窗口的辅助方法
+    private func findMainWindow() -> NSWindow? {
+        // 查找标题不为空且不是状态栏相关窗口的窗口
+        return NSApp.windows.first(where: { window in
+            // 状态栏窗口通常很小且位于屏幕顶部
+            let isStatusBarRelated = window.frame.height < 30 && 
+                                     window.frame.origin.y > NSScreen.main?.frame.height ?? 0 - 30
+            
+            // 主窗口通常有标题且不是状态栏相关窗口
+            return !window.title.isEmpty && !isStatusBarRelated
+        })
     }
 
     // 播放声音的辅助函数
@@ -152,15 +214,38 @@ class StatusBarController {
         }
     }
 
-    // 切换窗口的显示状态
-    @objc private func toggleWindow(_ sender: AnyObject?) {
-        if let window = window {
-            if window.isVisible {
-                window.close()
-            } else {
-                window.makeKeyAndOrderFront(nil)
-                NSApp.activate(ignoringOtherApps: true)
+    // 切换主窗口的显示状态
+    @objc private func toggleMainWindow(_ sender: AnyObject?) {
+        // 这里不要立即激活应用程序，可能会导致状态栏图标消失
+        
+        // 查找主窗口
+        if mainWindowController?.window == nil {
+            if let mainWindow = findMainWindow() {
+                mainWindowController = NSWindowController(window: mainWindow)
             }
+        }
+        
+        if let windowController = mainWindowController {
+            if let window = windowController.window, window.isVisible {
+                // 如果窗口可见，先隐藏窗口
+                window.orderOut(nil)
+                // 然后确保应用程序保持运行状态
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    NSApp.setActivationPolicy(.accessory)
+                }
+            } else {
+                // 如果窗口不可见，先设置应用程序为常规应用，再显示窗口
+                NSApp.setActivationPolicy(.regular)
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    windowController.showWindow(nil)
+                    NSApp.activate(ignoringOtherApps: true)
+                }
+            }
+        } else {
+            // 如果没有找到主窗口，尝试恢复应用程序状态
+            NSApp.setActivationPolicy(.regular)
+            NSApp.activate(ignoringOtherApps: true)
+            print("未找到主窗口，请确保应用程序已正确启动")
         }
     }
 }
