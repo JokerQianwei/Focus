@@ -20,33 +20,35 @@ class StatusBarController {
 
     init() {
         statusBar = NSStatusBar.system
-        statusItem = statusBar.statusItem(withLength: 52)
-
+        
         // 获取TimerManager实例
         timerManager = TimerManager.shared
         
-        // 根据设置决定是否显示状态栏图标
-        updateStatusBarVisibility()
-
-        // 创建并设置自定义视图
-        if let button = statusItem.button {
-            let frame = NSRect(x: 0, y: 0, width: 52, height: button.frame.height)
-            statusBarView = StatusBarView(
-                frame: frame,
-                text: timerManager.timeString,
-                textColor: NSColor.black
-            )
-            button.subviews.forEach { $0.removeFromSuperview() }
-            button.addSubview(statusBarView!)
-        }
-
-        // 设置菜单栏项的初始文本
-        updateStatusBarText()
-
-        // 设置菜单栏项的点击事件
-        if let button = statusItem.button {
-            button.action = #selector(toggleMainWindow(_:))
-            button.target = self
+        // 根据设置决定是否创建状态栏图标
+        if timerManager.showStatusBarIcon {
+            statusItem = statusBar.statusItem(withLength: 52)
+            
+            // 创建并设置自定义视图
+            if let button = statusItem.button {
+                let frame = NSRect(x: 0, y: 0, width: 52, height: button.frame.height)
+                statusBarView = StatusBarView(
+                    frame: frame,
+                    text: timerManager.timeString,
+                    textColor: NSColor.black
+                )
+                button.subviews.forEach { $0.removeFromSuperview() }
+                button.addSubview(statusBarView!)
+                
+                // 设置菜单栏项的点击事件
+                button.action = #selector(toggleMainWindow(_:))
+                button.target = self
+            }
+            
+            // 设置菜单栏项的初始文本
+            updateStatusBarText()
+        } else {
+            // 如果设置为不显示图标，则创建一个长度为0的空状态栏项
+            statusItem = statusBar.statusItem(withLength: 0)
         }
 
         // 确保应用程序不会在所有窗口关闭时退出
@@ -125,27 +127,31 @@ class StatusBarController {
 
     @objc private func applicationWillBecomeActive(_ notification: Notification) {
         // 应用程序即将变为活跃状态，根据设置确保状态栏项存在
-        if timerManager.showStatusBarIcon && statusItem.length == 0 {
-            statusItem = statusBar.statusItem(withLength: 52)
-            
-            // 重新设置自定义视图
-            if let button = statusItem.button {
-                let frame = NSRect(x: 0, y: 0, width: 52, height: button.frame.height)
-                statusBarView = StatusBarView(
-                    frame: frame,
-                    text: timerManager.timeString,
-                    textColor: NSColor.black
-                )
-                button.subviews.forEach { $0.removeFromSuperview() }
-                button.addSubview(statusBarView!)
+        if timerManager.showStatusBarIcon {
+            // 检查statusItem是否有效，如果无效或长度为0则重新创建
+            if statusItem.length == 0 {
+                // 创建新的状态栏项
+                statusItem = statusBar.statusItem(withLength: 52)
                 
-                // 重新设置点击事件
-                button.action = #selector(toggleMainWindow(_:))
-                button.target = self
+                // 重新设置自定义视图
+                if let button = statusItem.button {
+                    let frame = NSRect(x: 0, y: 0, width: 52, height: button.frame.height)
+                    statusBarView = StatusBarView(
+                        frame: frame,
+                        text: timerManager.timeString,
+                        textColor: NSColor.black
+                    )
+                    button.subviews.forEach { $0.removeFromSuperview() }
+                    button.addSubview(statusBarView!)
+                    
+                    // 重新设置点击事件
+                    button.action = #selector(toggleMainWindow(_:))
+                    button.target = self
+                }
+                
+                // 更新状态栏文本
+                updateStatusBarText()
             }
-            
-            // 更新状态栏文本
-            updateStatusBarText()
         }
     }
     
@@ -261,11 +267,10 @@ class StatusBarController {
 
     // 更新状态栏图标的可见性
     private func updateStatusBarVisibility() {
-        // 如果设置为不显示图标，则将statusItem长度设为0（隐藏）
-        // 否则设置正常长度（显示）
         if timerManager.showStatusBarIcon {
             if statusItem.length == 0 {
-                statusItem.length = 52
+                // 创建新的状态栏项
+                statusItem = statusBar.statusItem(withLength: 52)
                 
                 // 重新创建并设置自定义视图
                 if let button = statusItem.button {
@@ -287,7 +292,10 @@ class StatusBarController {
                 updateStatusBarText()
             }
         } else {
-            statusItem.length = 0
+            // 完全移除状态栏项而不是设置长度为0
+            statusBar.removeStatusItem(statusItem)
+            // 重新创建一个空的状态栏项，以便后续可以恢复
+            statusItem = statusBar.statusItem(withLength: 0)
         }
     }
 }

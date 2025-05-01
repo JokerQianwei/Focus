@@ -7,6 +7,7 @@
 
 import Foundation
 import Combine
+import AppKit
 
 // 计时器管理器，作为单例，在应用程序的不同部分之间共享计时器状态
 class TimerManager: ObservableObject {
@@ -71,6 +72,17 @@ class TimerManager: ObservableObject {
             UserDefaults.standard.set(showStatusBarIcon, forKey: showStatusBarIconKey)
             // 发送通知，告知状态栏控制器更新图标的显示状态
             NotificationCenter.default.post(name: .statusBarIconVisibilityChanged, object: nil)
+            
+            // 如果隐藏了状态栏图标，确保显示主窗口
+            if !showStatusBarIcon {
+                DispatchQueue.main.async {
+                    let windowsVisible = NSApp.windows.contains(where: { $0.isVisible })
+                    if !windowsVisible {
+                        NSApp.setActivationPolicy(.regular)
+                        NSApp.activate(ignoringOtherApps: true)
+                    }
+                }
+            }
         }
     }
     
