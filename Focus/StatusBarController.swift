@@ -12,7 +12,7 @@ import Combine
 class StatusBarController {
     private var statusBar: NSStatusBar
     private var statusItem: NSStatusItem
-    private var popover: NSPopover
+    private var window: NSWindow?
     private var timerManager: TimerManager
     private var cancellables = Set<AnyCancellable>()
     private var statusBarView: StatusBarView?
@@ -20,16 +20,25 @@ class StatusBarController {
 
     init() {
         statusBar = NSStatusBar.system
-        statusItem = statusBar.statusItem(withLength: 52) // 进一步减小宽度，使方框更紧凑
-
-        // 创建一个弹出窗口，用于显示应用程序的主界面
-        popover = NSPopover()
-        popover.contentSize = NSSize(width: 400, height: 500)
-        popover.behavior = .transient
-        popover.contentViewController = NSHostingController(rootView: ContentView())
+        statusItem = statusBar.statusItem(withLength: 52)
 
         // 获取TimerManager实例
         timerManager = TimerManager.shared
+
+        // 创建主窗口
+        let contentView = ContentView()
+            .environmentObject(timerManager)  // 注入 TimerManager 环境对象
+        let hostingView = NSHostingView(rootView: contentView)
+        window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 400, height: 500),
+            styleMask: [.titled, .closable, .miniaturizable, .resizable],
+            backing: .buffered,
+            defer: false
+        )
+        window?.contentView = hostingView
+        window?.title = "Focus"
+        window?.center()
+        window?.isReleasedWhenClosed = false
 
         // 创建并设置自定义视图
         if let button = statusItem.button {
@@ -37,7 +46,7 @@ class StatusBarController {
             statusBarView = StatusBarView(
                 frame: frame,
                 text: timerManager.timeString,
-                textColor: NSColor.black // 使用黑色文本，不受模式影响
+                textColor: NSColor.black
             )
             button.subviews.forEach { $0.removeFromSuperview() }
             button.addSubview(statusBarView!)
@@ -48,7 +57,7 @@ class StatusBarController {
 
         // 设置菜单栏项的点击事件
         if let button = statusItem.button {
-            button.action = #selector(togglePopover(_:))
+            button.action = #selector(toggleWindow(_:))
             button.target = self
         }
 
@@ -143,24 +152,15 @@ class StatusBarController {
         }
     }
 
-    // 切换弹出窗口的显示状态
-    @objc private func togglePopover(_ sender: AnyObject?) {
-        if popover.isShown {
-            closePopover(sender)
-        } else {
-            showPopover(sender)
+    // 切换窗口的显示状态
+    @objc private func toggleWindow(_ sender: AnyObject?) {
+        if let window = window {
+            if window.isVisible {
+                window.close()
+            } else {
+                window.makeKeyAndOrderFront(nil)
+                NSApp.activate(ignoringOtherApps: true)
+            }
         }
-    }
-
-    // 显示弹出窗口
-    private func showPopover(_ sender: AnyObject?) {
-        if let button = statusItem.button {
-            popover.show(relativeTo: button.bounds, of: button, preferredEdge: NSRectEdge.minY)
-        }
-    }
-
-    // 关闭弹出窗口
-    private func closePopover(_ sender: AnyObject?) {
-        popover.performClose(sender)
     }
 }
