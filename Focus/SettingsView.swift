@@ -262,6 +262,21 @@ struct SettingsView: View {
                         .padding(.bottom, 5) // Increased padding
                 }
 
+                // 其它设置 Section
+                Section { 
+                    Toggle(isOn: $timerManager.showStatusBarIcon) {
+                        Text("显示菜单栏图标")
+                            .font(.body.weight(.medium))
+                    }
+                    .toggleStyle(.switch)
+                    .padding(.vertical, 6)
+                } header: { 
+                    Text("其他设置")
+                        .font(.title3) // Adjusted font size
+                        .fontWeight(.bold) // Make header bold
+                        .padding(.bottom, 5) // Increased padding
+                }
+
             }
             .formStyle(.grouped) 
             .frame(maxWidth: .infinity) // Let Form manage its internal width

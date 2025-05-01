@@ -47,6 +47,7 @@ struct FocusApp: App {
 class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDelegate {
     private var statusBarController: StatusBarController?
     private var audioPlayer: AVAudioPlayer?
+    private var mainWindowController: NSWindowController?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         // 请求通知权限
@@ -62,6 +63,13 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
 
         // 初始化菜单栏控制器
         statusBarController = StatusBarController()
+        
+        // 初始化主窗口控制器
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            if let mainWindow = NSApp.windows.first(where: { !$0.title.isEmpty }) {
+                self.mainWindowController = NSWindowController(window: mainWindow)
+            }
+        }
 
         // 设置音频播放器
         setupAudioPlayer()
@@ -86,6 +94,14 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
             self,
             selector: #selector(sendTimerNotification),
             name: .timerModeChanged,
+            object: nil
+        )
+        
+        // 监听状态栏图标可见性变化
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(statusBarIconVisibilityChanged),
+            name: .statusBarIconVisibilityChanged,
             object: nil
         )
     }
@@ -180,5 +196,29 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
                                withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
         // 即使应用程序在前台，也显示通知
         completionHandler([.banner, .sound])
+    }
+
+    // 状态栏图标可见性变化的处理
+    @objc private func statusBarIconVisibilityChanged() {
+        // 在这里可以添加额外的逻辑，如果需要的话
+        // 例如，如果图标不可见且窗口也不可见，可以将窗口设为可见
+        if !TimerManager.shared.showStatusBarIcon {
+            let windowsVisible = NSApp.windows.contains(where: { $0.isVisible })
+            if !windowsVisible {
+                // 如果没有可见窗口，显示主窗口
+                NSApp.setActivationPolicy(.regular)
+                // 检查是否已有主窗口控制器，如果没有则尝试获取
+                if mainWindowController == nil {
+                    if let mainWindow = NSApp.windows.first(where: { !$0.title.isEmpty }) {
+                        mainWindowController = NSWindowController(window: mainWindow)
+                    }
+                }
+                
+                if let controller = mainWindowController {
+                    controller.showWindow(self)
+                    NSApp.activate(ignoringOtherApps: true)
+                }
+            }
+        }
     }
 }

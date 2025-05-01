@@ -21,6 +21,7 @@ class TimerManager: ObservableObject {
     private let promptMaxIntervalKey = "promptMaxInterval"
     private let microBreakSecondsKey = "microBreakSeconds"
     private let completionTimestampsKey = "completionTimestamps" // UserDefaults key
+    private let showStatusBarIconKey = "showStatusBarIcon" // 控制状态栏图标显示的键
 
     // 发布的属性，当这些属性改变时，所有观察者都会收到通知
     @Published var minutes: Int = 90
@@ -62,6 +63,14 @@ class TimerManager: ObservableObject {
     @Published var microBreakSeconds: Int {
         didSet {
             UserDefaults.standard.set(microBreakSeconds, forKey: microBreakSecondsKey)
+        }
+    }
+    
+    @Published var showStatusBarIcon: Bool {
+        didSet {
+            UserDefaults.standard.set(showStatusBarIcon, forKey: showStatusBarIconKey)
+            // 发送通知，告知状态栏控制器更新图标的显示状态
+            NotificationCenter.default.post(name: .statusBarIconVisibilityChanged, object: nil)
         }
     }
     
@@ -131,6 +140,13 @@ class TimerManager: ObservableObject {
             self.microBreakSeconds = UserDefaults.standard.integer(forKey: microBreakSecondsKey)
         } else {
             self.microBreakSeconds = 10 // 默认值
+        }
+
+        // 状态栏图标显示设置
+        if UserDefaults.standard.object(forKey: showStatusBarIconKey) != nil {
+            self.showStatusBarIcon = UserDefaults.standard.bool(forKey: showStatusBarIconKey)
+        } else {
+            self.showStatusBarIcon = true // 默认显示
         }
 
         // 初始化计时器状态
@@ -416,4 +432,5 @@ extension Notification.Name {
     static let playPromptSound = Notification.Name("playPromptSound")
     static let playStartSound = Notification.Name("playStartSound")
     static let playEndSound = Notification.Name("playEndSound")
+    static let statusBarIconVisibilityChanged = Notification.Name("statusBarIconVisibilityChanged")
 }

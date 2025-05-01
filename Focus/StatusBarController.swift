@@ -24,6 +24,9 @@ class StatusBarController {
 
         // 获取TimerManager实例
         timerManager = TimerManager.shared
+        
+        // 根据设置决定是否显示状态栏图标
+        updateStatusBarVisibility()
 
         // 创建并设置自定义视图
         if let button = statusItem.button {
@@ -111,11 +114,18 @@ class StatusBarController {
                 self?.playSound(named: "Blow")
             }
             .store(in: &cancellables)
+
+        // 监听状态栏图标可见性更改通知
+        NotificationCenter.default.publisher(for: .statusBarIconVisibilityChanged)
+            .sink { [weak self] _ in
+                self?.updateStatusBarVisibility()
+            }
+            .store(in: &cancellables)
     }
 
     @objc private func applicationWillBecomeActive(_ notification: Notification) {
-        // 应用程序即将变为活跃状态，确保状态栏项存在
-        if statusItem.length == 0 {
+        // 应用程序即将变为活跃状态，根据设置确保状态栏项存在
+        if timerManager.showStatusBarIcon && statusItem.length == 0 {
             statusItem = statusBar.statusItem(withLength: 52)
             
             // 重新设置自定义视图
@@ -246,6 +256,38 @@ class StatusBarController {
             NSApp.setActivationPolicy(.regular)
             NSApp.activate(ignoringOtherApps: true)
             print("未找到主窗口，请确保应用程序已正确启动")
+        }
+    }
+
+    // 更新状态栏图标的可见性
+    private func updateStatusBarVisibility() {
+        // 如果设置为不显示图标，则将statusItem长度设为0（隐藏）
+        // 否则设置正常长度（显示）
+        if timerManager.showStatusBarIcon {
+            if statusItem.length == 0 {
+                statusItem.length = 52
+                
+                // 重新创建并设置自定义视图
+                if let button = statusItem.button {
+                    let frame = NSRect(x: 0, y: 0, width: 52, height: button.frame.height)
+                    statusBarView = StatusBarView(
+                        frame: frame,
+                        text: timerManager.timeString,
+                        textColor: NSColor.black
+                    )
+                    button.subviews.forEach { $0.removeFromSuperview() }
+                    button.addSubview(statusBarView!)
+                    
+                    // 重新设置点击事件
+                    button.action = #selector(toggleMainWindow(_:))
+                    button.target = self
+                }
+                
+                // 更新状态栏文本
+                updateStatusBarText()
+            }
+        } else {
+            statusItem.length = 0
         }
     }
 }
