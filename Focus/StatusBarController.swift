@@ -34,7 +34,7 @@ class StatusBarController {
                 statusBarView = StatusBarView(
                     frame: frame,
                     text: timerManager.timeString,
-                    textColor: NSColor.black
+                    textColor: NSColor.white
                 )
                 button.subviews.forEach { $0.removeFromSuperview() }
                 button.addSubview(statusBarView!)
@@ -139,7 +139,7 @@ class StatusBarController {
                     statusBarView = StatusBarView(
                         frame: frame,
                         text: timerManager.timeString,
-                        textColor: NSColor.black
+                        textColor: NSColor.white
                     )
                     button.subviews.forEach { $0.removeFromSuperview() }
                     button.addSubview(statusBarView!)
@@ -218,7 +218,7 @@ class StatusBarController {
     // 更新菜单栏项的文本
     private func updateStatusBarText() {
         let text = timerManager.statusBarText
-        let textColor = NSColor.black // 使用黑色文本，不受模式影响
+        let textColor = NSColor.white // 使用白色文本，确保在深色模式下可见
 
         // 在主线程上更新UI
         DispatchQueue.main.async { [weak self] in
@@ -278,7 +278,7 @@ class StatusBarController {
                     statusBarView = StatusBarView(
                         frame: frame,
                         text: timerManager.timeString,
-                        textColor: NSColor.black
+                        textColor: NSColor.white
                     )
                     button.subviews.forEach { $0.removeFromSuperview() }
                     button.addSubview(statusBarView!)

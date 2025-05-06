@@ -34,7 +34,7 @@ class StatusBarView: NSView {
         verticallyAlignedCell.isEditable = false
         verticallyAlignedCell.isBordered = false
         verticallyAlignedCell.backgroundColor = NSColor.clear
-        verticallyAlignedCell.textColor = NSColor.black // 使用黑色文本，不受模式影响
+        verticallyAlignedCell.textColor = NSColor.white // 使用白色文本，确保在深色模式下可见
         verticallyAlignedCell.alignment = .center
         verticallyAlignedCell.font = NSFont.monospacedDigitSystemFont(ofSize: 12, weight: .medium)
         verticallyAlignedCell.stringValue = text
@@ -88,7 +88,7 @@ class StatusBarView: NSView {
         // 更新Cell的文本
         if let cell = textField.cell as? VerticallyAlignedTextFieldCell {
             cell.stringValue = text
-            cell.textColor = NSColor.black // 保持黑色文本，不受模式影响
+            cell.textColor = NSColor.white // 保持白色文本，确保在深色模式下可见
         }
 
         needsDisplay = true
@@ -100,8 +100,8 @@ class StatusBarView: NSView {
         // 绘制圆角矩形边框
         let borderPath = NSBezierPath(roundedRect: bounds.insetBy(dx: 2, dy: 2), xRadius: 6, yRadius: 6)
 
-        // 使用黑色边框
-        NSColor.black.withAlphaComponent(0.6).setStroke() // 使用半透明黑色，看起来更柔和
+        // 使用白色边框
+        NSColor.white.withAlphaComponent(0.6).setStroke() // 使用半透明白色，看起来更柔和
         borderPath.lineWidth = 1.0
         borderPath.stroke()
     }
