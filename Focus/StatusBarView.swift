@@ -34,7 +34,7 @@ class StatusBarView: NSView {
         verticallyAlignedCell.isEditable = false
         verticallyAlignedCell.isBordered = false
         verticallyAlignedCell.backgroundColor = NSColor.clear
-        verticallyAlignedCell.textColor = NSColor.controlTextColor // 改为系统控件文本颜色
+        verticallyAlignedCell.textColor = NSColor.controlTextColor
         verticallyAlignedCell.alignment = .center
         verticallyAlignedCell.font = NSFont.monospacedDigitSystemFont(ofSize: 12, weight: .medium)
         verticallyAlignedCell.stringValue = text
@@ -48,36 +48,22 @@ class StatusBarView: NSView {
         textField.isEditable = false
         textField.isBordered = false
         textField.backgroundColor = NSColor.clear
-        textField.cell = verticallyAlignedCell // 使用自定义的垂直居中Cell
-
-        // 使文本字段的背景透明
+        textField.cell = verticallyAlignedCell
         textField.drawsBackground = false
-
-        // 设置文本字段的大小，使其填满整个视图
         textField.frame = NSRect(x: 0, y: 0, width: bounds.width, height: bounds.height)
 
         // 添加文本字段到视图
         addSubview(textField)
 
-        // 设置文本字段的约束，使其完全居中，减小左右间距
+        // 设置文本字段的约束
         textField.translatesAutoresizingMaskIntoConstraints = false
-
-        // 移除所有现有约束
         NSLayoutConstraint.deactivate(textField.constraints)
-
-        // 添加新约束，确保文本字段完全居中
         NSLayoutConstraint.activate([
-            // 水平居中
             textField.centerXAnchor.constraint(equalTo: centerXAnchor),
-            // 垂直居中
             textField.centerYAnchor.constraint(equalTo: centerYAnchor),
-            // 设置宽度为视图宽度的98%，进一步减小左右间距
             textField.widthAnchor.constraint(equalTo: widthAnchor, multiplier: 0.98),
-            // 设置高度等于视图高度
             textField.heightAnchor.constraint(equalTo: heightAnchor)
         ])
-
-        // 这段代码已经在上面设置过，这里删除重复的部分
     }
 
     // 更新文本和颜色
@@ -88,27 +74,13 @@ class StatusBarView: NSView {
         // 更新Cell的文本
         if let cell = textField.cell as? VerticallyAlignedTextFieldCell {
             cell.stringValue = text
-            cell.textColor = textColor // 使用传入的颜色
+            cell.textColor = textColor
         }
 
-        // 确保整个视图层次结构都重绘
+        // 确保视图刷新
         needsDisplay = true
-        
-        // 通知父视图也需要重绘
         if let superview = self.superview {
             superview.needsDisplay = true
         }
-    }
-
-    override func draw(_ dirtyRect: NSRect) {
-        super.draw(dirtyRect)
-
-        // 绘制圆角矩形边框
-        let borderPath = NSBezierPath(roundedRect: bounds.insetBy(dx: 2, dy: 2), xRadius: 6, yRadius: 6)
-
-        // 使用系统控件文本颜色绘制边框，保持一致性
-        NSColor.controlTextColor.withAlphaComponent(0.6).setStroke()
-        borderPath.lineWidth = 1.0
-        borderPath.stroke()
     }
 }
