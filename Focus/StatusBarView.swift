@@ -34,7 +34,7 @@ class StatusBarView: NSView {
         verticallyAlignedCell.isEditable = false
         verticallyAlignedCell.isBordered = false
         verticallyAlignedCell.backgroundColor = NSColor.clear
-        verticallyAlignedCell.textColor = NSColor.white // 使用白色文本，确保在深色模式下可见
+        verticallyAlignedCell.textColor = NSColor.controlTextColor // 改为系统控件文本颜色
         verticallyAlignedCell.alignment = .center
         verticallyAlignedCell.font = NSFont.monospacedDigitSystemFont(ofSize: 12, weight: .medium)
         verticallyAlignedCell.stringValue = text
@@ -88,10 +88,16 @@ class StatusBarView: NSView {
         // 更新Cell的文本
         if let cell = textField.cell as? VerticallyAlignedTextFieldCell {
             cell.stringValue = text
-            cell.textColor = NSColor.white // 保持白色文本，确保在深色模式下可见
+            cell.textColor = textColor // 使用传入的颜色
         }
 
+        // 确保整个视图层次结构都重绘
         needsDisplay = true
+        
+        // 通知父视图也需要重绘
+        if let superview = self.superview {
+            superview.needsDisplay = true
+        }
     }
 
     override func draw(_ dirtyRect: NSRect) {
@@ -100,8 +106,8 @@ class StatusBarView: NSView {
         // 绘制圆角矩形边框
         let borderPath = NSBezierPath(roundedRect: bounds.insetBy(dx: 2, dy: 2), xRadius: 6, yRadius: 6)
 
-        // 使用白色边框
-        NSColor.white.withAlphaComponent(0.6).setStroke() // 使用半透明白色，看起来更柔和
+        // 使用系统控件文本颜色绘制边框，保持一致性
+        NSColor.controlTextColor.withAlphaComponent(0.6).setStroke()
         borderPath.lineWidth = 1.0
         borderPath.stroke()
     }

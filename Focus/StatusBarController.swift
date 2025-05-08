@@ -8,6 +8,7 @@
 import AppKit
 import SwiftUI
 import Combine
+import Foundation
 
 class StatusBarController {
     private var statusBar: NSStatusBar
@@ -34,7 +35,7 @@ class StatusBarController {
                 statusBarView = StatusBarView(
                     frame: frame,
                     text: timerManager.timeString,
-                    textColor: NSColor.white
+                    textColor: NSColor.controlTextColor
                 )
                 button.subviews.forEach { $0.removeFromSuperview() }
                 button.addSubview(statusBarView!)
@@ -123,6 +124,20 @@ class StatusBarController {
                 self?.updateStatusBarVisibility()
             }
             .store(in: &cancellables)
+
+        // 监听系统外观变化
+        NotificationCenter.default.publisher(for: NSApplication.didChangeScreenParametersNotification)
+            .sink { [weak self] _ in
+                self?.updateStatusBarText()
+            }
+            .store(in: &cancellables)
+            
+        // 监听系统外观模式变化（深色/浅色模式切换）
+        DistributedNotificationCenter.default().publisher(for: Notification.Name("AppleInterfaceThemeChangedNotification"))
+            .sink { [weak self] _ in
+                self?.updateStatusBarText()
+            }
+            .store(in: &cancellables)
     }
 
     @objc private func applicationWillBecomeActive(_ notification: Notification) {
@@ -139,7 +154,7 @@ class StatusBarController {
                     statusBarView = StatusBarView(
                         frame: frame,
                         text: timerManager.timeString,
-                        textColor: NSColor.white
+                        textColor: NSColor.controlTextColor
                     )
                     button.subviews.forEach { $0.removeFromSuperview() }
                     button.addSubview(statusBarView!)
@@ -218,7 +233,8 @@ class StatusBarController {
     // 更新菜单栏项的文本
     private func updateStatusBarText() {
         let text = timerManager.statusBarText
-        let textColor = NSColor.white // 使用白色文本，确保在深色模式下可见
+        // 每次更新时获取当前的系统控件文本颜色
+        let textColor = NSColor.controlTextColor
 
         // 在主线程上更新UI
         DispatchQueue.main.async { [weak self] in
@@ -227,6 +243,11 @@ class StatusBarController {
 
             // 确保视图重绘
             self?.statusBarView?.needsDisplay = true
+            
+            // 强制刷新状态栏按钮
+            if let button = self?.statusItem.button {
+                button.needsDisplay = true
+            }
         }
     }
 
@@ -278,7 +299,7 @@ class StatusBarController {
                     statusBarView = StatusBarView(
                         frame: frame,
                         text: timerManager.timeString,
-                        textColor: NSColor.white
+                        textColor: NSColor.controlTextColor
                     )
                     button.subviews.forEach { $0.removeFromSuperview() }
                     button.addSubview(statusBarView!)
