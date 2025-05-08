@@ -27,11 +27,11 @@ class StatusBarController {
         
         // 根据设置决定是否创建状态栏图标
         if timerManager.showStatusBarIcon {
-            statusItem = statusBar.statusItem(withLength: 35)
+            statusItem = statusBar.statusItem(withLength: 40)
             
             // 创建并设置自定义视图
             if let button = statusItem.button {
-                let frame = NSRect(x: 0, y: 0, width: 35, height: button.frame.height)
+                let frame = NSRect(x: 0, y: 0, width: 40, height: button.frame.height)
                 statusBarView = StatusBarView(
                     frame: frame,
                     text: timerManager.timeString,
@@ -146,11 +146,11 @@ class StatusBarController {
             // 检查statusItem是否有效，如果无效或长度为0则重新创建
             if statusItem.length == 0 {
                 // 创建新的状态栏项
-                statusItem = statusBar.statusItem(withLength: 35)
+                statusItem = statusBar.statusItem(withLength: 40)
                 
                 // 重新设置自定义视图
                 if let button = statusItem.button {
-                    let frame = NSRect(x: 0, y: 0, width: 35, height: button.frame.height)
+                    let frame = NSRect(x: 0, y: 0, width: 40, height: button.frame.height)
                     statusBarView = StatusBarView(
                         frame: frame,
                         text: timerManager.timeString,
