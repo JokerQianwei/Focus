@@ -23,6 +23,7 @@ class TimerManager: ObservableObject {
     private let microBreakSecondsKey = "microBreakSeconds"
     private let completionTimestampsKey = "completionTimestamps" // UserDefaults key
     private let showStatusBarIconKey = "showStatusBarIcon" // 控制状态栏图标显示的键
+    private let enableForcedBreakKey = "enableForcedBreak" // 控制强制休息功能的键
 
     // 发布的属性，当这些属性改变时，所有观察者都会收到通知
     @Published var minutes: Int = 90
@@ -83,6 +84,13 @@ class TimerManager: ObservableObject {
                     }
                 }
             }
+        }
+    }
+    
+    // 新增强制休息功能开关
+    @Published var enableForcedBreak: Bool {
+        didSet {
+            UserDefaults.standard.set(enableForcedBreak, forKey: enableForcedBreakKey)
         }
     }
     
@@ -159,6 +167,13 @@ class TimerManager: ObservableObject {
             self.showStatusBarIcon = UserDefaults.standard.bool(forKey: showStatusBarIconKey)
         } else {
             self.showStatusBarIcon = true // 默认显示
+        }
+        
+        // 强制休息功能设置
+        if UserDefaults.standard.object(forKey: enableForcedBreakKey) != nil {
+            self.enableForcedBreak = UserDefaults.standard.bool(forKey: enableForcedBreakKey)
+        } else {
+            self.enableForcedBreak = false // 默认关闭
         }
 
         // 初始化计时器状态
@@ -378,11 +393,21 @@ class TimerManager: ObservableObject {
 
     // 安排微休息时间后的第二次提示音
     func scheduleSecondPrompt() {
+        // 如果启用了强制休息功能，则启动黑屏
+        if enableForcedBreak {
+            BlackoutManager.shared.startForcedBreak(duration: microBreakSeconds)
+        }
+        
         secondPromptTimer = Timer.scheduledTimer(withTimeInterval: TimeInterval(microBreakSeconds), repeats: false) { [weak self] _ in
             guard let self = self else { return }
 
             // 播放第二次提示音
             NotificationCenter.default.post(name: .playPromptSound, object: nil)
+            
+            // 如果黑屏功能已激活，确保结束黑屏
+            if self.enableForcedBreak && BlackoutManager.shared.isBreakActive {
+                BlackoutManager.shared.endForcedBreak()
+            }
 
             // 重新启动随机提示音计时器
             self.startPromptTimer()
@@ -396,6 +421,11 @@ class TimerManager: ObservableObject {
 
         secondPromptTimer?.invalidate()
         secondPromptTimer = nil
+        
+        // 如果黑屏功能已激活，结束黑屏
+        if enableForcedBreak && BlackoutManager.shared.isBreakActive {
+            BlackoutManager.shared.endForcedBreak()
+        }
     }
 
     // Helper function to save timestamps to UserDefaults

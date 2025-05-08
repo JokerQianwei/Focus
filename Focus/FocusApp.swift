@@ -9,11 +9,15 @@ import SwiftUI
 import UserNotifications
 import AVFoundation
 import AudioToolbox
+// 导入BlackoutManager
+import Foundation
 
 @main
 struct FocusApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @StateObject private var timerManager = TimerManager.shared
+    // 初始化BlackoutManager
+    @StateObject private var blackoutManager = BlackoutManager.shared 
 
     var body: some Scene {
         WindowGroup {

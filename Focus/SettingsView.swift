@@ -262,6 +262,30 @@ struct SettingsView: View {
                         .padding(.bottom, 5) // Increased padding
                 }
 
+                // 强制休息功能 Section
+                Section { 
+                    Toggle(isOn: $timerManager.enableForcedBreak) {
+                        Text("强制微休息")
+                            .font(.body.weight(.medium)) // Adjusted font
+                    }
+                    .toggleStyle(.switch)
+                    .disabled(timerManager.timerRunning)
+                    .padding(.vertical, 6) // Increased padding
+
+                    // Conditionally show description text
+                    if timerManager.enableForcedBreak {
+                        Text("微休息时屏幕将黑屏，显示倒计时，强制休息\(timerManager.microBreakSeconds)秒。")
+                            .font(.callout) // Adjusted font size
+                            .foregroundColor(.secondary)
+                            .padding(.top, 4) // Increased padding
+                    }
+                } header: { 
+                    Text("强制休息")
+                        .font(.title3) // Adjusted font size
+                        .fontWeight(.bold) // Make header bold
+                        .padding(.bottom, 5) // Increased padding
+                }
+
                 // 其它设置 Section
                 Section { 
                     Toggle(isOn: $timerManager.showStatusBarIcon) {
