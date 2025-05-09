@@ -9,6 +9,40 @@ import Cocoa
 import SwiftUI
 import Combine
 
+// 倒计时状态管理类
+class BlackoutCountdownState: ObservableObject {
+    @Published var remainingSeconds: Int = 0
+    private var cancellable: AnyCancellable?
+    
+    func startCountdown(from seconds: Int) {
+        // 设置初始值
+        remainingSeconds = seconds
+        
+        // 取消现有订阅
+        cancellable?.cancel()
+        
+        // 创建新的计时器发布者
+        let timerPublisher = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
+        
+        // 订阅计时器事件
+        cancellable = timerPublisher.sink { [weak self] _ in
+            guard let self = self else { return }
+            if self.remainingSeconds > 0 {
+                self.remainingSeconds -= 1
+                print("Countdown state updated: \(self.remainingSeconds) seconds remaining")
+            }
+        }
+    }
+    
+    func stopCountdown() {
+        cancellable?.cancel()
+    }
+    
+    deinit {
+        cancellable?.cancel()
+    }
+}
+
 class BlackoutWindowController: NSWindowController {
     // 单例模式
     static let shared = BlackoutWindowController()
@@ -24,6 +58,9 @@ class BlackoutWindowController: NSWindowController {
     
     // 记录开始时间
     private var startTime: TimeInterval = 0
+    
+    // 添加倒计时状态管理器
+    private let countdownState = BlackoutCountdownState()
     
     // 初始化方法
     private override init(window: NSWindow?) {
@@ -69,7 +106,8 @@ class BlackoutWindowController: NSWindowController {
     // 设置内容视图的辅助方法
     private func setupContentView() {
         let countdownView = BlackoutCountdownView(
-            onSkip: { self.hideBlackoutWindow() }
+            onSkip: { self.hideBlackoutWindow() },
+            countdownState: countdownState  // 传递状态对象
         )
         
         let hostingController = NSHostingController(rootView: countdownView)
@@ -201,6 +239,9 @@ class BlackoutWindowController: NSWindowController {
         
         // 使用DispatchQueue.main.async确保在主线程上运行
         DispatchQueue.main.async {
+            // 启动共享的倒计时状态
+            self.countdownState.startCountdown(from: self.timerManager.microBreakSeconds)
+            
             // 使用Timer来确保在休息结束时自动关闭黑屏
             self.countdownTimer = Timer.scheduledTimer(withTimeInterval: TimeInterval(self.timerManager.microBreakSeconds), repeats: false) { [weak self] _ in
                 self?.hideBlackoutWindow()
@@ -220,6 +261,7 @@ class BlackoutWindowController: NSWindowController {
     private func stopCountdownTimer() {
         countdownTimer?.invalidate()
         countdownTimer = nil
+        countdownState.stopCountdown()
     }
 }
 
@@ -227,8 +269,9 @@ class BlackoutWindowController: NSWindowController {
 struct BlackoutCountdownView: View {
     var onSkip: () -> Void
     @State private var scale: CGFloat = 1.0
-    @State private var remainingSeconds: Int = 0
-    @State private var timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
+    
+    // 使用ObservedObject而不是State来观察共享的倒计时状态
+    @ObservedObject var countdownState: BlackoutCountdownState
     
     var body: some View {
         ZStack {
@@ -236,8 +279,8 @@ struct BlackoutCountdownView: View {
             Color.black.edgesIgnoringSafeArea(.all)
             
             VStack(spacing: 40) {
-                // 倒计时显示
-                Text("\(remainingSeconds) seconds")
+                // 倒计时显示，使用共享状态的值
+                Text("\(countdownState.remainingSeconds) seconds")
                     .font(.system(size: 36, weight: .bold))
                     .foregroundColor(.white)
                 
@@ -267,12 +310,7 @@ struct BlackoutCountdownView: View {
             }
         }
         .onAppear {
-            self.remainingSeconds = TimerManager.shared.microBreakSeconds
-        }
-        .onReceive(timer) { _ in
-            if self.remainingSeconds > 0 {
-                self.remainingSeconds -= 1
-            }
+            print("BlackoutCountdownView appeared with \(countdownState.remainingSeconds) seconds")
         }
     }
 }
