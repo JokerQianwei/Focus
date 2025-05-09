@@ -24,6 +24,7 @@ class TimerManager: ObservableObject {
     private let completionTimestampsKey = "completionTimestamps" // UserDefaults key
     private let showStatusBarIconKey = "showStatusBarIcon" // 控制状态栏图标显示的键
     private let blackoutEnabledKey = "blackoutEnabled" // 控制黑屏功能的键
+    private let muteAudioDuringBreakKey = "muteAudioDuringBreak" // 控制微休息期间暂停媒体播放的键
 
     // 发布的属性，当这些属性改变时，所有观察者都会收到通知
     @Published var minutes: Int = 90
@@ -33,6 +34,12 @@ class TimerManager: ObservableObject {
     @Published var blackoutEnabled: Bool = false {
         didSet {
             UserDefaults.standard.set(blackoutEnabled, forKey: blackoutEnabledKey)
+        }
+    }
+    
+    @Published var muteAudioDuringBreak: Bool {
+        didSet {
+            UserDefaults.standard.set(muteAudioDuringBreak, forKey: muteAudioDuringBreakKey)
         }
     }
     
@@ -172,6 +179,13 @@ class TimerManager: ObservableObject {
             self.blackoutEnabled = UserDefaults.standard.bool(forKey: blackoutEnabledKey)
         } else {
             self.blackoutEnabled = false // 默认不启用
+        }
+
+        // 微休息期间音频静音设置
+        if UserDefaults.standard.object(forKey: muteAudioDuringBreakKey) != nil {
+            self.muteAudioDuringBreak = UserDefaults.standard.bool(forKey: muteAudioDuringBreakKey)
+        } else {
+            self.muteAudioDuringBreak = true // 默认启用
         }
 
         // 初始化计时器状态
