@@ -378,14 +378,14 @@ struct SettingsView: View {
                     settingsSection(title: "视频控制", systemImage: "play.slash") {
                         VStack(spacing: 12) {
                             Toggle(isOn: $timerManager.muteAudioDuringBreak) {
-                                Text("微休息时暂停视频")
+                                Text("微休息时暂停/播放视频")
                                     .foregroundColor(.primary)
                             }
                             .toggleStyle(SwitchToggleStyle(tint: .accentColor))
                             .disabled(timerManager.timerRunning)
                             
                             if timerManager.muteAudioDuringBreak {
-                                Text("提示音响起时，将暂停正在播放的视频及音乐，微休息结束后恢复播放。")
+                                Text("微休息期间自动切换播放/暂停状态，观看视频/网课时建议开启，其他场景可关闭。（首次使用需授予辅助功能权限）")
                                     .font(.footnote)
                                     .foregroundColor(.secondary)
                                     .padding(.top, 2)
