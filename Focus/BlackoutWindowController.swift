@@ -22,6 +22,9 @@ class BlackoutWindowController: NSWindowController {
     // 存储额外的黑屏窗口
     private var blackoutWindows: [NSWindow] = []
     
+    // 记录开始时间
+    private var startTime: TimeInterval = 0
+    
     // 初始化方法
     private override init(window: NSWindow?) {
         // 创建全屏黑色窗口
@@ -201,21 +204,32 @@ class BlackoutWindowController: NSWindowController {
     private func startCountdownTimer() {
         stopCountdownTimer() // 确保先停止可能存在的计时器
         
-        // 在主线程运行计时器以确保UI更新流畅
+        // 使用DispatchQueue.main.async确保在主线程上运行
         DispatchQueue.main.async {
-            self.countdownTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
+            // 使用CADisplayLink来确保平滑更新，与屏幕刷新率同步
+            self.countdownTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
                 guard let self = self else { return }
                 
-                if self.secondsRemaining > 1 {
-                    self.secondsRemaining -= 1
+                if self.secondsRemaining > 0 {
+                    // 每0.1秒更新一次，但只有在整秒变化时才改变显示
+                    let newSeconds = Int(ceil(Double(self.timerManager.microBreakSeconds) - 
+                                        (Date().timeIntervalSince1970 - self.startTime)))
+                    
+                    if newSeconds != self.secondsRemaining {
+                        self.secondsRemaining = max(0, newSeconds)
+                    }
                 } else {
                     self.hideBlackoutWindow()
                 }
             }
-            // 确保计时器在主RunLoop运行
+            
+            // 确保计时器在主RunLoop运行，优先级设为最高
             if let timer = self.countdownTimer {
                 RunLoop.main.add(timer, forMode: .common)
             }
+            
+            // 记录开始时间
+            self.startTime = Date().timeIntervalSince1970
         }
     }
     
@@ -231,122 +245,44 @@ struct BlackoutCountdownView: View {
     @Binding var secondsRemaining: Int
     var onSkip: () -> Void
     @State private var scale: CGFloat = 1.0
-    @State private var breatheIn = false
     
     var body: some View {
         ZStack {
-            // 为纯黑色背景添加一点渐变，使其看起来更柔和
-            LinearGradient(
-                gradient: Gradient(colors: [Color.black, Color(red: 0.05, green: 0.05, blue: 0.1)]),
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-            .edgesIgnoringSafeArea(.all)
+            // 简单黑色背景
+            Color.black.edgesIgnoringSafeArea(.all)
             
-            // 添加轻微的圆形光晕效果
-            Circle()
-                .fill(Color.blue.opacity(0.05))
-                .frame(width: 300, height: 300)
-                .blur(radius: 70)
-                .scaleEffect(breatheIn ? 1.1 : 0.9)
-                .animation(
-                    Animation.easeInOut(duration: 4)
-                        .repeatForever(autoreverses: true),
-                    value: breatheIn
-                )
-                .onAppear { breatheIn = true }
-            
-            VStack(spacing: 40) {
-                // 倒计时标题
-                Text("微休息时间")
-                    .font(.system(size: 46, weight: .bold, design: .rounded))
+            VStack(spacing: 60) {
+                // 只保留倒计时数字，让它更大更醒目
+                Text("\(secondsRemaining)")
+                    .font(.system(size: 120, weight: .bold, design: .rounded))
                     .foregroundColor(.white)
-                    .shadow(color: Color.blue.opacity(0.7), radius: 15, x: 0, y: 0)
+                    .monospacedDigit()
                 
-                // 优雅的倒计时圆环
-                ZStack {
-                    // 背景圆环
-                    Circle()
-                        .stroke(lineWidth: 15)
-                        .opacity(0.1)
-                        .foregroundColor(.white)
-                    
-                    // 进度圆环
-                    Circle()
-                        .trim(from: 0.0, to: min(1.0, CGFloat(secondsRemaining) / CGFloat(timerManager.microBreakSeconds)))
-                        .stroke(style: StrokeStyle(lineWidth: 15, lineCap: .round, lineJoin: .round))
-                        .foregroundColor(.blue)
-                        .rotationEffect(.degrees(-90))
-                        .animation(.easeInOut, value: secondsRemaining)
-                    
-                    // 倒计时数字
-                    Text("\(secondsRemaining)")
-                        .font(.system(size: 70, weight: .bold, design: .rounded))
-                        .foregroundColor(.white)
-                        .monospacedDigit()
-                        .shadow(color: Color.blue.opacity(0.7), radius: 10, x: 0, y: 0)
-                }
-                .frame(width: 200, height: 200)
-                
-                // 滚动切换的休息提示语
-                Text(restPromptForTime(secondsRemaining))
-                    .font(.system(size: 30, weight: .medium, design: .rounded))
-                    .foregroundColor(.gray)
-                    .padding(.top, 10)
-                    .frame(height: 40)
-                    .id(secondsRemaining % 5) // 每5秒切换一次提示
-                    .transition(.move(edge: .top).combined(with: .opacity))
-                    .animation(.easeInOut, value: secondsRemaining % 5)
-                
-                // 更美观的跳过按钮
+                // 简化的跳过按钮
                 Button(action: onSkip) {
                     Text("跳过休息")
-                        .font(.system(size: 20, weight: .semibold))
+                        .font(.system(size: 22, weight: .semibold))
                         .foregroundColor(.white)
-                        .padding(.horizontal, 35)
-                        .padding(.vertical, 15)
+                        .padding(.horizontal, 40)
+                        .padding(.vertical, 16)
                         .background(
-                            RoundedRectangle(cornerRadius: 30)
-                                .fill(
-                                    LinearGradient(
-                                        gradient: Gradient(colors: [Color.blue.opacity(0.6), Color.purple.opacity(0.3)]),
-                                        startPoint: .leading,
-                                        endPoint: .trailing
-                                    )
-                                )
+                            RoundedRectangle(cornerRadius: 12)
+                                .fill(Color.gray.opacity(0.3))
                         )
                         .overlay(
-                            RoundedRectangle(cornerRadius: 30)
-                                .stroke(Color.white.opacity(0.3), lineWidth: 2)
-                                .blur(radius: 1)
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(Color.white.opacity(0.5), lineWidth: 1)
                         )
                 }
                 .buttonStyle(PlainButtonStyle())
-                .padding(.top, 40)
                 .scaleEffect(scale)
-                .shadow(color: Color.black.opacity(0.5), radius: 10, x: 0, y: 5)
                 .onHover { hovering in
-                    withAnimation(.spring()) {
-                        scale = hovering ? 1.1 : 1.0
+                    withAnimation(.easeOut(duration: 0.2)) {
+                        scale = hovering ? 1.05 : 1.0
                     }
                 }
             }
-            .padding(50)
         }
-    }
-    
-    // 不同时间段显示不同的休息提示
-    private func restPromptForTime(_ seconds: Int) -> String {
-        let prompts = [
-            "闭上眼睛，深呼吸...",
-            "放松你的肩膀和脖子...",
-            "向远处看看，缓解眼睛疲劳...",
-            "站起来活动一下身体...",
-            "放松一下，片刻即回",
-            "喝口水，保持水分补充"
-        ]
-        
-        return prompts[abs(seconds / 5) % prompts.count]
     }
 }
 
