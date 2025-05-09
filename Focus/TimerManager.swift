@@ -232,7 +232,7 @@ class TimerManager: ObservableObject {
         if UserDefaults.standard.object(forKey: muteAudioDuringBreakKey) != nil {
             self.muteAudioDuringBreak = UserDefaults.standard.bool(forKey: muteAudioDuringBreakKey)
         } else {
-            self.muteAudioDuringBreak = true // 默认启用
+            self.muteAudioDuringBreak = false // 默认关闭视频控制
         }
         
         // 微休息开始声音设置
@@ -240,7 +240,7 @@ class TimerManager: ObservableObject {
            let soundType = SoundType(rawValue: soundTypeString) {
             self.microBreakStartSoundType = soundType
         } else {
-            self.microBreakStartSoundType = .tink // 默认值
+            self.microBreakStartSoundType = .glass // 默认值改为玻璃声
         }
 
         // 微休息结束声音设置
@@ -248,7 +248,7 @@ class TimerManager: ObservableObject {
            let soundType = SoundType(rawValue: soundTypeString) {
             self.microBreakEndSoundType = soundType
         } else {
-            self.microBreakEndSoundType = .hero // 默认值
+            self.microBreakEndSoundType = .hero // 默认值改为完成声
         }
 
         // 初始化计时器状态
