@@ -9,6 +9,7 @@ import SwiftUI
 
 struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.colorScheme) private var colorScheme
 
     // 使用TimerManager
     @ObservedObject var timerManager: TimerManager
@@ -20,6 +21,10 @@ struct SettingsView: View {
     @State private var promptMaxInput: String
     @State private var microBreakInput: String
     @State private var isHoveringClose = false // State for close button hover
+    
+    // 动画状态
+    @State private var activeSection: String? = nil
+    @Namespace private var animation
 
     init(timerManager: TimerManager) {
         self.timerManager = timerManager
@@ -33,11 +38,13 @@ struct SettingsView: View {
     }
 
     var body: some View {
-        VStack(spacing: 24) {
+        VStack(spacing: 0) {
+            // 顶部标题栏
             HStack {
                 Text("设置")
                     .font(.title2)
-                    .fontWeight(.bold)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.primary)
                 
                 Spacer()
                 
@@ -46,33 +53,39 @@ struct SettingsView: View {
                 }) {
                     Image(systemName: "xmark.circle.fill")
                         .font(.title3)
-                        .foregroundColor(isHoveringClose ? .red : .gray)
+                        .symbolRenderingMode(.hierarchical)
+                        .foregroundStyle(isHoveringClose ? .red : .secondary)
                 }
                 .buttonStyle(PlainButtonStyle())
                 .onHover { hovering in
-                    isHoveringClose = hovering
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        isHoveringClose = hovering
+                    }
                 }
             }
-            .padding(.top, 8)
+            .padding(.horizontal)
+            .padding(.top, 16)
+            .padding(.bottom, 12)
             
             Divider()
+                .padding(.horizontal)
             
             ScrollView {
-                VStack(alignment: .leading, spacing: 24) {
+                VStack(alignment: .leading, spacing: 28) {
                     // 计时选项 Section
-                    Section { 
-                        Grid(alignment: .leadingFirstTextBaseline, horizontalSpacing: 15, verticalSpacing: 12) { // Increased spacing
+                    settingsSection(title: "计时", systemImage: "timer") {
+                        VStack(spacing: 16) {
                             // 专注时间
-                            GridRow {
+                            HStack(alignment: .center) {
                                 Text("专注时间")
-                                    .font(.body.weight(.medium)) // Adjusted font
-                                    .gridColumnAlignment(.leading)
-
-                                HStack {
-                                    Spacer()
+                                    .foregroundColor(.primary)
+                                
+                                Spacer()
+                                
+                                HStack(spacing: 4) {
                                     TextField("", text: $workMinutesInput)
-                                        .textFieldStyle(RoundedBorderTextFieldStyle())
-                                        .frame(width: 60) 
+                                        .textFieldStyle(RoundedInputStyle())
+                                        .frame(width: 70)
                                         .multilineTextAlignment(.trailing)
                                         .disabled(timerManager.timerRunning)
                                         .onChange(of: workMinutesInput) { _, newValue in
@@ -85,27 +98,25 @@ struct SettingsView: View {
                                                 }
                                             }
                                         }
-                                        .focusEffectDisabled()
 
                                     Text("分钟")
                                         .foregroundColor(.secondary)
-                                        .frame(width: 30, alignment: .leading) 
                                 }
                             }
-
-                            Divider() // Add divider between rows
-
+                            
+                            Divider()
+                            
                             // 休息时间
-                            GridRow {
+                            HStack(alignment: .center) {
                                 Text("休息时间")
-                                    .font(.body.weight(.medium)) // Adjusted font
-                                    .gridColumnAlignment(.leading)
-
-                                HStack {
-                                    Spacer()
+                                    .foregroundColor(.primary)
+                                
+                                Spacer()
+                                
+                                HStack(spacing: 4) {
                                     TextField("", text: $breakMinutesInput)
-                                        .textFieldStyle(RoundedBorderTextFieldStyle())
-                                        .frame(width: 60)
+                                        .textFieldStyle(RoundedInputStyle())
+                                        .frame(width: 70)
                                         .multilineTextAlignment(.trailing)
                                         .disabled(timerManager.timerRunning)
                                         .onChange(of: breakMinutesInput) { _, newValue in
@@ -115,37 +126,29 @@ struct SettingsView: View {
                                                 timerManager.breakMinutes = minutes
                                             }
                                         }
-                                        .focusEffectDisabled()
 
                                     Text("分钟")
                                         .foregroundColor(.secondary)
-                                        .frame(width: 30, alignment: .leading)
                                 }
                             }
-
-                            // Divider() // Remove divider after the last row in this section
                         }
-                    } header: { 
-                        Text("计时")
-                            .font(.title3) // Adjusted font size
-                            .fontWeight(.bold) // Make header bold
-                            .padding(.bottom, 5) // Increased padding
+                        .padding(.vertical, 8)
                     }
-
+                    
                     // 提示音间隔 Section
-                    Section { 
-                        Grid(alignment: .leadingFirstTextBaseline, horizontalSpacing: 15, verticalSpacing: 12) { // Increased spacing
+                    settingsSection(title: "随机提示音间隔", systemImage: "bell.badge") {
+                        VStack(spacing: 16) {
                             // 最小间隔
-                            GridRow {
+                            HStack(alignment: .center) {
                                 Text("最小间隔")
-                                    .font(.body.weight(.medium)) // Adjusted font
-                                    .gridColumnAlignment(.leading)
-
-                                HStack {
-                                    Spacer()
+                                    .foregroundColor(.primary)
+                                
+                                Spacer()
+                                
+                                HStack(spacing: 4) {
                                     TextField("", text: $promptMinInput)
-                                        .textFieldStyle(RoundedBorderTextFieldStyle())
-                                        .frame(width: 60)
+                                        .textFieldStyle(RoundedInputStyle())
+                                        .frame(width: 70)
                                         .multilineTextAlignment(.trailing)
                                         .disabled(timerManager.timerRunning)
                                         .onChange(of: promptMinInput) { _, newValue in
@@ -155,27 +158,25 @@ struct SettingsView: View {
                                                 timerManager.promptMinInterval = minutes
                                             }
                                         }
-                                        .focusEffectDisabled()
 
                                     Text("分钟")
                                         .foregroundColor(.secondary)
-                                        .frame(width: 30, alignment: .leading)
                                 }
                             }
-
-                            Divider() // Add divider between rows
-
+                            
+                            Divider()
+                            
                             // 最大间隔
-                            GridRow {
+                            HStack(alignment: .center) {
                                 Text("最大间隔")
-                                    .font(.body.weight(.medium)) // Adjusted font
-                                    .gridColumnAlignment(.leading)
-
-                                HStack {
-                                    Spacer()
+                                    .foregroundColor(.primary)
+                                
+                                Spacer()
+                                
+                                HStack(spacing: 4) {
                                     TextField("", text: $promptMaxInput)
-                                        .textFieldStyle(RoundedBorderTextFieldStyle())
-                                        .frame(width: 60)
+                                        .textFieldStyle(RoundedInputStyle())
+                                        .frame(width: 70)
                                         .multilineTextAlignment(.trailing)
                                         .disabled(timerManager.timerRunning)
                                         .onChange(of: promptMaxInput) { _, newValue in
@@ -185,27 +186,25 @@ struct SettingsView: View {
                                                 timerManager.promptMaxInterval = minutes
                                             }
                                         }
-                                        .focusEffectDisabled()
 
                                     Text("分钟")
                                         .foregroundColor(.secondary)
-                                        .frame(width: 30, alignment: .leading)
                                 }
                             }
-
-                            Divider() // Add divider between rows
-
+                            
+                            Divider()
+                            
                             // 微休息
-                            GridRow {
+                            HStack(alignment: .center) {
                                 Text("微休息")
-                                    .font(.body.weight(.medium)) // Adjusted font
-                                    .gridColumnAlignment(.leading)
-
-                                HStack {
-                                    Spacer()
+                                    .foregroundColor(.primary)
+                                
+                                Spacer()
+                                
+                                HStack(spacing: 4) {
                                     TextField("", text: $microBreakInput)
-                                        .textFieldStyle(RoundedBorderTextFieldStyle())
-                                        .frame(width: 60)
+                                        .textFieldStyle(RoundedInputStyle())
+                                        .frame(width: 70)
                                         .multilineTextAlignment(.trailing)
                                         .disabled(timerManager.timerRunning)
                                         .onChange(of: microBreakInput) { _, newValue in
@@ -215,118 +214,150 @@ struct SettingsView: View {
                                                 timerManager.microBreakSeconds = seconds
                                             }
                                         }
-                                        .focusEffectDisabled()
 
                                     Text("秒")
                                         .foregroundColor(.secondary)
-                                        .frame(width: 30, alignment: .leading)
                                 }
                             }
                         }
-
-                    } header: { 
-                        Text("随机提示音间隔")
-                            .font(.title3) // Adjusted font size
-                            .fontWeight(.bold) // Make header bold
-                            .padding(.bottom, 5) // Increased padding
+                        .padding(.vertical, 8)
                     }
-
+                    
                     // 提示音开关 Section
-                    Section { 
-                        Toggle(isOn: $timerManager.promptSoundEnabled) {
-                            Text("专注期间提示音")
-                                .font(.body.weight(.medium)) // Adjusted font
+                    settingsSection(title: "提示音", systemImage: "speaker.wave.2") {
+                        VStack(spacing: 12) {
+                            Toggle(isOn: $timerManager.promptSoundEnabled) {
+                                Text("专注期间提示音")
+                                    .foregroundColor(.primary)
+                            }
+                            .toggleStyle(SwitchToggleStyle(tint: .accentColor))
+                            .disabled(timerManager.timerRunning)
+                            
+                            if timerManager.promptSoundEnabled {
+                                Text("每隔 \(timerManager.promptMinInterval)-\(timerManager.promptMaxInterval) 分钟播放提示音，并在 \(timerManager.microBreakSeconds) 秒后再次响起。")
+                                    .font(.footnote)
+                                    .foregroundColor(.secondary)
+                                    .padding(.top, 2)
+                                    .padding(.leading, 4)
+                                    .animation(.easeInOut, value: timerManager.promptSoundEnabled)
+                            }
                         }
-                        .toggleStyle(.switch)
-                        .disabled(timerManager.timerRunning)
-                        .padding(.vertical, 6) // Increased padding
-
-                        // Conditionally show description text
-                        if timerManager.promptSoundEnabled {
-                            Text("每隔 \(timerManager.promptMinInterval)-\(timerManager.promptMaxInterval) 分钟播放提示音，并在 \(timerManager.microBreakSeconds) 秒后再次响起。")
-                                .font(.callout) // Adjusted font size
-                                .foregroundColor(.secondary)
-                                .padding(.top, 4) // Increased padding
-                        }
-                    } header: { 
-                        Text("提示音")
-                            .font(.title3) // Adjusted font size
-                            .fontWeight(.bold) // Make header bold
-                            .padding(.bottom, 5) // Increased padding
+                        .padding(.vertical, 8)
                     }
                     
                     // 黑屏设置 Section
-                    Section {
-                        Toggle(isOn: $timerManager.blackoutEnabled) {
-                            Text("微休息黑屏")
-                                .font(.body.weight(.medium))
+                    settingsSection(title: "黑屏功能", systemImage: "display") {
+                        VStack(spacing: 12) {
+                            Toggle(isOn: $timerManager.blackoutEnabled) {
+                                Text("微休息黑屏")
+                                    .foregroundColor(.primary)
+                            }
+                            .toggleStyle(SwitchToggleStyle(tint: .accentColor))
+                            .disabled(timerManager.timerRunning)
+                            
+                            if timerManager.blackoutEnabled {
+                                Text("提示音响起时，将显示全屏黑色窗口，并在休息结束后自动关闭。")
+                                    .font(.footnote)
+                                    .foregroundColor(.secondary)
+                                    .padding(.top, 2)
+                                    .padding(.leading, 4)
+                                    .animation(.easeInOut, value: timerManager.blackoutEnabled)
+                            }
                         }
-                        .toggleStyle(.switch)
-                        .disabled(timerManager.timerRunning)
-                        .padding(.vertical, 6)
-                        
-                        if timerManager.blackoutEnabled {
-                            Text("提示音响起时，将显示全屏黑色窗口，并在休息结束后自动关闭。")
-                                .font(.callout)
-                                .foregroundColor(.secondary)
-                                .padding(.top, 4)
-                        }
-                    } header: {
-                        Text("黑屏功能")
-                            .font(.title3)
-                            .fontWeight(.bold)
-                            .padding(.bottom, 5)
+                        .padding(.vertical, 8)
                     }
-
+                    
                     // 视频暂停功能 Section
-                    Section {
-                        Toggle(isOn: $timerManager.muteAudioDuringBreak) {
-                            Text("微休息时暂停视频")
-                                .font(.body.weight(.medium))
+                    settingsSection(title: "视频控制", systemImage: "play.slash") {
+                        VStack(spacing: 12) {
+                            Toggle(isOn: $timerManager.muteAudioDuringBreak) {
+                                Text("微休息时暂停视频")
+                                    .foregroundColor(.primary)
+                            }
+                            .toggleStyle(SwitchToggleStyle(tint: .accentColor))
+                            .disabled(timerManager.timerRunning)
+                            
+                            if timerManager.muteAudioDuringBreak {
+                                Text("提示音响起时，将暂停正在播放的视频及音乐，微休息结束后恢复播放。")
+                                    .font(.footnote)
+                                    .foregroundColor(.secondary)
+                                    .padding(.top, 2)
+                                    .padding(.leading, 4)
+                                    .animation(.easeInOut, value: timerManager.muteAudioDuringBreak)
+                            }
                         }
-                        .toggleStyle(.switch)
-                        .disabled(timerManager.timerRunning)
-                        .padding(.vertical, 6)
-                        
-                        if timerManager.muteAudioDuringBreak {
-                            Text("提示音响起时，将暂停正在播放的视频及音乐，微休息结束后恢复播放。")
-                                .font(.callout)
-                                .foregroundColor(.secondary)
-                                .padding(.top, 4)
-                        }
-                    } header: {
-                        Text("视频控制")
-                            .font(.title3)
-                            .fontWeight(.bold)
-                            .padding(.bottom, 5)
+                        .padding(.vertical, 8)
                     }
-
+                    
                     // 其它设置 Section
-                    Section { 
-                        Toggle(isOn: $timerManager.showStatusBarIcon) {
-                            Text("显示菜单栏图标")
-                                .font(.body.weight(.medium))
+                    settingsSection(title: "其他设置", systemImage: "gearshape") {
+                        VStack(spacing: 12) {
+                            Toggle(isOn: $timerManager.showStatusBarIcon) {
+                                Text("显示菜单栏图标")
+                                    .foregroundColor(.primary)
+                            }
+                            .toggleStyle(SwitchToggleStyle(tint: .accentColor))
                         }
-                        .toggleStyle(.switch)
-                        .padding(.vertical, 6)
-                    } header: { 
-                        Text("其他设置")
-                            .font(.title3) // Adjusted font size
-                            .fontWeight(.bold) // Make header bold
-                            .padding(.bottom, 5) // Increased padding
+                        .padding(.vertical, 8)
                     }
-
                 }
-                .padding(.vertical, 8)
+                .padding(.horizontal)
+                .padding(.vertical, 16)
             }
         }
-        .padding()
-        .frame(width: 300, height: 480)
+        .frame(width: 340, height: 520)
         .background(Color(NSColor.windowBackgroundColor))
+        .fixedSize(horizontal: true, vertical: true)
+    }
+    
+    // 通用的设置区块
+    @ViewBuilder
+    private func settingsSection<Content: View>(title: String, systemImage: String, @ViewBuilder content: @escaping () -> Content) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 6) {
+                Image(systemName: systemImage)
+                    .font(.headline)
+                    .foregroundColor(.accentColor)
+                
+                Text(title)
+                    .font(.headline)
+                    .foregroundColor(.primary)
+            }
+            
+            VStack {
+                content()
+            }
+            .padding(12)
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(colorScheme == .dark ? Color(.windowBackgroundColor).opacity(0.3) : Color(.controlBackgroundColor))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(Color.secondary.opacity(0.2), lineWidth: 1)
+            )
+        }
+    }
+}
+
+// 自定义圆角输入框样式
+struct RoundedInputStyle: TextFieldStyle {
+    func _body(configuration: TextField<Self._Label>) -> some View {
+        configuration
+            .padding(6)
+            .background(
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(Color(.textBackgroundColor))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(Color.secondary.opacity(0.3), lineWidth: 1)
+            )
+            .shadow(color: Color.black.opacity(0.03), radius: 1, x: 0, y: 1)
     }
 }
 
 #Preview {
     SettingsView(timerManager: TimerManager.shared)
-        .frame(width: 350, height: 550) // Set frame for preview canvas
+        .frame(width: 340, height: 520) // Set frame for preview canvas
 }
