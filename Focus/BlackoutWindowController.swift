@@ -286,10 +286,10 @@ struct BlackoutCountdownView: View {
                     .foregroundColor(.white)
                     .monospacedDigit()
                 
-                Text("seconds")
-                    .font(.system(size: 20, weight: .regular, design: .rounded))
-                    .foregroundColor(.white.opacity(0.8))
-                    .tracking(1.2)
+                // Text("seconds")
+                //     .font(.system(size: 20, weight: .regular, design: .rounded))
+                //     .foregroundColor(.white.opacity(0.8))
+                //     .tracking(1.2)
             }
             
             // 左上角的关闭按钮
