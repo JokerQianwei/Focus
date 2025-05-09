@@ -257,27 +257,16 @@ struct SettingsView: View {
                                     }
                                     .pickerStyle(MenuPickerStyle())
                                     .disabled(timerManager.timerRunning || !timerManager.promptSoundEnabled)
-                                }
-                                
-                                // 预览按钮
-                                HStack {
-                                    Spacer()
-                                    Button(action: {
-                                        // 播放选中的音效
-                                        NotificationCenter.default.post(
-                                            name: .playMicroBreakStartSound,
-                                            object: timerManager.microBreakStartSoundType.rawValue
-                                        )
-                                    }) {
-                                        Image(systemName: "play.circle")
-                                            .foregroundColor(.accentColor)
-                                        Text("试听")
-                                            .foregroundColor(.accentColor)
+                                    .onChange(of: timerManager.microBreakStartSoundType) { _, newValue in
+                                        // 选择后直接播放音效
+                                        if timerManager.promptSoundEnabled {
+                                            NotificationCenter.default.post(
+                                                name: .playMicroBreakStartSound,
+                                                object: newValue.rawValue
+                                            )
+                                        }
                                     }
-                                    .buttonStyle(PlainButtonStyle())
-                                    .disabled(!timerManager.promptSoundEnabled)
                                 }
-                                .padding(.leading, 20)
                                 
                                 Divider()
                                 
@@ -295,27 +284,16 @@ struct SettingsView: View {
                                     }
                                     .pickerStyle(MenuPickerStyle())
                                     .disabled(timerManager.timerRunning || !timerManager.promptSoundEnabled)
-                                }
-                                
-                                // 预览按钮
-                                HStack {
-                                    Spacer()
-                                    Button(action: {
-                                        // 播放选中的音效
-                                        NotificationCenter.default.post(
-                                            name: .playMicroBreakEndSound,
-                                            object: timerManager.microBreakEndSoundType.rawValue
-                                        )
-                                    }) {
-                                        Image(systemName: "play.circle")
-                                            .foregroundColor(.accentColor)
-                                        Text("试听")
-                                            .foregroundColor(.accentColor)
+                                    .onChange(of: timerManager.microBreakEndSoundType) { _, newValue in
+                                        // 选择后直接播放音效
+                                        if timerManager.promptSoundEnabled {
+                                            NotificationCenter.default.post(
+                                                name: .playMicroBreakEndSound,
+                                                object: newValue.rawValue
+                                            )
+                                        }
                                     }
-                                    .buttonStyle(PlainButtonStyle())
-                                    .disabled(!timerManager.promptSoundEnabled)
                                 }
-                                .padding(.leading, 20)
                             }
                         }
                         .padding(.vertical, 8)
