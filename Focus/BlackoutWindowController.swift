@@ -14,7 +14,6 @@ class BlackoutWindowController: NSWindowController {
     
     private let timerManager = TimerManager.shared
     private var countdownTimer: Timer?
-    private var secondsRemaining: Int = 0
     
     // 黑屏窗口状态
     private var isActive = false
@@ -69,10 +68,6 @@ class BlackoutWindowController: NSWindowController {
     // 设置内容视图的辅助方法
     private func setupContentView() {
         let countdownView = BlackoutCountdownView(
-            secondsRemaining: Binding<Int>(
-                get: { self.secondsRemaining },
-                set: { self.secondsRemaining = $0 }
-            ),
             onSkip: { self.hideBlackoutWindow() }
         )
         
@@ -94,7 +89,6 @@ class BlackoutWindowController: NSWindowController {
         guard !isActive, timerManager.blackoutEnabled else { return }
         
         isActive = true
-        secondsRemaining = timerManager.microBreakSeconds
         
         // 为每个屏幕创建覆盖窗口
         createOverlayWindowsForAllScreens()
@@ -206,21 +200,9 @@ class BlackoutWindowController: NSWindowController {
         
         // 使用DispatchQueue.main.async确保在主线程上运行
         DispatchQueue.main.async {
-            // 使用CADisplayLink来确保平滑更新，与屏幕刷新率同步
-            self.countdownTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
-                guard let self = self else { return }
-                
-                if self.secondsRemaining > 0 {
-                    // 每0.1秒更新一次，但只有在整秒变化时才改变显示
-                    let newSeconds = Int(ceil(Double(self.timerManager.microBreakSeconds) - 
-                                        (Date().timeIntervalSince1970 - self.startTime)))
-                    
-                    if newSeconds != self.secondsRemaining {
-                        self.secondsRemaining = max(0, newSeconds)
-                    }
-                } else {
-                    self.hideBlackoutWindow()
-                }
+            // 使用Timer来确保在休息结束时自动关闭黑屏
+            self.countdownTimer = Timer.scheduledTimer(withTimeInterval: TimeInterval(self.timerManager.microBreakSeconds), repeats: false) { [weak self] _ in
+                self?.hideBlackoutWindow()
             }
             
             // 确保计时器在主RunLoop运行，优先级设为最高
@@ -242,7 +224,6 @@ class BlackoutWindowController: NSWindowController {
 
 // 黑屏倒计时视图
 struct BlackoutCountdownView: View {
-    @Binding var secondsRemaining: Int
     var onSkip: () -> Void
     @State private var scale: CGFloat = 1.0
     
@@ -251,35 +232,27 @@ struct BlackoutCountdownView: View {
             // 简单黑色背景
             Color.black.edgesIgnoringSafeArea(.all)
             
-            VStack(spacing: 60) {
-                // 只保留倒计时数字，让它更大更醒目
-                Text("\(secondsRemaining)")
-                    .font(.system(size: 120, weight: .bold, design: .rounded))
+            // 简化的跳过按钮
+            Button(action: onSkip) {
+                Text("跳过休息")
+                    .font(.system(size: 22, weight: .semibold))
                     .foregroundColor(.white)
-                    .monospacedDigit()
-                
-                // 简化的跳过按钮
-                Button(action: onSkip) {
-                    Text("跳过休息")
-                        .font(.system(size: 22, weight: .semibold))
-                        .foregroundColor(.white)
-                        .padding(.horizontal, 40)
-                        .padding(.vertical, 16)
-                        .background(
-                            RoundedRectangle(cornerRadius: 12)
-                                .fill(Color.gray.opacity(0.3))
-                        )
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 12)
-                                .stroke(Color.white.opacity(0.5), lineWidth: 1)
-                        )
-                }
-                .buttonStyle(PlainButtonStyle())
-                .scaleEffect(scale)
-                .onHover { hovering in
-                    withAnimation(.easeOut(duration: 0.2)) {
-                        scale = hovering ? 1.05 : 1.0
-                    }
+                    .padding(.horizontal, 40)
+                    .padding(.vertical, 16)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(Color.gray.opacity(0.3))
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(Color.white.opacity(0.5), lineWidth: 1)
+                    )
+            }
+            .buttonStyle(PlainButtonStyle())
+            .scaleEffect(scale)
+            .onHover { hovering in
+                withAnimation(.easeOut(duration: 0.2)) {
+                    scale = hovering ? 1.05 : 1.0
                 }
             }
         }
