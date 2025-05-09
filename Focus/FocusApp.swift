@@ -14,38 +14,13 @@ import AudioToolbox
 struct FocusApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @StateObject private var timerManager = TimerManager.shared
-    @State private var showingBlackout = false
     
     var body: some Scene {
         WindowGroup {
-            ZStack {
-                ContentView()
-                    .environmentObject(timerManager)
-                    .frame(width: 320, height: 470)
-                    .fixedSize(horizontal: true, vertical: true)
-                
-                if showingBlackout {
-                    BlackoutView(timerManager: timerManager, onClose: {
-                        withAnimation(.easeOut(duration: 0.3)) {
-                            showingBlackout = false
-                        }
-                    })
-                    .transition(.opacity)
-                    .edgesIgnoringSafeArea(.all)
-                }
-            }
-            .onReceive(NotificationCenter.default.publisher(for: .showBlackout)) { _ in
-                if timerManager.blackoutEnabled {
-                    withAnimation(.easeIn(duration: 0.3)) {
-                        showingBlackout = true
-                    }
-                }
-            }
-            .onReceive(NotificationCenter.default.publisher(for: .hideBlackout)) { _ in
-                withAnimation(.easeOut(duration: 0.3)) {
-                    showingBlackout = false
-                }
-            }
+            ContentView()
+                .environmentObject(timerManager)
+                .frame(width: 320, height: 470)
+                .fixedSize(horizontal: true, vertical: true)
         }
         .windowStyle(HiddenTitleBarWindowStyle())
         .windowResizability(.contentSize)
@@ -73,6 +48,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
     private var statusBarController: StatusBarController?
     private var audioPlayer: AVAudioPlayer?
     private var mainWindowController: NSWindowController?
+    private var blackoutWindowController: BlackoutWindowController?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         // 请求通知权限
@@ -88,6 +64,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
 
         // 初始化菜单栏控制器
         statusBarController = StatusBarController()
+        
+        // 初始化黑屏窗口控制器
+        blackoutWindowController = BlackoutWindowController.shared
         
         // 初始化主窗口控制器
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
@@ -127,6 +106,22 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
             self,
             selector: #selector(statusBarIconVisibilityChanged),
             name: .statusBarIconVisibilityChanged,
+            object: nil
+        )
+        
+        // 监听黑屏显示请求
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleShowBlackout),
+            name: .showBlackout,
+            object: nil
+        )
+        
+        // 监听黑屏隐藏请求
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleHideBlackout),
+            name: .hideBlackout,
             object: nil
         )
     }
@@ -247,5 +242,17 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
         }
     }
     
-
+    // 处理显示黑屏请求
+    @objc private func handleShowBlackout() {
+        if TimerManager.shared.blackoutEnabled {
+            // 委托给专门的黑屏控制器处理
+            blackoutWindowController?.showBlackoutWindow()
+        }
+    }
+    
+    // 处理隐藏黑屏请求
+    @objc private func handleHideBlackout() {
+        // 委托给专门的黑屏控制器处理
+        blackoutWindowController?.hideBlackoutWindow()
+    }
 }
