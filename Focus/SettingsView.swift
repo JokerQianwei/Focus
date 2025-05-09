@@ -250,22 +250,48 @@ struct SettingsView: View {
                                     
                                     Spacer()
                                     
-                                    Picker("", selection: $timerManager.microBreakStartSoundType) {
+                                    Menu {
                                         ForEach(SoundType.allCases) { soundType in
-                                            Text(soundType.displayName).tag(soundType)
+                                            Button(action: {
+                                                // 无论是否变化，都播放所选音效
+                                                if timerManager.promptSoundEnabled {
+                                                    NotificationCenter.default.post(
+                                                        name: .playMicroBreakStartSound,
+                                                        object: soundType.rawValue
+                                                    )
+                                                }
+                                                // 更新选择
+                                                timerManager.microBreakStartSoundType = soundType
+                                            }) {
+                                                HStack {
+                                                    Text(soundType.displayName)
+                                                    if timerManager.microBreakStartSoundType == soundType {
+                                                        Spacer()
+                                                        Image(systemName: "checkmark")
+                                                    }
+                                                }
+                                            }
                                         }
+                                    } label: {
+                                        HStack(spacing: 4) {
+                                            Text(timerManager.microBreakStartSoundType.displayName)
+                                                .foregroundColor(.primary)
+                                            Image(systemName: "chevron.down")
+                                                .font(.caption)
+                                                .foregroundColor(.secondary)
+                                        }
+                                        .padding(.horizontal, 8)
+                                        .padding(.vertical, 4)
+                                        .background(
+                                            RoundedRectangle(cornerRadius: 6)
+                                                .fill(Color(.controlBackgroundColor))
+                                        )
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 6)
+                                                .stroke(Color.secondary.opacity(0.2), lineWidth: 1)
+                                        )
                                     }
-                                    .pickerStyle(MenuPickerStyle())
                                     .disabled(timerManager.timerRunning || !timerManager.promptSoundEnabled)
-                                    .onChange(of: timerManager.microBreakStartSoundType) { _, newValue in
-                                        // 选择后直接播放音效
-                                        if timerManager.promptSoundEnabled {
-                                            NotificationCenter.default.post(
-                                                name: .playMicroBreakStartSound,
-                                                object: newValue.rawValue
-                                            )
-                                        }
-                                    }
                                 }
                                 
                                 Divider()
@@ -277,22 +303,48 @@ struct SettingsView: View {
                                     
                                     Spacer()
                                     
-                                    Picker("", selection: $timerManager.microBreakEndSoundType) {
+                                    Menu {
                                         ForEach(SoundType.allCases) { soundType in
-                                            Text(soundType.displayName).tag(soundType)
+                                            Button(action: {
+                                                // 无论是否变化，都播放所选音效
+                                                if timerManager.promptSoundEnabled {
+                                                    NotificationCenter.default.post(
+                                                        name: .playMicroBreakEndSound,
+                                                        object: soundType.rawValue
+                                                    )
+                                                }
+                                                // 更新选择
+                                                timerManager.microBreakEndSoundType = soundType
+                                            }) {
+                                                HStack {
+                                                    Text(soundType.displayName)
+                                                    if timerManager.microBreakEndSoundType == soundType {
+                                                        Spacer()
+                                                        Image(systemName: "checkmark")
+                                                    }
+                                                }
+                                            }
                                         }
+                                    } label: {
+                                        HStack(spacing: 4) {
+                                            Text(timerManager.microBreakEndSoundType.displayName)
+                                                .foregroundColor(.primary)
+                                            Image(systemName: "chevron.down")
+                                                .font(.caption)
+                                                .foregroundColor(.secondary)
+                                        }
+                                        .padding(.horizontal, 8)
+                                        .padding(.vertical, 4)
+                                        .background(
+                                            RoundedRectangle(cornerRadius: 6)
+                                                .fill(Color(.controlBackgroundColor))
+                                        )
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 6)
+                                                .stroke(Color.secondary.opacity(0.2), lineWidth: 1)
+                                        )
                                     }
-                                    .pickerStyle(MenuPickerStyle())
                                     .disabled(timerManager.timerRunning || !timerManager.promptSoundEnabled)
-                                    .onChange(of: timerManager.microBreakEndSoundType) { _, newValue in
-                                        // 选择后直接播放音效
-                                        if timerManager.promptSoundEnabled {
-                                            NotificationCenter.default.post(
-                                                name: .playMicroBreakEndSound,
-                                                object: newValue.rawValue
-                                            )
-                                        }
-                                    }
                                 }
                             }
                         }
