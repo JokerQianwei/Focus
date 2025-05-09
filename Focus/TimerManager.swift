@@ -9,6 +9,37 @@ import Foundation
 import Combine
 import AppKit
 
+// 声音类型枚举
+enum SoundType: String, CaseIterable, Identifiable {
+    case tink = "Tink"
+    case glass = "Glass"
+    case bell = "Blow"
+    case hero = "Hero"
+    case submarine = "Submarine"
+    
+    var id: String { self.rawValue }
+    
+    var fileName: String {
+        switch self {
+            case .tink: return "Tink.aiff"
+            case .glass: return "Glass.aiff"
+            case .bell: return "Blow.aiff"
+            case .hero: return "Hero.aiff"
+            case .submarine: return "Submarine.aiff"
+        }
+    }
+    
+    var displayName: String {
+        switch self {
+            case .tink: return "水滴声"
+            case .glass: return "玻璃声"
+            case .bell: return "铃声"
+            case .hero: return "完成声"
+            case .submarine: return "低音声"
+        }
+    }
+}
+
 // 计时器管理器，作为单例，在应用程序的不同部分之间共享计时器状态
 class TimerManager: ObservableObject {
     // 单例实例
@@ -25,6 +56,9 @@ class TimerManager: ObservableObject {
     private let showStatusBarIconKey = "showStatusBarIcon" // 控制状态栏图标显示的键
     private let blackoutEnabledKey = "blackoutEnabled" // 控制黑屏功能的键
     private let muteAudioDuringBreakKey = "muteAudioDuringBreak" // 控制微休息期间暂停媒体播放的键
+    // 音效相关键
+    private let microBreakStartSoundTypeKey = "microBreakStartSoundType"
+    private let microBreakEndSoundTypeKey = "microBreakEndSoundType"
 
     // 发布的属性，当这些属性改变时，所有观察者都会收到通知
     @Published var minutes: Int = 90
@@ -100,6 +134,19 @@ class TimerManager: ObservableObject {
     }
     
     @Published private var completionTimestamps: [Date] = [] // Store completion timestamps
+
+    // 微休息开始和结束的声音设置
+    @Published var microBreakStartSoundType: SoundType {
+        didSet {
+            UserDefaults.standard.set(microBreakStartSoundType.rawValue, forKey: microBreakStartSoundTypeKey)
+        }
+    }
+
+    @Published var microBreakEndSoundType: SoundType {
+        didSet {
+            UserDefaults.standard.set(microBreakEndSoundType.rawValue, forKey: microBreakEndSoundTypeKey)
+        }
+    }
 
     // 计时器
     private var timer: Timer? = nil
@@ -186,6 +233,22 @@ class TimerManager: ObservableObject {
             self.muteAudioDuringBreak = UserDefaults.standard.bool(forKey: muteAudioDuringBreakKey)
         } else {
             self.muteAudioDuringBreak = true // 默认启用
+        }
+        
+        // 微休息开始声音设置
+        if let soundTypeString = UserDefaults.standard.string(forKey: microBreakStartSoundTypeKey),
+           let soundType = SoundType(rawValue: soundTypeString) {
+            self.microBreakStartSoundType = soundType
+        } else {
+            self.microBreakStartSoundType = .tink // 默认值
+        }
+
+        // 微休息结束声音设置
+        if let soundTypeString = UserDefaults.standard.string(forKey: microBreakEndSoundTypeKey),
+           let soundType = SoundType(rawValue: soundTypeString) {
+            self.microBreakEndSoundType = soundType
+        } else {
+            self.microBreakEndSoundType = .hero // 默认值
         }
 
         // 初始化计时器状态
@@ -395,8 +458,11 @@ class TimerManager: ObservableObject {
         promptTimer = Timer.scheduledTimer(withTimeInterval: nextPromptInterval, repeats: false) { [weak self] _ in
             guard let self = self else { return }
 
-            // 播放第一次提示音
-            NotificationCenter.default.post(name: .playPromptSound, object: nil)
+            // 播放微休息开始提示音
+            NotificationCenter.default.post(
+                name: .playMicroBreakStartSound,
+                object: self.microBreakStartSoundType.rawValue
+            )
             
             // 如果启用了黑屏，发送黑屏通知
             if self.blackoutEnabled {
@@ -413,8 +479,11 @@ class TimerManager: ObservableObject {
         secondPromptTimer = Timer.scheduledTimer(withTimeInterval: TimeInterval(microBreakSeconds), repeats: false) { [weak self] _ in
             guard let self = self else { return }
 
-            // 播放第二次提示音
-            NotificationCenter.default.post(name: .playPromptSound, object: nil)
+            // 播放微休息结束提示音
+            NotificationCenter.default.post(
+                name: .playMicroBreakEndSound,
+                object: self.microBreakEndSoundType.rawValue
+            )
             
             // 如果启用了黑屏，发送结束黑屏通知
             if self.blackoutEnabled {
@@ -481,6 +550,8 @@ extension Notification.Name {
     static let playPromptSound = Notification.Name("playPromptSound")
     static let playStartSound = Notification.Name("playStartSound")
     static let playEndSound = Notification.Name("playEndSound")
+    static let playMicroBreakStartSound = Notification.Name("playMicroBreakStartSound")
+    static let playMicroBreakEndSound = Notification.Name("playMicroBreakEndSound")
     static let statusBarIconVisibilityChanged = Notification.Name("statusBarIconVisibilityChanged")
     static let showBlackout = Notification.Name("showBlackout")
     static let hideBlackout = Notification.Name("hideBlackout")

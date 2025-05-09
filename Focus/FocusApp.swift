@@ -96,6 +96,22 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
             name: .playPromptSound,
             object: nil
         )
+        
+        // 监听微休息开始音效请求
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(playMicroBreakStartSound),
+            name: .playMicroBreakStartSound,
+            object: nil
+        )
+
+        // 监听微休息结束音效请求
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(playMicroBreakEndSound),
+            name: .playMicroBreakEndSound,
+            object: nil
+        )
 
         // 监听计时器模式变化，发送通知
         NotificationCenter.default.addObserver(
@@ -163,6 +179,22 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
             print("初始化音频播放器失败: \(error.localizedDescription)")
         }
     }
+    
+    // 播放特定类型的声音
+    private func playSound(of type: SoundType) {
+        let soundURL = URL(fileURLWithPath: "/System/Library/Sounds/\(type.fileName)")
+
+        do {
+            audioPlayer = try AVAudioPlayer(contentsOf: soundURL)
+            audioPlayer?.prepareToPlay()
+            audioPlayer?.volume = 0.7 // 设置音量
+            audioPlayer?.play()
+        } catch {
+            print("音频播放失败: \(error.localizedDescription)")
+            // 尝试使用系统声音API作为备选
+            AudioServicesPlaySystemSound(SystemSoundID(1005))
+        }
+    }
 
     // 播放提示音
     @objc private func playPromptSound() {
@@ -178,6 +210,28 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
             // 如果播放失败，使用系统声音API
             let systemSoundID = 1005 // 系统声音ID，这是一个提示音
             AudioServicesPlaySystemSound(SystemSoundID(systemSoundID))
+        }
+    }
+    
+    // 播放微休息开始音效
+    @objc private func playMicroBreakStartSound(_ notification: Notification) {
+        if let soundTypeString = notification.object as? String,
+           let soundType = SoundType(rawValue: soundTypeString) {
+            playSound(of: soundType)
+        } else {
+            // 使用默认音效
+            playSound(of: .tink)
+        }
+    }
+
+    // 播放微休息结束音效
+    @objc private func playMicroBreakEndSound(_ notification: Notification) {
+        if let soundTypeString = notification.object as? String,
+           let soundType = SoundType(rawValue: soundTypeString) {
+            playSound(of: soundType)
+        } else {
+            // 使用默认音效
+            playSound(of: .hero)
         }
     }
 

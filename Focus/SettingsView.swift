@@ -240,6 +240,82 @@ struct SettingsView: View {
                                     .padding(.top, 2)
                                     .padding(.leading, 4)
                                     .animation(.easeInOut, value: timerManager.promptSoundEnabled)
+                                    
+                                Divider()
+                                
+                                // 微休息开始声音选择
+                                HStack {
+                                    Text("微休息开始音效")
+                                        .foregroundColor(.primary)
+                                    
+                                    Spacer()
+                                    
+                                    Picker("", selection: $timerManager.microBreakStartSoundType) {
+                                        ForEach(SoundType.allCases) { soundType in
+                                            Text(soundType.displayName).tag(soundType)
+                                        }
+                                    }
+                                    .pickerStyle(MenuPickerStyle())
+                                    .disabled(timerManager.timerRunning || !timerManager.promptSoundEnabled)
+                                }
+                                
+                                // 预览按钮
+                                HStack {
+                                    Spacer()
+                                    Button(action: {
+                                        // 播放选中的音效
+                                        NotificationCenter.default.post(
+                                            name: .playMicroBreakStartSound,
+                                            object: timerManager.microBreakStartSoundType.rawValue
+                                        )
+                                    }) {
+                                        Image(systemName: "play.circle")
+                                            .foregroundColor(.accentColor)
+                                        Text("试听")
+                                            .foregroundColor(.accentColor)
+                                    }
+                                    .buttonStyle(PlainButtonStyle())
+                                    .disabled(!timerManager.promptSoundEnabled)
+                                }
+                                .padding(.leading, 20)
+                                
+                                Divider()
+                                
+                                // 微休息结束声音选择
+                                HStack {
+                                    Text("微休息结束音效")
+                                        .foregroundColor(.primary)
+                                    
+                                    Spacer()
+                                    
+                                    Picker("", selection: $timerManager.microBreakEndSoundType) {
+                                        ForEach(SoundType.allCases) { soundType in
+                                            Text(soundType.displayName).tag(soundType)
+                                        }
+                                    }
+                                    .pickerStyle(MenuPickerStyle())
+                                    .disabled(timerManager.timerRunning || !timerManager.promptSoundEnabled)
+                                }
+                                
+                                // 预览按钮
+                                HStack {
+                                    Spacer()
+                                    Button(action: {
+                                        // 播放选中的音效
+                                        NotificationCenter.default.post(
+                                            name: .playMicroBreakEndSound,
+                                            object: timerManager.microBreakEndSoundType.rawValue
+                                        )
+                                    }) {
+                                        Image(systemName: "play.circle")
+                                            .foregroundColor(.accentColor)
+                                        Text("试听")
+                                            .foregroundColor(.accentColor)
+                                    }
+                                    .buttonStyle(PlainButtonStyle())
+                                    .disabled(!timerManager.promptSoundEnabled)
+                                }
+                                .padding(.leading, 20)
                             }
                         }
                         .padding(.vertical, 8)
