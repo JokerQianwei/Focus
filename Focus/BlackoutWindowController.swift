@@ -269,6 +269,7 @@ class BlackoutWindowController: NSWindowController {
 struct BlackoutCountdownView: View {
     var onSkip: () -> Void
     @State private var scale: CGFloat = 1.0
+    @State private var closeScale: CGFloat = 1.0
     
     // 使用ObservedObject而不是State来观察共享的倒计时状态
     @ObservedObject var countdownState: BlackoutCountdownState
@@ -278,36 +279,40 @@ struct BlackoutCountdownView: View {
             // 简单黑色背景
             Color.black.edgesIgnoringSafeArea(.all)
             
-            VStack(spacing: 40) {
-                // 倒计时显示，使用共享状态的值
-                Text("\(countdownState.remainingSeconds) seconds")
-                    .font(.system(size: 36, weight: .bold))
-                    .foregroundColor(.white)
-                
-                // 简化的跳过按钮
-                Button(action: onSkip) {
-                    Text("跳过休息")
-                        .font(.system(size: 22, weight: .semibold))
-                        .foregroundColor(.white)
-                        .padding(.horizontal, 40)
-                        .padding(.vertical, 16)
-                        .background(
-                            RoundedRectangle(cornerRadius: 12)
-                                .fill(Color.gray.opacity(0.3))
-                        )
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 12)
-                                .stroke(Color.white.opacity(0.5), lineWidth: 1)
-                        )
-                }
-                .buttonStyle(PlainButtonStyle())
-                .scaleEffect(scale)
-                .onHover { hovering in
-                    withAnimation(.easeOut(duration: 0.2)) {
-                        scale = hovering ? 1.05 : 1.0
+            // 倒计时显示，使用共享状态的值，现在居中显示
+            Text("\(countdownState.remainingSeconds)")
+                .font(.system(size: 80, weight: .thin, design: .rounded))
+                .foregroundColor(.white)
+                .monospacedDigit()
+            
+            // 左上角的关闭按钮
+            VStack {
+                HStack {
+                    Button(action: onSkip) {
+                        Image(systemName: "xmark")
+                            .font(.system(size: 18, weight: .semibold))
+                            .foregroundColor(.white)
+                            .frame(width: 40, height: 40)
+                            .background(Circle().fill(Color.gray.opacity(0.3)))
+                            .overlay(
+                                Circle()
+                                    .stroke(Color.white.opacity(0.5), lineWidth: 1)
+                            )
                     }
+                    .buttonStyle(PlainButtonStyle())
+                    .scaleEffect(closeScale)
+                    .onHover { hovering in
+                        withAnimation(.easeOut(duration: 0.2)) {
+                            closeScale = hovering ? 1.1 : 1.0
+                        }
+                    }
+                    
+                    Spacer()
                 }
+                
+                Spacer()
             }
+            .padding(20)
         }
         .onAppear {
             print("BlackoutCountdownView appeared with \(countdownState.remainingSeconds) seconds")
