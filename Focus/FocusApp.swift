@@ -49,6 +49,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
     private var audioPlayer: AVAudioPlayer?
     private var mainWindowController: NSWindowController?
     private var blackoutWindowController: BlackoutWindowController?
+    private var videoControlManager: VideoControlManager?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         // 请求通知权限
@@ -67,6 +68,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
         
         // 初始化黑屏窗口控制器
         blackoutWindowController = BlackoutWindowController.shared
+        
+        // 初始化视频控制管理器
+        videoControlManager = VideoControlManager.shared
         
         // 初始化主窗口控制器
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
@@ -248,11 +252,19 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
             // 委托给专门的黑屏控制器处理
             blackoutWindowController?.showBlackoutWindow()
         }
+        
+        // 暂停视频播放（通过静音系统）
+        videoControlManager?.pauseVideo()
     }
     
     // 处理隐藏黑屏请求
     @objc private func handleHideBlackout() {
-        // 委托给专门的黑屏控制器处理
-        blackoutWindowController?.hideBlackoutWindow()
+        if TimerManager.shared.blackoutEnabled {
+            // 委托给专门的黑屏控制器处理
+            blackoutWindowController?.hideBlackoutWindow()
+        }
+        
+        // 恢复视频播放（通过恢复系统音量）
+        videoControlManager?.resumeVideo()
     }
 }
