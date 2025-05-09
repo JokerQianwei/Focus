@@ -23,12 +23,18 @@ class TimerManager: ObservableObject {
     private let microBreakSecondsKey = "microBreakSeconds"
     private let completionTimestampsKey = "completionTimestamps" // UserDefaults key
     private let showStatusBarIconKey = "showStatusBarIcon" // 控制状态栏图标显示的键
+    private let blackoutEnabledKey = "blackoutEnabled" // 控制黑屏功能的键
 
     // 发布的属性，当这些属性改变时，所有观察者都会收到通知
     @Published var minutes: Int = 90
     @Published var seconds: Int = 0
     @Published var isWorkMode: Bool = true
     @Published var timerRunning: Bool = false
+    @Published var blackoutEnabled: Bool = false {
+        didSet {
+            UserDefaults.standard.set(blackoutEnabled, forKey: blackoutEnabledKey)
+        }
+    }
     
     // 使用重写的属性来自动保存设置的更改
     @Published var workMinutes: Int {
@@ -159,6 +165,13 @@ class TimerManager: ObservableObject {
             self.showStatusBarIcon = UserDefaults.standard.bool(forKey: showStatusBarIconKey)
         } else {
             self.showStatusBarIcon = true // 默认显示
+        }
+        
+        // 黑屏功能设置
+        if UserDefaults.standard.object(forKey: blackoutEnabledKey) != nil {
+            self.blackoutEnabled = UserDefaults.standard.bool(forKey: blackoutEnabledKey)
+        } else {
+            self.blackoutEnabled = false // 默认不启用
         }
 
         // 初始化计时器状态
@@ -370,6 +383,11 @@ class TimerManager: ObservableObject {
 
             // 播放第一次提示音
             NotificationCenter.default.post(name: .playPromptSound, object: nil)
+            
+            // 如果启用了黑屏，发送黑屏通知
+            if self.blackoutEnabled {
+                NotificationCenter.default.post(name: .showBlackout, object: nil)
+            }
 
             // 安排微休息时间后的第二次提示音
             self.scheduleSecondPrompt()
@@ -383,6 +401,11 @@ class TimerManager: ObservableObject {
 
             // 播放第二次提示音
             NotificationCenter.default.post(name: .playPromptSound, object: nil)
+            
+            // 如果启用了黑屏，发送结束黑屏通知
+            if self.blackoutEnabled {
+                NotificationCenter.default.post(name: .hideBlackout, object: nil)
+            }
 
             // 重新启动随机提示音计时器
             self.startPromptTimer()
@@ -445,4 +468,6 @@ extension Notification.Name {
     static let playStartSound = Notification.Name("playStartSound")
     static let playEndSound = Notification.Name("playEndSound")
     static let statusBarIconVisibilityChanged = Notification.Name("statusBarIconVisibilityChanged")
+    static let showBlackout = Notification.Name("showBlackout")
+    static let hideBlackout = Notification.Name("hideBlackout")
 }

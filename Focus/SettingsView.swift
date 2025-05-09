@@ -29,6 +29,7 @@ struct SettingsView: View {
         _promptMinInput = State(initialValue: String(timerManager.promptMinInterval))
         _promptMaxInput = State(initialValue: String(timerManager.promptMaxInterval))
         _microBreakInput = State(initialValue: String(timerManager.microBreakSeconds))
+        // 黑屏功能在 TimerManager 中初始化，不需要在这里初始化
     }
 
     var body: some View {
@@ -260,6 +261,29 @@ struct SettingsView: View {
                         .font(.title3) // Adjusted font size
                         .fontWeight(.bold) // Make header bold
                         .padding(.bottom, 5) // Increased padding
+                }
+                
+                // 黑屏设置 Section
+                Section {
+                    Toggle(isOn: $timerManager.blackoutEnabled) {
+                        Text("微休息黑屏")
+                            .font(.body.weight(.medium))
+                    }
+                    .toggleStyle(.switch)
+                    .disabled(timerManager.timerRunning)
+                    .padding(.vertical, 6)
+                    
+                    if timerManager.blackoutEnabled {
+                        Text("提示音响起时，将显示全屏黑色窗口，并在休息结束后自动关闭。")
+                            .font(.callout)
+                            .foregroundColor(.secondary)
+                            .padding(.top, 4)
+                    }
+                } header: {
+                    Text("黑屏功能")
+                        .font(.title3)
+                        .fontWeight(.bold)
+                        .padding(.bottom, 5)
                 }
 
                 // 其它设置 Section

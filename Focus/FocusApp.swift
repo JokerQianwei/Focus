@@ -14,13 +14,38 @@ import AudioToolbox
 struct FocusApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @StateObject private var timerManager = TimerManager.shared
-
+    @State private var showingBlackout = false
+    
     var body: some Scene {
         WindowGroup {
-            ContentView()
-                .environmentObject(timerManager)
-                .frame(width: 320, height: 470)
-                .fixedSize(horizontal: true, vertical: true)
+            ZStack {
+                ContentView()
+                    .environmentObject(timerManager)
+                    .frame(width: 320, height: 470)
+                    .fixedSize(horizontal: true, vertical: true)
+                
+                if showingBlackout {
+                    BlackoutView(timerManager: timerManager, onClose: {
+                        withAnimation(.easeOut(duration: 0.3)) {
+                            showingBlackout = false
+                        }
+                    })
+                    .transition(.opacity)
+                    .edgesIgnoringSafeArea(.all)
+                }
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .showBlackout)) { _ in
+                if timerManager.blackoutEnabled {
+                    withAnimation(.easeIn(duration: 0.3)) {
+                        showingBlackout = true
+                    }
+                }
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .hideBlackout)) { _ in
+                withAnimation(.easeOut(duration: 0.3)) {
+                    showingBlackout = false
+                }
+            }
         }
         .windowStyle(HiddenTitleBarWindowStyle())
         .windowResizability(.contentSize)
@@ -221,4 +246,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
             }
         }
     }
+    
+
 }
