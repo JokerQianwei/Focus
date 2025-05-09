@@ -57,6 +57,7 @@ struct SettingsView: View {
                         .foregroundStyle(isHoveringClose ? .red : .secondary)
                 }
                 .buttonStyle(PlainButtonStyle())
+                .focusable(false)
                 .onHover { hovering in
                     withAnimation(.easeInOut(duration: 0.2)) {
                         isHoveringClose = hovering
