@@ -279,24 +279,31 @@ struct BlackoutCountdownView: View {
             // 简单黑色背景
             Color.black.edgesIgnoringSafeArea(.all)
             
-            // 倒计时显示，使用共享状态的值，现在居中显示
-            Text("\(countdownState.remainingSeconds)")
-                .font(.system(size: 80, weight: .thin, design: .rounded))
-                .foregroundColor(.white)
-                .monospacedDigit()
+            // 倒计时显示，使用共享状态的值，居中显示
+            VStack(spacing: 8) {
+                Text("\(countdownState.remainingSeconds)")
+                    .font(.system(size: 72, weight: .light, design: .rounded))
+                    .foregroundColor(.white)
+                    .monospacedDigit()
+                
+                Text("seconds")
+                    .font(.system(size: 20, weight: .regular, design: .rounded))
+                    .foregroundColor(.white.opacity(0.8))
+                    .tracking(1.2)
+            }
             
             // 左上角的关闭按钮
             VStack {
                 HStack {
                     Button(action: onSkip) {
                         Image(systemName: "xmark")
-                            .font(.system(size: 18, weight: .semibold))
+                            .font(.system(size: 12, weight: .semibold))
                             .foregroundColor(.white)
-                            .frame(width: 40, height: 40)
-                            .background(Circle().fill(Color.gray.opacity(0.3)))
+                            .frame(width: 32, height: 32)
+                            .background(Circle().fill(Color.white.opacity(0.2)))
                             .overlay(
                                 Circle()
-                                    .stroke(Color.white.opacity(0.5), lineWidth: 1)
+                                    .stroke(Color.white.opacity(0.3), lineWidth: 1)
                             )
                     }
                     .buttonStyle(PlainButtonStyle())
@@ -312,7 +319,7 @@ struct BlackoutCountdownView: View {
                 
                 Spacer()
             }
-            .padding(20)
+            .padding(16)
         }
         .onAppear {
             print("BlackoutCountdownView appeared with \(countdownState.remainingSeconds) seconds")
