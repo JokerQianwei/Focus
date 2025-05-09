@@ -7,6 +7,7 @@
 
 import Cocoa
 import SwiftUI
+import Combine
 
 class BlackoutWindowController: NSWindowController {
     // 单例模式
@@ -226,34 +227,51 @@ class BlackoutWindowController: NSWindowController {
 struct BlackoutCountdownView: View {
     var onSkip: () -> Void
     @State private var scale: CGFloat = 1.0
+    @State private var remainingSeconds: Int = 0
+    @State private var timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
     
     var body: some View {
         ZStack {
             // 简单黑色背景
             Color.black.edgesIgnoringSafeArea(.all)
             
-            // 简化的跳过按钮
-            Button(action: onSkip) {
-                Text("跳过休息")
-                    .font(.system(size: 22, weight: .semibold))
+            VStack(spacing: 40) {
+                // 倒计时显示
+                Text("\(remainingSeconds) seconds")
+                    .font(.system(size: 36, weight: .bold))
                     .foregroundColor(.white)
-                    .padding(.horizontal, 40)
-                    .padding(.vertical, 16)
-                    .background(
-                        RoundedRectangle(cornerRadius: 12)
-                            .fill(Color.gray.opacity(0.3))
-                    )
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 12)
-                            .stroke(Color.white.opacity(0.5), lineWidth: 1)
-                    )
-            }
-            .buttonStyle(PlainButtonStyle())
-            .scaleEffect(scale)
-            .onHover { hovering in
-                withAnimation(.easeOut(duration: 0.2)) {
-                    scale = hovering ? 1.05 : 1.0
+                
+                // 简化的跳过按钮
+                Button(action: onSkip) {
+                    Text("跳过休息")
+                        .font(.system(size: 22, weight: .semibold))
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 40)
+                        .padding(.vertical, 16)
+                        .background(
+                            RoundedRectangle(cornerRadius: 12)
+                                .fill(Color.gray.opacity(0.3))
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(Color.white.opacity(0.5), lineWidth: 1)
+                        )
                 }
+                .buttonStyle(PlainButtonStyle())
+                .scaleEffect(scale)
+                .onHover { hovering in
+                    withAnimation(.easeOut(duration: 0.2)) {
+                        scale = hovering ? 1.05 : 1.0
+                    }
+                }
+            }
+        }
+        .onAppear {
+            self.remainingSeconds = TimerManager.shared.microBreakSeconds
+        }
+        .onReceive(timer) { _ in
+            if self.remainingSeconds > 0 {
+                self.remainingSeconds -= 1
             }
         }
     }
