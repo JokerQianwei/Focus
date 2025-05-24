@@ -628,11 +628,11 @@ struct ModernSummaryCard: View {
             // 顶部装饰条
             Rectangle()
                 .fill(topBarGradient)
-                .frame(height: 4)
+                .frame(height: 3)
             
-            VStack(alignment: .leading, spacing: 16) {
+            VStack(alignment: .leading, spacing: 10) {
                 // 图标和数值
-                HStack(alignment: .top, spacing: 12) {
+                HStack(alignment: .top, spacing: 10) {
                     iconView
                     
                     Spacer()
@@ -643,7 +643,7 @@ struct ModernSummaryCard: View {
                 // 标题
                 titleView
             }
-            .padding(20)
+            .padding(14)
         }
         .background(cardBackground)
         .overlay(cardBorder)
@@ -671,27 +671,27 @@ struct ModernSummaryCard: View {
         ZStack {
             Circle()
                 .fill(color.opacity(0.12))
-                .frame(width: 40, height: 40)
+                .frame(width: 32, height: 32)
             
             Image(systemName: icon)
-                .font(.system(size: 18, weight: .medium))
+                .font(.system(size: 15, weight: .medium))
                 .foregroundStyle(iconGradient)
                 .scaleEffect(isVisible ? 1.0 : 0.8)
         }
     }
     
     private var valueView: some View {
-        VStack(alignment: .trailing, spacing: 4) {
-            HStack(alignment: .firstTextBaseline, spacing: 4) {
+        VStack(alignment: .trailing, spacing: 2) {
+            HStack(alignment: .firstTextBaseline, spacing: 3) {
                 Text(getAnimatedValueText())
-                    .font(.system(size: 24, weight: .bold, design: .rounded))
+                    .font(.system(size: 20, weight: .bold, design: .rounded))
                     .foregroundColor(.primary)
                     .lineLimit(1)
                     .contentTransition(.numericText())
                 
                 if !subtitle.isEmpty {
                     Text(subtitle)
-                        .font(.system(size: 12, weight: .medium))
+                        .font(.system(size: 11, weight: .medium))
                         .foregroundColor(.secondary)
                         .lineLimit(1)
                         .opacity(isVisible ? 1.0 : 0.0)
@@ -702,7 +702,7 @@ struct ModernSummaryCard: View {
     
     private var titleView: some View {
         Text(title)
-            .font(.system(size: 14, weight: .semibold))
+            .font(.system(size: 13, weight: .semibold))
             .foregroundColor(.primary)
             .lineLimit(2)
             .multilineTextAlignment(.leading)
@@ -710,7 +710,7 @@ struct ModernSummaryCard: View {
     }
     
     private var cardBackground: some View {
-        RoundedRectangle(cornerRadius: 16)
+        RoundedRectangle(cornerRadius: 14)
             .fill(Color(.controlBackgroundColor))
             .shadow(
                 color: .black.opacity(0.08),
@@ -721,7 +721,7 @@ struct ModernSummaryCard: View {
     }
     
     private var cardBorder: some View {
-        RoundedRectangle(cornerRadius: 16)
+        RoundedRectangle(cornerRadius: 14)
             .stroke(borderGradient, lineWidth: 1)
     }
     
