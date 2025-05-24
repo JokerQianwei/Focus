@@ -29,6 +29,15 @@ struct ContentView: View {
             VStack(spacing: 15) {
                 // 顶部栏：标题和设置按钮
                 HStack {
+                    // 左侧占位元素，与右侧设置按钮保持平衡
+                    Button(action: {}) {
+                        Image(systemName: "gearshape.fill")
+                            .font(.title2)
+                            .foregroundColor(.clear)
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(true)
+                    
                     // 标题居中，根据模式改变文本
                     Text(timerManager.isWorkMode ? "Focus" : "Break")
                         .font(.system(size: 36, weight: .bold, design: .rounded))

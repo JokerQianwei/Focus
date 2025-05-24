@@ -355,7 +355,7 @@ struct BlackoutCountdownView: View {
                     .scaleEffect(scale)
                     .animation(.easeInOut(duration: 1.0), value: scale)
                 
-                Text("闭眼休息！")
+                Text("闭眼！深呼吸！")
                     .font(.system(size: 18, weight: .regular))
                     .foregroundColor(.white.opacity(0.8))
                     .tracking(2.0)

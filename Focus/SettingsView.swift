@@ -512,6 +512,7 @@ struct TimeInputRow: View {
                 Text(unit)
                     .font(.system(size: 11, weight: .medium))
                     .foregroundColor(.secondary)
+                    .frame(width: 30, alignment: .leading)
             }
         }
     }
