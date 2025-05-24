@@ -210,9 +210,8 @@ struct SettingsView: View {
             
             SimpleCard {
                 VStack(spacing: 12) {
-                    ToggleRow(
+                    SimpleToggleRow(
                         title: "启用提示音",
-                        subtitle: "专注期间播放提示音",
                         icon: "speaker.2",
                         isOn: $timerManager.promptSoundEnabled
                     )
@@ -263,16 +262,6 @@ struct SettingsView: View {
                         }
                         .transition(.opacity.combined(with: .scale(scale: 0.95)))
                     }
-                    
-                    Divider()
-                        .padding(.horizontal, -6)
-                    
-                    ToggleRow(
-                        title: "微休息通知",
-                        subtitle: "发送系统通知提醒",
-                        icon: "bell",
-                        isOn: $timerManager.microBreakNotificationEnabled
-                    )
                 }
             }
         }
@@ -286,8 +275,17 @@ struct SettingsView: View {
             SimpleCard {
                 VStack(spacing: 12) {
                     ToggleRow(
+                        title: "微休息通知",
+                        subtitle: "微休息开始和结束时发送系统通知提醒",
+                        icon: "bell",
+                        isOn: $timerManager.microBreakNotificationEnabled
+                    )
+                    
+                    Divider()
+                        .padding(.horizontal, -6)
+                    
+                    SimpleToggleRow(
                         title: "微休息时全屏模式",
-                        subtitle: "",
                         icon: "rectangle.fill",
                         isOn: $timerManager.blackoutEnabled
                     )
@@ -541,6 +539,30 @@ struct ToggleRow: View {
                     .font(.caption2)
                     .foregroundColor(.secondary)
             }
+            
+            Spacer()
+            
+            Toggle("", isOn: $isOn)
+                .toggleStyle(ModernToggleStyle())
+        }
+    }
+}
+
+// MARK: - 简单切换行组件（无副标题）
+struct SimpleToggleRow: View {
+    let title: String
+    let icon: String
+    @Binding var isOn: Bool
+    
+    var body: some View {
+        HStack(spacing: 10) {
+            Image(systemName: icon)
+                .foregroundColor(.secondary)
+                .frame(width: 18)
+            
+            Text(title)
+                .font(.system(size: 13, weight: .medium))
+                .foregroundColor(.primary)
             
             Spacer()
             
