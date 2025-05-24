@@ -568,7 +568,7 @@ struct ModernMenu: View {
                 .font(.system(size: 14, weight: .medium))
                 .foregroundColor(.blue)
             
-            Text(selection == .count ? "次数" : "时长")
+            Text(selection == .count ? "数量" : "时间")
                 .font(.system(size: 14, weight: .semibold))
                 .foregroundColor(.primary)
             
