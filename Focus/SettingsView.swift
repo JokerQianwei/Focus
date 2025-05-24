@@ -141,7 +141,7 @@ struct SettingsView: View {
                     }
                     
                     // 提示音间隔 Section
-                    settingsSection(title: "随机提示音间隔", systemImage: "bell.badge") {
+                    settingsSection(title: "随机提示音", systemImage: "bell.badge") {
                         VStack(spacing: 16) {
                             // 最小间隔
                             HStack(alignment: .center) {
@@ -236,7 +236,6 @@ struct SettingsView: View {
                                     .foregroundColor(.primary)
                             }
                             .toggleStyle(SwitchToggleStyle(tint: .accentColor))
-                            .disabled(timerManager.timerRunning)
                             
                             if timerManager.promptSoundEnabled {
                                 Text("每隔 \(timerManager.promptMinInterval)-\(timerManager.promptMaxInterval) 分钟播放提示音，并在 \(timerManager.microBreakSeconds) 秒后再次响起。")
@@ -296,7 +295,7 @@ struct SettingsView: View {
                                                 .stroke(Color.secondary.opacity(0.2), lineWidth: 1)
                                         )
                                     }
-                                    .disabled(timerManager.timerRunning || !timerManager.promptSoundEnabled)
+                                    .disabled(!timerManager.promptSoundEnabled)
                                 }
                                 
                                 Divider()
@@ -349,7 +348,7 @@ struct SettingsView: View {
                                                 .stroke(Color.secondary.opacity(0.2), lineWidth: 1)
                                         )
                                     }
-                                    .disabled(timerManager.timerRunning || !timerManager.promptSoundEnabled)
+                                    .disabled(!timerManager.promptSoundEnabled)
                                 }
                             }
                         }
@@ -364,7 +363,6 @@ struct SettingsView: View {
                                     .foregroundColor(.primary)
                             }
                             .toggleStyle(SwitchToggleStyle(tint: .accentColor))
-                            .disabled(timerManager.timerRunning)
                             
                             if timerManager.blackoutEnabled {
                                 Text("提示音响起时，将显示全屏黑色窗口，并在休息结束后自动关闭。")
@@ -386,7 +384,6 @@ struct SettingsView: View {
                                     .foregroundColor(.primary)
                             }
                             .toggleStyle(SwitchToggleStyle(tint: .accentColor))
-                            .disabled(timerManager.timerRunning)
                             
                             if timerManager.muteAudioDuringBreak {
                                 Text("微休息期间自动切换播放/暂停状态，观看视频/网课时建议开启，其他场景可关闭。（首次使用需授予辅助功能权限）")
@@ -416,7 +413,6 @@ struct SettingsView: View {
                                     .foregroundColor(.primary)
                             }
                             .toggleStyle(SwitchToggleStyle(tint: .accentColor))
-                            .disabled(timerManager.timerRunning)
                             
                             if timerManager.microBreakNotificationEnabled {
                                 Text("在微休息开始和结束时发送系统通知")
