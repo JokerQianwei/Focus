@@ -831,19 +831,61 @@ struct ModernBarChartView: View {
                 }
                 .frame(height: chartHeight)
                 
-                // 底部标签
-                HStack(alignment: .center, spacing: barSpacing) {
-                    ForEach(data) { dataPoint in
-                        Text(dataPoint.label)
-                            .font(.system(size: period == .day ? 10 : 11, weight: .medium))
-                            .foregroundColor(.secondary)
-                            .frame(width: barWidth)
-                            .multilineTextAlignment(.center)
-                            .lineLimit(1)
+                // 底部标签 - 智能显示
+                HStack(alignment: .center, spacing: 0) {
+                    ForEach(Array(data.enumerated()), id: \.element.id) { index, dataPoint in
+                        Group {
+                            if shouldShowLabel(at: index, total: data.count, period: period) {
+                                Text(dataPoint.label)
+                                    .font(.system(size: getLabelFontSize(for: period), weight: .medium))
+                                    .foregroundColor(.primary)
+                                    .frame(width: barWidth + barSpacing, alignment: .center)
+                                    .multilineTextAlignment(.center)
+                                    .lineLimit(1)
+                            } else {
+                                // 保留空间但不显示文字，确保对齐
+                                Spacer()
+                                    .frame(width: barWidth + barSpacing)
+                            }
+                        }
                     }
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.top, 16)
             }
+        }
+    }
+    
+    /// 智能标签显示策略
+    private func shouldShowLabel(at index: Int, total: Int, period: StatisticsPeriod) -> Bool {
+        switch period {
+        case .day:
+            // 天视图：每4小时显示一次 (0, 4, 8, 12, 16, 20)
+            return index % 4 == 0
+        case .week:
+            // 周视图：显示所有天
+            return true
+        case .month:
+            // 月视图：固定按5的步长显示 (1, 5, 10, 15, 20, 25, 30)
+            let dayNumber = index + 1
+            return dayNumber == 1 || dayNumber % 5 == 0
+        case .year:
+            // 年视图：显示所有月份
+            return true
+        }
+    }
+    
+    /// 根据时间段获取合适的标签字体大小
+    private func getLabelFontSize(for period: StatisticsPeriod) -> CGFloat {
+        switch period {
+        case .day:
+            return 10
+        case .week:
+            return 11
+        case .month:
+            return 12 // 月视图标签更大，因为显示的更少
+        case .year:
+            return 10
         }
     }
     
@@ -939,7 +981,16 @@ struct ModernValueTooltip: View {
         switch period {
         case .day:
             return "\(dataPoint.label):00"
-        case .week, .month, .year:
+        case .week:
+            return dataPoint.label
+        case .month:
+            // 月视图显示完整日期信息
+            let calendar = Calendar.current
+            let formatter = DateFormatter()
+            formatter.locale = Locale(identifier: "zh_CN")
+            formatter.dateFormat = "M月d日 E"
+            return formatter.string(from: dataPoint.date)
+        case .year:
             return dataPoint.label
         }
     }

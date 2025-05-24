@@ -102,6 +102,53 @@ class StatisticsTests: XCTestCase {
         XCTAssertGreaterThanOrEqual(summary.currentStreak, 0)
     }
     
+    func testMonthlyDataLabelGeneration() throws {
+        // 测试月份数据生成包含正确的标签
+        statisticsManager.currentPeriod = .month
+        let monthlyData = statisticsManager.getStatisticsData()
+        
+        // 验证数据点数量符合当月天数
+        let calendar = Calendar.current
+        let monthInterval = calendar.dateInterval(of: .month, for: statisticsManager.currentDate)!
+        let daysInMonth = calendar.dateComponents([.day], from: monthInterval.start, to: monthInterval.end).day!
+        
+        XCTAssertEqual(monthlyData.count, daysInMonth)
+        
+        // 验证标签格式正确（应该是数字字符串）
+        for dataPoint in monthlyData {
+            XCTAssertTrue(Int(dataPoint.label) != nil, "月份标签应该是有效的数字")
+        }
+    }
+    
+    func testYearlyDataLabelGeneration() throws {
+        // 测试年份数据生成包含正确的月份标签
+        statisticsManager.currentPeriod = .year
+        let yearlyData = statisticsManager.getStatisticsData()
+        
+        // 验证有12个月的数据
+        XCTAssertEqual(yearlyData.count, 12)
+        
+        // 验证标签格式正确（应该包含"月"字符）
+        for dataPoint in yearlyData {
+            XCTAssertTrue(dataPoint.label.contains("月"), "年份视图标签应该包含'月'字符")
+        }
+    }
+    
+    func testNavigationBoundaries() throws {
+        // 测试导航边界检查
+        let originalDate = statisticsManager.currentDate
+        
+        // 测试向前导航到未来是否被正确限制
+        statisticsManager.currentDate = Date()
+        let canNavigateToFuture = statisticsManager.canNavigateToNext
+        
+        // 当前日期应该不能导航到未来
+        XCTAssertFalse(canNavigateToFuture)
+        
+        // 恢复原始日期
+        statisticsManager.currentDate = originalDate
+    }
+    
     func testCurrentPeriodTitle() throws {
         statisticsManager.currentPeriod = .day
         let dayTitle = statisticsManager.getCurrentPeriodTitle()
