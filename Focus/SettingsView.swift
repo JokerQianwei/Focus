@@ -276,7 +276,7 @@ struct SettingsView: View {
                 VStack(spacing: 8) {
                     ToggleRow(
                         title: "微休息通知",
-                        subtitle: "微休息开始和结束时发送系统通知提醒",
+                        subtitle: "微休息发送系统通知提醒",
                         icon: "bell",
                         isOn: $timerManager.microBreakNotificationEnabled
                     )
@@ -295,7 +295,7 @@ struct SettingsView: View {
                     
                     VStack(alignment: .leading, spacing: 4) {
                         ToggleRow(
-                            title: "微休息时切换暂停/播放状态",
+                            title: "切换暂停/播放状态",
                             subtitle: "推荐看视频/网课时开启",
                             icon: "pause.rectangle",
                             isOn: $timerManager.muteAudioDuringBreak
