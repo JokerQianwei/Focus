@@ -59,6 +59,8 @@ class TimerManager: ObservableObject {
     // 音效相关键
     private let microBreakStartSoundTypeKey = "microBreakStartSoundType"
     private let microBreakEndSoundTypeKey = "microBreakEndSoundType"
+    // 微休息通知键
+    private let microBreakNotificationEnabledKey = "microBreakNotificationEnabled"
 
     // 发布的属性，当这些属性改变时，所有观察者都会收到通知
     @Published var minutes: Int = 90
@@ -114,24 +116,8 @@ class TimerManager: ObservableObject {
         }
     }
     
-    @Published var showStatusBarIcon: Bool {
-        didSet {
-            UserDefaults.standard.set(showStatusBarIcon, forKey: showStatusBarIconKey)
-            // 发送通知，告知状态栏控制器更新图标的显示状态
-            NotificationCenter.default.post(name: .statusBarIconVisibilityChanged, object: nil)
-            
-            // 如果隐藏了状态栏图标，确保显示主窗口
-            if !showStatusBarIcon {
-                DispatchQueue.main.async {
-                    let windowsVisible = NSApp.windows.contains(where: { $0.isVisible })
-                    if !windowsVisible {
-                        NSApp.setActivationPolicy(.regular)
-                        NSApp.activate(ignoringOtherApps: true)
-                    }
-                }
-            }
-        }
-    }
+    // 作为纯菜单栏应用，状态栏图标始终显示（只读属性）
+    let showStatusBarIcon: Bool = true
     
     @Published private var completionTimestamps: [Date] = [] // Store completion timestamps
 
@@ -145,6 +131,13 @@ class TimerManager: ObservableObject {
     @Published var microBreakEndSoundType: SoundType {
         didSet {
             UserDefaults.standard.set(microBreakEndSoundType.rawValue, forKey: microBreakEndSoundTypeKey)
+        }
+    }
+    
+    // 微休息通知设置
+    @Published var microBreakNotificationEnabled: Bool {
+        didSet {
+            UserDefaults.standard.set(microBreakNotificationEnabled, forKey: microBreakNotificationEnabledKey)
         }
     }
 
@@ -214,12 +207,7 @@ class TimerManager: ObservableObject {
             self.microBreakSeconds = 10 // 默认值
         }
 
-        // 状态栏图标显示设置
-        if UserDefaults.standard.object(forKey: showStatusBarIconKey) != nil {
-            self.showStatusBarIcon = UserDefaults.standard.bool(forKey: showStatusBarIconKey)
-        } else {
-            self.showStatusBarIcon = true // 默认显示
-        }
+        // 作为纯菜单栏应用，状态栏图标始终显示，不需要从UserDefaults加载
         
         // 黑屏功能设置
         if UserDefaults.standard.object(forKey: blackoutEnabledKey) != nil {
@@ -249,6 +237,13 @@ class TimerManager: ObservableObject {
             self.microBreakEndSoundType = soundType
         } else {
             self.microBreakEndSoundType = .hero // 默认值改为完成声
+        }
+
+        // 微休息通知设置
+        if UserDefaults.standard.object(forKey: microBreakNotificationEnabledKey) != nil {
+            self.microBreakNotificationEnabled = UserDefaults.standard.bool(forKey: microBreakNotificationEnabledKey)
+        } else {
+            self.microBreakNotificationEnabled = true // 默认启用微休息通知
         }
 
         // 初始化计时器状态
@@ -464,6 +459,11 @@ class TimerManager: ObservableObject {
                 object: self.microBreakStartSoundType.rawValue
             )
             
+            // 如果启用了微休息通知，发送通知
+            if self.microBreakNotificationEnabled {
+                NotificationCenter.default.post(name: .microBreakStartNotification, object: nil)
+            }
+            
             // 如果启用了黑屏，发送黑屏通知
             if self.blackoutEnabled {
                 NotificationCenter.default.post(name: .showBlackout, object: nil)
@@ -484,6 +484,11 @@ class TimerManager: ObservableObject {
                 name: .playMicroBreakEndSound,
                 object: self.microBreakEndSoundType.rawValue
             )
+            
+            // 如果启用了微休息通知，发送通知
+            if self.microBreakNotificationEnabled {
+                NotificationCenter.default.post(name: .microBreakEndNotification, object: nil)
+            }
             
             // 如果启用了黑屏，发送结束黑屏通知
             if self.blackoutEnabled {
@@ -555,4 +560,6 @@ extension Notification.Name {
     static let statusBarIconVisibilityChanged = Notification.Name("statusBarIconVisibilityChanged")
     static let showBlackout = Notification.Name("showBlackout")
     static let hideBlackout = Notification.Name("hideBlackout")
+    static let microBreakStartNotification = Notification.Name("microBreakStartNotification")
+    static let microBreakEndNotification = Notification.Name("microBreakEndNotification")
 }

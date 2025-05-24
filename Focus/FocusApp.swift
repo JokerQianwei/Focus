@@ -55,16 +55,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
     private var audioPlayers: [SoundType: AVAudioPlayer] = [:]
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        // 请求通知权限
-        let center = UNUserNotificationCenter.current()
-        center.delegate = self
-        center.requestAuthorization(options: [.alert, .sound]) { granted, error in
-            if granted {
-                print("通知权限已获取")
-            } else if let error = error {
-                print("通知权限请求失败: \(error.localizedDescription)")
-            }
-        }
+        // 请求通知权限（改进版本）
+        requestNotificationPermission()
 
         // 初始化菜单栏控制器
         statusBarController = StatusBarController()
@@ -75,10 +67,19 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
         // 初始化视频控制管理器
         videoControlManager = VideoControlManager.shared
         
-        // 初始化主窗口控制器
+        // 初始化主窗口控制器并显示窗口
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            if let mainWindow = NSApp.windows.first(where: { !$0.title.isEmpty }) {
+            if let mainWindow = NSApp.windows.first(where: { window in
+                // 查找主窗口：包含内容且尺寸合理
+                let hasContentView = window.contentViewController != nil
+                let isReasonableSize = window.frame.width > 250 && window.frame.height > 400
+                let isNotStatusBar = window.frame.height > 100
+                return hasContentView && isReasonableSize && isNotStatusBar
+            }) {
                 self.mainWindowController = NSWindowController(window: mainWindow)
+                
+                // 默认显示主窗口
+                self.showMainWindowOnStartup(window: mainWindow)
             }
         }
 
@@ -147,6 +148,29 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
             name: .hideBlackout,
             object: nil
         )
+        
+        // 监听微休息开始通知
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(sendMicroBreakStartNotification),
+            name: .microBreakStartNotification,
+            object: nil
+        )
+        
+        // 监听微休息结束通知
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(sendMicroBreakEndNotification),
+            name: .microBreakEndNotification,
+            object: nil
+        )
+        
+        // 调试：测试通知权限（仅在调试模式下）
+        #if DEBUG
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+            NotificationTest.shared.testNotificationPermission()
+        }
+        #endif
     }
     
     // 当应用程序激活时也确保窗口尺寸
@@ -271,33 +295,43 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
 
     // 发送计时器通知
     @objc private func sendTimerNotification() {
-        let timerManager = TimerManager.shared
-        let content = UNMutableNotificationContent()
+        // 首先检查通知权限
+        checkNotificationPermission { hasPermission in
+            if !hasPermission {
+                print("没有通知权限，无法发送通知")
+                // 可以选择显示权限提示
+                self.showNotificationPermissionAlert()
+                return
+            }
+            
+            let timerManager = TimerManager.shared
+            let content = UNMutableNotificationContent()
 
-        if timerManager.isWorkMode {
-            content.title = "专注时间结束"
-            content.body = "休息一下吧！"
-        } else {
-            content.title = "休息时间结束"
-            content.body = "开始新的专注周期！"
-        }
+            if timerManager.isWorkMode {
+                content.title = "专注时间结束"
+                content.body = "休息一下吧！"
+            } else {
+                content.title = "休息时间结束"
+                content.body = "开始新的专注周期！"
+            }
 
-        content.sound = UNNotificationSound.default
+            content.sound = UNNotificationSound.default
 
-        // 立即触发通知
-        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)
+            // 立即触发通知
+            let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)
 
-        // 创建通知请求
-        let request = UNNotificationRequest(
-            identifier: UUID().uuidString,
-            content: content,
-            trigger: trigger
-        )
+            // 创建通知请求
+            let request = UNNotificationRequest(
+                identifier: UUID().uuidString,
+                content: content,
+                trigger: trigger
+            )
 
-        // 添加通知请求
-        UNUserNotificationCenter.current().add(request) { error in
-            if let error = error {
-                print("通知发送失败: \(error.localizedDescription)")
+            // 添加通知请求
+            UNUserNotificationCenter.current().add(request) { error in
+                if let error = error {
+                    print("通知发送失败: \(error.localizedDescription)")
+                }
             }
         }
     }
@@ -310,28 +344,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
         completionHandler([.banner, .sound])
     }
 
-    // 状态栏图标可见性变化的处理
+    // 状态栏图标可见性变化的处理（纯菜单栏应用不需要处理）
     @objc private func statusBarIconVisibilityChanged() {
-        // 在这里可以添加额外的逻辑，如果需要的话
-        // 例如，如果图标不可见且窗口也不可见，可以将窗口设为可见
-        if !TimerManager.shared.showStatusBarIcon {
-            let windowsVisible = NSApp.windows.contains(where: { $0.isVisible })
-            if !windowsVisible {
-                // 如果没有可见窗口，显示主窗口
-                NSApp.setActivationPolicy(.regular)
-                // 检查是否已有主窗口控制器，如果没有则尝试获取
-                if mainWindowController == nil {
-                    if let mainWindow = NSApp.windows.first(where: { !$0.title.isEmpty }) {
-                        mainWindowController = NSWindowController(window: mainWindow)
-                    }
-                }
-                
-                if let controller = mainWindowController {
-                    controller.showWindow(self)
-                    NSApp.activate(ignoringOtherApps: true)
-                }
-            }
-        }
+        // 作为纯菜单栏应用，状态栏图标始终保持可见
+        // 此方法保留以兼容现有通知系统，但不执行任何操作
     }
     
     // 处理显示黑屏请求
@@ -354,5 +370,163 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
         
         // 恢复视频播放（通过恢复系统音量）
         videoControlManager?.resumeVideo()
+    }
+    
+    // 发送微休息开始通知
+    @objc private func sendMicroBreakStartNotification() {
+        // 首先检查通知权限
+        checkNotificationPermission { hasPermission in
+            if !hasPermission {
+                print("没有通知权限，无法发送微休息通知")
+                return
+            }
+            
+            let content = UNMutableNotificationContent()
+            content.title = "微休息开始"
+            content.body = "休息 \(TimerManager.shared.microBreakSeconds) 秒，放松一下眼睛吧！"
+            content.sound = UNNotificationSound.default
+
+            // 立即触发通知
+            let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)
+
+            // 创建通知请求
+            let request = UNNotificationRequest(
+                identifier: "microbreak-start-\(UUID().uuidString)",
+                content: content,
+                trigger: trigger
+            )
+
+            // 添加通知请求
+            UNUserNotificationCenter.current().add(request) { error in
+                if let error = error {
+                    print("微休息开始通知发送失败: \(error.localizedDescription)")
+                }
+            }
+        }
+    }
+    
+    // 发送微休息结束通知
+    @objc private func sendMicroBreakEndNotification() {
+        // 首先检查通知权限
+        checkNotificationPermission { hasPermission in
+            if !hasPermission {
+                print("没有通知权限，无法发送微休息通知")
+                return
+            }
+            
+            let content = UNMutableNotificationContent()
+            content.title = "微休息结束"
+            content.body = "继续专注工作吧！"
+            content.sound = UNNotificationSound.default
+
+            // 立即触发通知
+            let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)
+
+            // 创建通知请求
+            let request = UNNotificationRequest(
+                identifier: "microbreak-end-\(UUID().uuidString)",
+                content: content,
+                trigger: trigger
+            )
+
+            // 添加通知请求
+            UNUserNotificationCenter.current().add(request) { error in
+                if let error = error {
+                    print("微休息结束通知发送失败: \(error.localizedDescription)")
+                }
+            }
+        }
+    }
+
+    // 改进的通知权限请求方法
+    private func requestNotificationPermission() {
+        let center = UNUserNotificationCenter.current()
+        center.delegate = self
+        
+        // 首先检查当前权限状态
+        center.getNotificationSettings { settings in
+            DispatchQueue.main.async {
+                switch settings.authorizationStatus {
+                case .notDetermined:
+                    // 首次请求权限
+                    self.performNotificationRequest(center: center)
+                    
+                case .denied:
+                    // 权限被拒绝，引导用户到系统设置
+                    print("通知权限被拒绝，需要在系统设置中手动开启")
+                    self.showNotificationPermissionAlert()
+                    
+                case .authorized, .provisional, .ephemeral:
+                    // 权限已获取
+                    print("通知权限已获取")
+                    
+                @unknown default:
+                    // 未知状态，尝试请求
+                    self.performNotificationRequest(center: center)
+                }
+            }
+        }
+    }
+    
+    // 执行通知权限请求
+    private func performNotificationRequest(center: UNUserNotificationCenter) {
+        center.requestAuthorization(options: [.alert, .sound, .badge]) { granted, error in
+            DispatchQueue.main.async {
+                if granted {
+                    print("通知权限已获取")
+                } else if let error = error {
+                    print("通知权限请求失败: \(error.localizedDescription)")
+                    self.showNotificationPermissionAlert()
+                } else {
+                    print("通知权限被用户拒绝")
+                    self.showNotificationPermissionAlert()
+                }
+            }
+        }
+    }
+    
+    // 显示通知权限提示对话框
+    private func showNotificationPermissionAlert() {
+        let alert = NSAlert()
+        alert.messageText = "需要通知权限"
+        alert.informativeText = "Focus 需要通知权限来提醒您工作和休息时间。请在系统偏好设置中开启通知权限。"
+        alert.addButton(withTitle: "打开系统设置")
+        alert.addButton(withTitle: "稍后设置")
+        alert.alertStyle = .informational
+        
+        let response = alert.runModal()
+        if response == .alertFirstButtonReturn {
+            // 打开系统偏好设置的通知页面
+            self.openNotificationSettings()
+        }
+    }
+    
+    // 打开系统通知设置
+    private func openNotificationSettings() {
+        if let url = URL(string: "x-apple.systempreferences:com.apple.preference.notifications") {
+            NSWorkspace.shared.open(url)
+        }
+    }
+    
+    // 应用启动时显示主窗口
+    private func showMainWindowOnStartup(window: NSWindow) {
+        // 设置窗口属性，确保在菜单栏应用模式下正确显示
+        window.level = .floating
+        window.makeKeyAndOrderFront(nil)
+        window.orderFrontRegardless()
+        
+        // 激活应用程序，确保窗口可见
+        NSApp.activate(ignoringOtherApps: true)
+        
+        print("主窗口已在启动时显示")
+    }
+    
+    // 检查通知权限状态的公共方法
+    func checkNotificationPermission(completion: @escaping (Bool) -> Void) {
+        UNUserNotificationCenter.current().getNotificationSettings { settings in
+            DispatchQueue.main.async {
+                completion(settings.authorizationStatus == .authorized)
+            }
+        }
     }
 }

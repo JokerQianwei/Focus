@@ -28,29 +28,29 @@ struct ContentView: View {
 
             VStack(spacing: 15) {
                 // 顶部栏：标题和设置按钮
-                ZStack {
+                HStack {
                     // 标题居中，根据模式改变文本
                     Text(timerManager.isWorkMode ? "Focus" : "Break")
                         .font(.system(size: 36, weight: .bold, design: .rounded))
                         .foregroundColor(.primary)
                         .frame(maxWidth: .infinity)
 
-                    // 设置按钮靠右
-                    HStack {
-                        Spacer()
+                    // 右侧设置按钮
+                    Button(action: {
+                        showingSettings = true
+                    }) {
                         Image(systemName: "gearshape.fill")
                             .font(.title2)
-                            .foregroundColor(isHoveringSettings ? .primary : .secondary) // Change color on hover
-                            .scaleEffect(isHoveringSettings ? 1.1 : 1.0) // Scale effect on hover
-                            .onTapGesture {
-                                showingSettings = true
-                            }
-                            .help("设置")
-                            .onHover { hovering in
-                                withAnimation(.easeInOut(duration: 0.1)) {
-                                    isHoveringSettings = hovering
-                                }
-                            }
+                            .foregroundColor(isHoveringSettings ? .primary : .secondary)
+                            .scaleEffect(isHoveringSettings ? 1.1 : 1.0)
+                    }
+                    .buttonStyle(.plain)
+                    .focusEffectDisabled()
+                    .help("设置")
+                    .onHover { hovering in
+                        withAnimation(.easeInOut(duration: 0.1)) {
+                            isHoveringSettings = hovering
+                        }
                     }
                     .keyboardShortcut(",", modifiers: .command)
                 }
