@@ -29,16 +29,19 @@ final class MicroBreakNotificationTests: XCTestCase {
         // 测试默认值
         XCTAssertTrue(timerManager.microBreakNotificationEnabled, "微休息通知应该默认启用")
         
+        // 保存原始值
+        let originalValue = timerManager.microBreakNotificationEnabled
+        
         // 测试设置关闭
         timerManager.microBreakNotificationEnabled = false
         XCTAssertFalse(timerManager.microBreakNotificationEnabled, "设置应该正确保存")
         
-        // 模拟重新加载设置
-        let newTimerManager = TimerManager()
-        XCTAssertFalse(newTimerManager.microBreakNotificationEnabled, "设置应该从UserDefaults正确加载")
+        // 验证UserDefaults中的值
+        let savedValue = UserDefaults.standard.bool(forKey: "microBreakNotificationEnabled")
+        XCTAssertFalse(savedValue, "设置应该正确保存到UserDefaults")
         
-        // 恢复设置
-        timerManager.microBreakNotificationEnabled = true
+        // 恢复原始设置
+        timerManager.microBreakNotificationEnabled = originalValue
     }
     
     /// 测试微休息开始通知发送

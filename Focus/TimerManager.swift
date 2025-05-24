@@ -128,12 +128,20 @@ class TimerManager: ObservableObject {
     @Published var promptMinInterval: Int {
         didSet {
             UserDefaults.standard.set(promptMinInterval, forKey: promptMinIntervalKey)
+            // 确保最小间隔不大于最大间隔
+            if promptMinInterval > promptMaxInterval {
+                promptMaxInterval = promptMinInterval
+            }
         }
     }
     
     @Published var promptMaxInterval: Int {
         didSet {
             UserDefaults.standard.set(promptMaxInterval, forKey: promptMaxIntervalKey)
+            // 确保最大间隔不小于最小间隔
+            if promptMaxInterval < promptMinInterval {
+                promptMaxInterval = promptMinInterval
+            }
         }
     }
     
@@ -474,7 +482,12 @@ class TimerManager: ObservableObject {
         // 生成随机间隔（转换为秒）
         let minSeconds = promptMinInterval * 60
         let maxSeconds = promptMaxInterval * 60
-        nextPromptInterval = TimeInterval(Int.random(in: minSeconds...maxSeconds))
+        
+        // 安全检查：确保范围有效
+        let safeMinSeconds = min(minSeconds, maxSeconds)
+        let safeMaxSeconds = max(minSeconds, maxSeconds)
+        
+        nextPromptInterval = TimeInterval(Int.random(in: safeMinSeconds...safeMaxSeconds))
 
         // 创建新的计时器
         promptTimer = Timer.scheduledTimer(withTimeInterval: nextPromptInterval, repeats: false) { [weak self] _ in
