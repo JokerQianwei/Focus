@@ -112,7 +112,7 @@ struct SettingsView: View {
     // MARK: - 计时设置分组
     private var timerSettingsSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            SectionTitle(title: "计时设置", icon: "timer", iconColor: .blue)
+            SectionTitle(title: "计时", icon: "timer", iconColor: .blue)
             
             SimpleCard {
                 VStack(spacing: 12) {
@@ -153,7 +153,7 @@ struct SettingsView: View {
     // MARK: - 随机提示设置分组
     private var promptSettingsSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            SectionTitle(title: "随机提示", icon: "waveform.path.ecg", iconColor: .green)
+            SectionTitle(title: "随机提示音", icon: "waveform.path.ecg", iconColor: .green)
             
             SimpleCard {
                 VStack(spacing: 12) {
@@ -206,7 +206,7 @@ struct SettingsView: View {
     // MARK: - 声音设置分组
     private var soundSettingsSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            SectionTitle(title: "提示音效", icon: "speaker.wave.3", iconColor: .purple)
+            SectionTitle(title: "声音", icon: "speaker.wave.3", iconColor: .purple)
             
             SimpleCard {
                 VStack(spacing: 12) {
@@ -263,6 +263,16 @@ struct SettingsView: View {
                         }
                         .transition(.opacity.combined(with: .scale(scale: 0.95)))
                     }
+                    
+                    Divider()
+                        .padding(.horizontal, -6)
+                    
+                    ToggleRow(
+                        title: "微休息通知",
+                        subtitle: "发送系统通知提醒",
+                        icon: "bell",
+                        isOn: $timerManager.microBreakNotificationEnabled
+                    )
                 }
             }
         }
@@ -277,7 +287,7 @@ struct SettingsView: View {
                 VStack(spacing: 12) {
                     ToggleRow(
                         title: "微休息时全屏模式",
-                        subtitle: "全屏黑色窗口强制休息",
+                        subtitle: "",
                         icon: "rectangle.fill",
                         isOn: $timerManager.blackoutEnabled
                     )
@@ -288,7 +298,7 @@ struct SettingsView: View {
                     VStack(alignment: .leading, spacing: 6) {
                         ToggleRow(
                             title: "微休息时切换暂停/播放状态",
-                            subtitle: "自动暂停/播放视频内容",
+                            subtitle: "推荐看视频/网课时开启",
                             icon: "pause.rectangle",
                             isOn: $timerManager.muteAudioDuringBreak
                         )
@@ -318,16 +328,6 @@ struct SettingsView: View {
             
             SimpleCard {
                 VStack(spacing: 12) {
-                    ToggleRow(
-                        title: "微休息通知",
-                        subtitle: "发送系统通知提醒",
-                        icon: "bell",
-                        isOn: $timerManager.microBreakNotificationEnabled
-                    )
-                    
-                    Divider()
-                        .padding(.horizontal, -6)
-                    
                     HStack {
                         Image(systemName: "key")
                             .foregroundColor(.secondary)
