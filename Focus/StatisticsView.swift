@@ -94,10 +94,6 @@ struct StatisticsView: View {
                         Text("专注统计")
                             .font(.system(size: 24, weight: .bold, design: .rounded))
                             .foregroundColor(.primary)
-                        
-                        Text("数据洞察与分析")
-                            .font(.system(size: 13, weight: .medium))
-                            .foregroundColor(.secondary)
                     }
                 }
                 
