@@ -32,7 +32,7 @@ class NotificationTest {
                     print("⚠️ 通知权限被拒绝，请在系统偏好设置中手动开启")
                 } else if settings.authorizationStatus == .authorized {
                     print("✅ 通知权限已授权")
-                    self.sendTestNotification()
+                    // self.sendTestNotification()
                 }
             }
         }
