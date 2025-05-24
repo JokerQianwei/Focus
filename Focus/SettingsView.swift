@@ -556,6 +556,8 @@ struct RoundedInputStyle: TextFieldStyle {
                     .stroke(Color.secondary.opacity(0.3), lineWidth: 1)
             )
             .shadow(color: Color.black.opacity(0.03), radius: 1, x: 0, y: 1)
+            .focusEffectDisabled()
+            .focusable(false)
     }
 }
 
