@@ -32,8 +32,8 @@ struct StatisticsView: View {
             
             ScrollView {
                 LazyVStack(spacing: 24) {
-                    periodNavigationSection
                     controlsSection
+                    periodNavigationSection
                     chartSection
                     summaryCardsSection
                 }
@@ -197,7 +197,7 @@ struct StatisticsView: View {
     // MARK: - Controls Section
     private var controlsSection: some View {
         HStack(spacing: 20) {
-            // 时间段选择器
+            // 时间段选择器 - 占更多空间
             ModernSegmentedControl(
                 selection: $statisticsManager.currentPeriod,
                 options: StatisticsPeriod.allCases,
@@ -210,15 +210,15 @@ struct StatisticsView: View {
                     }
                 }
             )
+            .frame(maxWidth: .infinity)
             
-            Spacer()
-            
-            // 单位选择器
+            // 单位选择器 - 更紧凑
             ModernMenu(
                 selection: $statisticsManager.currentUnit,
                 options: StatisticsUnit.allCases,
                 icon: "slider.horizontal.3"
             )
+            .frame(width: 120)
         }
     }
     
@@ -537,7 +537,7 @@ struct ModernSegmentedControl: View {
             Text(option.rawValue)
                 .font(.system(size: 14, weight: .semibold))
                 .foregroundColor(selection == option ? .white : .secondary)
-                .frame(minWidth: 48)
+                .frame(minWidth: 80)
                 .frame(height: 36)
                 .background(
                     ZStack {
@@ -609,7 +609,7 @@ struct ModernMenu: View {
                 .font(.system(size: 14, weight: .medium))
                 .foregroundColor(.blue)
             
-            Text(selection.rawValue)
+            Text(selection == .count ? "次数" : "时长")
                 .font(.system(size: 14, weight: .semibold))
                 .foregroundColor(.primary)
             
