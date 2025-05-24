@@ -71,3 +71,20 @@ Focus 的核心设计灵感来源于神经科学和心理学的研究成果：
 - `FocusTests/` 和 `FocusUITests/`: 项目的单元测试和UI测试代码。
 - `images/`: 存放项目相关的图片资源。
 - `Focus.app.zip`: 构建生成的应用打包文件。
+
+## 许可协议
+
+[![License: CC BY-NC 4.0](https://img.shields.io/badge/License-CC%20BY--NC%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc/4.0/)
+
+本项目采用 **Creative Commons Attribution-NonCommercial 4.0 International License (CC BY-NC 4.0)** 开源。详情请参见 [LICENSE](LICENSE) 文件。
+
+### 您可以：
+- ✅ **分享** — 以任何媒介或格式复制、发行本作品
+- ✅ **演绎** — 修改、转换或以本作品为基础进行创作
+
+### 惟须遵守下列条件：
+- 📝 **署名** — 您必须给出适当的署名，提供指向本许可协议的链接，同时标明是否（对原始作品）作了修改
+- 🚫 **非商业性使用** — 您不得将本作品用于商业目的
+
+### 商业使用说明
+如需商业使用本软件，请联系作者获取商业许可。个人学习、教育用途、非营利组织使用不受此限制。
