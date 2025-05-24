@@ -184,15 +184,26 @@ class StatusBarController {
     
     // 查找主窗口的辅助方法
     private func findMainWindow() -> NSWindow? {
-        // 查找标题不为空且不是状态栏相关窗口的窗口
-        return NSApp.windows.first(where: { window in
-            // 状态栏窗口通常很小且位于屏幕顶部
-            let isStatusBarRelated = window.frame.height < 30 && 
-                                     window.frame.origin.y > NSScreen.main?.frame.height ?? 0 - 30
+        // 优先查找 ContentView 相关的窗口
+        let mainWindow = NSApp.windows.first { window in
+            // 检查窗口是否包含 Focus 应用的主要内容
+            let hasContentView = window.contentViewController != nil
+            let isReasonableSize = window.frame.width > 250 && window.frame.height > 400
+            let isNotStatusBar = window.frame.height > 100
             
-            // 主窗口通常有标题且不是状态栏相关窗口
-            return !window.title.isEmpty && !isStatusBarRelated
-        })
+            return hasContentView && isReasonableSize && isNotStatusBar
+        }
+        
+        if mainWindow != nil {
+            return mainWindow
+        }
+        
+        // 如果没有找到，尝试其他方式
+        return NSApp.windows.first { window in
+            let isStatusBarRelated = window.frame.height < 100 || 
+                                     window.frame.width < 200
+            return !isStatusBarRelated && window.isVisible
+        }
     }
 
     // 播放声音的辅助函数
@@ -253,36 +264,73 @@ class StatusBarController {
 
     // 切换主窗口的显示状态
     @objc private func toggleMainWindow(_ sender: AnyObject?) {
-        // 这里不要立即激活应用程序，可能会导致状态栏图标消失
-        
-        // 查找主窗口
-        if mainWindowController?.window == nil {
-            if let mainWindow = findMainWindow() {
-                mainWindowController = NSWindowController(window: mainWindow)
-            }
+        // 确保获取最新的主窗口
+        if let mainWindow = findMainWindow() {
+            mainWindowController = NSWindowController(window: mainWindow)
         }
         
-        if let windowController = mainWindowController {
-            if let window = windowController.window, window.isVisible {
-                // 如果窗口可见，先隐藏窗口
-                window.orderOut(nil)
-                // 然后确保应用程序保持运行状态
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                    NSApp.setActivationPolicy(.accessory)
-                }
-            } else {
-                // 如果窗口不可见，先设置应用程序为常规应用，再显示窗口
-                NSApp.setActivationPolicy(.regular)
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                    windowController.showWindow(nil)
-                    NSApp.activate(ignoringOtherApps: true)
-                }
-            }
+        guard let windowController = mainWindowController,
+              let window = windowController.window else {
+            // 如果没有找到主窗口，创建一个新的
+            createAndShowMainWindow()
+            return
+        }
+        
+        // 判断窗口是否可见和活跃
+        let isWindowVisible = window.isVisible && !window.isMiniaturized
+        let isWindowActive = window.isKeyWindow || window.isMainWindow
+        
+        if isWindowVisible && (isWindowActive || NSApp.isActive) {
+            // 窗口可见且应用处于活跃状态，隐藏窗口
+            hideMainWindow(window: window)
         } else {
-            // 如果没有找到主窗口，尝试恢复应用程序状态
-            NSApp.setActivationPolicy(.regular)
+            // 窗口不可见或应用不活跃，显示窗口
+            showMainWindow(windowController: windowController)
+        }
+    }
+    
+    // 显示主窗口
+    private func showMainWindow(windowController: NSWindowController) {
+        NSApp.setActivationPolicy(.regular)
+        
+        DispatchQueue.main.async {
+            windowController.showWindow(nil)
+            
+            // 确保窗口出现在最前面
+            if let window = windowController.window {
+                window.makeKeyAndOrderFront(nil)
+                window.orderFrontRegardless()
+            }
+            
+            // 激活应用程序
             NSApp.activate(ignoringOtherApps: true)
-            print("未找到主窗口，请确保应用程序已正确启动")
+        }
+    }
+    
+    // 隐藏主窗口
+    private func hideMainWindow(window: NSWindow) {
+        window.orderOut(nil)
+        
+        // 延迟设置应用程序为后台模式，避免状态栏图标消失
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            NSApp.setActivationPolicy(.accessory)
+        }
+    }
+    
+    // 创建并显示主窗口（备用方案）
+    private func createAndShowMainWindow() {
+        NSApp.setActivationPolicy(.regular)
+        NSApp.activate(ignoringOtherApps: true)
+        
+        // 尝试创建新窗口或恢复现有窗口
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+            // 再次尝试查找主窗口
+            if let window = self.findMainWindow() {
+                self.mainWindowController = NSWindowController(window: window)
+                window.makeKeyAndOrderFront(nil)
+            } else {
+                print("警告：无法找到主窗口")
+            }
         }
     }
 
