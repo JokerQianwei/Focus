@@ -16,9 +16,11 @@ struct ContentView: View {
 
     // 设置视图相关状态
     @State private var showingSettings = false
+    @State private var showingStatistics = false
     @State private var isHoveringPlayPause = false // State for play/pause hover
     @State private var isHoveringReset = false     // State for reset hover
     @State private var isHoveringSettings = false // State for settings hover
+    @State private var isHoveringStatistics = false // State for statistics hover
     
     // 进度条动画状态
     @State private var animateProgress = false
@@ -74,14 +76,23 @@ struct ContentView: View {
             VStack(spacing: 15) {
                 // 顶部栏：标题和设置按钮
                 HStack {
-                    // 左侧占位元素，与右侧设置按钮保持平衡
-                    Button(action: {}) {
-                        Image(systemName: "gearshape.fill")
+                    // 左侧统计按钮
+                    Button(action: {
+                        showingStatistics = true
+                    }) {
+                        Image(systemName: "chart.bar.fill")
                             .font(.title2)
-                            .foregroundColor(.clear)
+                            .foregroundColor(isHoveringStatistics ? .primary : .secondary)
+                            .scaleEffect(isHoveringStatistics ? 1.1 : 1.0)
                     }
                     .buttonStyle(.plain)
-                    .disabled(true)
+                    .focusEffectDisabled()
+                    .help("数据统计")
+                    .onHover { hovering in
+                        withAnimation(.easeInOut(duration: 0.1)) {
+                            isHoveringStatistics = hovering
+                        }
+                    }
                     
                     // 标题居中，根据模式改变文本
                     Text(timerManager.isWorkMode ? "Focus" : "Break")
@@ -224,6 +235,9 @@ struct ContentView: View {
         }
         .sheet(isPresented: $showingSettings) {
             SettingsView(timerManager: timerManager)
+        }
+        .sheet(isPresented: $showingStatistics) {
+            StatisticsView(timerManager: timerManager)
         }
         .onChange(of: timerManager.isWorkMode) { _ in
             // 在模式切换时重新触发进度动画

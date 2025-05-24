@@ -80,6 +80,7 @@ class TimerManager: ObservableObject {
     private let promptMaxIntervalKey = "promptMaxInterval"
     private let microBreakSecondsKey = "microBreakSeconds"
     private let completionTimestampsKey = "completionTimestamps" // UserDefaults key
+    private let focusSessionsKey = "focusSessions" // 新增：专注会话存储键
     private let showStatusBarIconKey = "showStatusBarIcon" // 控制状态栏图标显示的键
     private let blackoutEnabledKey = "blackoutEnabled" // 控制黑屏功能的键
     private let muteAudioDuringBreakKey = "muteAudioDuringBreak" // 控制微休息期间暂停媒体播放的键
@@ -155,6 +156,7 @@ class TimerManager: ObservableObject {
     let showStatusBarIcon: Bool = true
     
     @Published private var completionTimestamps: [Date] = [] // Store completion timestamps
+    @Published var focusSessions: [FocusSession] = [] // 新增：专注会话数组
 
     // 微休息开始和结束的声音设置
     @Published var microBreakStartSoundType: SoundType {
@@ -181,6 +183,9 @@ class TimerManager: ObservableObject {
     private var promptTimer: Timer? = nil
     private var secondPromptTimer: Timer? = nil
     private var nextPromptInterval: TimeInterval = 0
+    
+    // 新增：当前会话追踪
+    private var currentSessionStartTime: Date?
 
     // 格式化时间显示
     var timeString: String {
@@ -284,10 +289,22 @@ class TimerManager: ObservableObject {
         // 初始化计时器状态
         self.minutes = self.workMinutes
         
-        // 加载完成时间戳
+        // 加载专注会话数据
+        if let savedSessionsData = UserDefaults.standard.data(forKey: focusSessionsKey),
+           let decodedSessions = try? JSONDecoder().decode([FocusSession].self, from: savedSessionsData) {
+            self.focusSessions = decodedSessions
+            // 清理旧的会话数据
+            cleanupOldSessionsIfNeeded()
+        }
+        
+        // 加载完成时间戳（用于向后兼容）
         if let savedTimestampsData = UserDefaults.standard.data(forKey: completionTimestampsKey),
            let decodedTimestamps = try? JSONDecoder().decode([Date].self, from: savedTimestampsData) {
             self.completionTimestamps = decodedTimestamps
+            // 如果focusSessions为空但有时间戳，进行数据迁移
+            if focusSessions.isEmpty && !decodedTimestamps.isEmpty {
+                migrateFromTimestampsToSessions(timestamps: decodedTimestamps)
+            }
             // Cleanup timestamps older than the start of the current "day" (5 AM)
             cleanupOldTimestampsIfNeeded()
         }
@@ -337,6 +354,12 @@ class TimerManager: ObservableObject {
         guard !timerRunning else { return }
 
         timerRunning = true
+        
+        // 记录会话开始时间（仅工作模式）
+        if isWorkMode {
+            currentSessionStartTime = Date()
+        }
+        
         // 在计时器实际启动后发送开始声音通知
         if promptSoundEnabled { // 检查是否启用声音
             NotificationCenter.default.post(name: .playStartSound, object: nil)
@@ -361,13 +384,27 @@ class TimerManager: ObservableObject {
 
                 // 切换模式
                 if wasWorkMode {
+                    // 记录完成的专注会话
+                    if let startTime = self.currentSessionStartTime {
+                        let endTime = Date()
+                        let session = FocusSession(
+                            startTime: startTime,
+                            endTime: endTime,
+                            durationMinutes: self.workMinutes,
+                            isWorkSession: true
+                        )
+                        self.focusSessions.append(session)
+                        self.saveFocusSessions()
+                        self.currentSessionStartTime = nil
+                    }
+                    
                     // 工作模式结束，发送结束声音通知，然后切换到休息模式
                     if self.promptSoundEnabled {
                         NotificationCenter.default.post(name: .playEndSound, object: nil)
                     }
                     self.isWorkMode = false
                     self.minutes = self.breakMinutes
-                    self.completionTimestamps.append(Date()) // Add current timestamp
+                    self.completionTimestamps.append(Date()) // Add current timestamp (保持向后兼容)
                     self.saveCompletionTimestamps() // Save updated timestamps
                     self.stopPromptSystem() // 工作结束，停止随机提示音
 
@@ -584,6 +621,59 @@ class TimerManager: ObservableObject {
             print("Cleaned up \(originalCount - completionTimestamps.count) old timestamps.")
             // No need to save here, as this is only called during init before potential modifications
          }
+    }
+
+    // Helper function to migrate from timestamps to sessions
+    private func migrateFromTimestampsToSessions(timestamps: [Date]) {
+        print("开始迁移时间戳数据到专注会话格式...")
+        
+        // 为每个时间戳创建一个默认的专注会话
+        let migratedSessions = timestamps.map { timestamp in
+            // 假设每个会话持续工作时间长度
+            let startTime = Calendar.current.date(byAdding: .minute, value: -workMinutes, to: timestamp) ?? timestamp
+            return FocusSession(
+                startTime: startTime,
+                endTime: timestamp,
+                durationMinutes: workMinutes,
+                isWorkSession: true
+            )
+        }
+        
+        focusSessions = migratedSessions
+        saveFocusSessions()
+        
+        print("成功迁移 \(migratedSessions.count) 个专注会话")
+    }
+
+    // Helper function to clean up old sessions
+    private func cleanupOldSessionsIfNeeded() {
+        let now = Date()
+        let calendar = Calendar.current
+        
+        // 保留最近3个月的数据
+        guard let threeMonthsAgo = calendar.date(byAdding: .month, value: -3, to: now) else { return }
+        
+        let originalCount = focusSessions.count
+        focusSessions.removeAll { $0.startTime < threeMonthsAgo }
+        
+        if focusSessions.count != originalCount {
+            print("清理了 \(originalCount - focusSessions.count) 个旧的专注会话记录")
+            saveFocusSessions()
+        }
+    }
+
+    // Helper function to save focus sessions to UserDefaults
+    private func saveFocusSessions() {
+        DispatchQueue.global(qos: .background).async {
+            if let encoded = try? JSONEncoder().encode(self.focusSessions) {
+                UserDefaults.standard.set(encoded, forKey: self.focusSessionsKey)
+                #if DEBUG
+                // print("Saved \(self.focusSessions.count) sessions.")
+                #endif
+            } else {
+                print("Error: Failed to encode focus sessions.")
+            }
+        }
     }
 }
 
