@@ -41,7 +41,7 @@ struct SettingsView: View {
             headerView
             
             ScrollView {
-                LazyVStack(spacing: 20) {
+                LazyVStack(spacing: 12) {
                     timerSettingsCard
                     promptSettingsCard
                     soundSettingsCard
@@ -50,7 +50,7 @@ struct SettingsView: View {
                     notificationCard
                 }
                 .padding(.horizontal, 20)
-                .padding(.vertical, 24)
+                .padding(.vertical, 20)
             }
         }
         .frame(width: 420, height: 600)
@@ -64,15 +64,9 @@ struct SettingsView: View {
     private var headerView: some View {
         VStack(spacing: 0) {
             HStack {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("设置")
-                        .font(.system(size: 22, weight: .bold, design: .rounded))
-                        .foregroundColor(.primary)
-                    
-                    Text("个性化你的专注体验")
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundColor(.secondary)
-                }
+                Text("设置")
+                    .font(.system(size: 20, weight: .semibold, design: .rounded))
+                    .foregroundColor(.primary)
                 
                 Spacer()
                 
@@ -82,14 +76,14 @@ struct SettingsView: View {
                     }
                 }) {
                     Image(systemName: "xmark")
-                        .font(.system(size: 14, weight: .semibold))
+                        .font(.system(size: 12, weight: .medium))
                         .foregroundColor(isHoveringClose ? .white : .secondary)
-                        .frame(width: 30, height: 30)
+                        .frame(width: 28, height: 28)
                         .background(
                             Circle()
                                 .fill(isHoveringClose ? .red : Color(.controlBackgroundColor))
                         )
-                        .shadow(color: .black.opacity(0.1), radius: 2, x: 0, y: 1)
+                        .shadow(color: .black.opacity(0.08), radius: 1, x: 0, y: 0.5)
                 }
                 .buttonStyle(PlainButtonStyle())
                 .onHover { hovering in
@@ -99,8 +93,8 @@ struct SettingsView: View {
                 }
             }
             .padding(.horizontal, 24)
-            .padding(.top, 20)
-            .padding(.bottom, 16)
+            .padding(.top, 18)
+            .padding(.bottom, 12)
         }
         .background(.ultraThinMaterial)
     }
@@ -120,11 +114,10 @@ struct SettingsView: View {
     private var timerSettingsCard: some View {
         SettingsCard(
             title: "计时设置",
-            subtitle: "设置专注和休息时间",
             icon: "timer",
             iconColor: .blue
         ) {
-            VStack(spacing: 16) {
+            VStack(spacing: 12) {
                 TimeInputRow(
                     title: "专注时间",
                     value: $workMinutesInput,
@@ -141,7 +134,7 @@ struct SettingsView: View {
                 }
                 
                 Divider()
-                    .padding(.horizontal, -8)
+                    .padding(.horizontal, -6)
                 
                 TimeInputRow(
                     title: "休息时间",
@@ -162,11 +155,10 @@ struct SettingsView: View {
     private var promptSettingsCard: some View {
         SettingsCard(
             title: "随机提示",
-            subtitle: "科学的微休息间隔",
             icon: "waveform.path.ecg",
             iconColor: .green
         ) {
-            VStack(spacing: 16) {
+            VStack(spacing: 12) {
                 TimeInputRow(
                     title: "最小间隔",
                     value: $promptMinInput,
@@ -180,7 +172,7 @@ struct SettingsView: View {
                 }
                 
                 Divider()
-                    .padding(.horizontal, -8)
+                    .padding(.horizontal, -6)
                 
                 TimeInputRow(
                     title: "最大间隔",
@@ -195,7 +187,7 @@ struct SettingsView: View {
                 }
                 
                 Divider()
-                    .padding(.horizontal, -8)
+                    .padding(.horizontal, -6)
                 
                 TimeInputRow(
                     title: "微休息时长",
@@ -216,11 +208,10 @@ struct SettingsView: View {
     private var soundSettingsCard: some View {
         SettingsCard(
             title: "提示音效",
-            subtitle: "个性化你的声音体验",
             icon: "speaker.wave.3",
             iconColor: .purple
         ) {
-            VStack(spacing: 16) {
+            VStack(spacing: 12) {
                 ToggleRow(
                     title: "启用提示音",
                     subtitle: "专注期间播放提示音",
@@ -229,9 +220,9 @@ struct SettingsView: View {
                 )
                 
                 if timerManager.promptSoundEnabled {
-                    VStack(spacing: 12) {
+                    VStack(spacing: 10) {
                         Divider()
-                            .padding(.horizontal, -8)
+                            .padding(.horizontal, -6)
                         
                         SoundSelectionRow(
                             title: "开始音效",
@@ -247,7 +238,7 @@ struct SettingsView: View {
                         )
                         
                         Divider()
-                            .padding(.horizontal, -8)
+                            .padding(.horizontal, -6)
                         
                         SoundSelectionRow(
                             title: "结束音效",
@@ -265,9 +256,9 @@ struct SettingsView: View {
                         HStack {
                             Image(systemName: "info.circle")
                                 .foregroundColor(.blue)
-                                .font(.caption)
+                                .font(.caption2)
                             Text("每隔 \(timerManager.promptMinInterval)-\(timerManager.promptMaxInterval) 分钟播放提示音")
-                                .font(.caption)
+                                .font(.caption2)
                                 .foregroundColor(.secondary)
                             Spacer()
                         }
@@ -282,7 +273,6 @@ struct SettingsView: View {
     private var blackoutSettingsCard: some View {
         SettingsCard(
             title: "黑屏功能",
-            subtitle: "强制休息模式",
             icon: "display",
             iconColor: .gray
         ) {
@@ -299,11 +289,10 @@ struct SettingsView: View {
     private var videoControlCard: some View {
         SettingsCard(
             title: "视频控制",
-            subtitle: "智能媒体管理",
             icon: "play.slash",
             iconColor: .orange
         ) {
-            VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: 6) {
                 ToggleRow(
                     title: "自动暂停视频",
                     subtitle: "微休息时暂停/播放视频",
@@ -315,9 +304,9 @@ struct SettingsView: View {
                     HStack {
                         Image(systemName: "exclamationmark.triangle")
                             .foregroundColor(.orange)
-                            .font(.caption)
+                            .font(.caption2)
                         Text("首次使用需授予辅助功能权限")
-                            .font(.caption)
+                            .font(.caption2)
                             .foregroundColor(.secondary)
                         Spacer()
                     }
@@ -331,11 +320,10 @@ struct SettingsView: View {
     private var notificationCard: some View {
         SettingsCard(
             title: "通知设置",
-            subtitle: "系统提醒配置",
             icon: "bell.badge",
             iconColor: .red
         ) {
-            VStack(spacing: 16) {
+            VStack(spacing: 12) {
                 ToggleRow(
                     title: "微休息通知",
                     subtitle: "发送系统通知提醒",
@@ -344,19 +332,19 @@ struct SettingsView: View {
                 )
                 
                 Divider()
-                    .padding(.horizontal, -8)
+                    .padding(.horizontal, -6)
                 
                 HStack {
                     Image(systemName: "key")
                         .foregroundColor(.secondary)
-                        .frame(width: 20)
+                        .frame(width: 18)
                     
-                    VStack(alignment: .leading, spacing: 2) {
+                    VStack(alignment: .leading, spacing: 1) {
                         Text("通知权限")
-                            .font(.system(size: 14, weight: .medium))
+                            .font(.system(size: 13, weight: .medium))
                             .foregroundColor(.primary)
                         Text("需要权限来发送提醒")
-                            .font(.caption)
+                            .font(.caption2)
                             .foregroundColor(.secondary)
                     }
                     
@@ -387,7 +375,6 @@ struct SettingsView: View {
 // MARK: - 设置卡片组件
 struct SettingsCard<Content: View>: View {
     let title: String
-    let subtitle: String
     let icon: String
     let iconColor: Color
     let content: Content
@@ -396,54 +383,46 @@ struct SettingsCard<Content: View>: View {
     
     init(
         title: String,
-        subtitle: String,
         icon: String,
         iconColor: Color,
         @ViewBuilder content: () -> Content
     ) {
         self.title = title
-        self.subtitle = subtitle
         self.icon = icon
         self.iconColor = iconColor
         self.content = content()
     }
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            HStack(spacing: 12) {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 10) {
                 Image(systemName: icon)
-                    .font(.system(size: 16, weight: .semibold))
+                    .font(.system(size: 14, weight: .medium))
                     .foregroundColor(iconColor)
-                    .frame(width: 24, height: 24)
+                    .frame(width: 20, height: 20)
                     .background(
                         Circle()
-                            .fill(iconColor.opacity(0.15))
+                            .fill(iconColor.opacity(0.12))
                     )
                 
-                VStack(alignment: .leading, spacing: 1) {
-                    Text(title)
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundColor(.primary)
-                    
-                    Text(subtitle)
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundColor(.secondary)
-                }
+                Text(title)
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundColor(.primary)
                 
                 Spacer()
             }
             
             content
         }
-        .padding(20)
+        .padding(16)
         .background(
-            RoundedRectangle(cornerRadius: 16)
+            RoundedRectangle(cornerRadius: 12)
                 .fill(.regularMaterial)
-                .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 2)
+                .shadow(color: .black.opacity(0.04), radius: 6, x: 0, y: 1)
         )
         .overlay(
-            RoundedRectangle(cornerRadius: 16)
-                .stroke(Color.secondary.opacity(0.1), lineWidth: 1)
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(Color.secondary.opacity(0.08), lineWidth: 0.5)
         )
     }
 }
@@ -458,21 +437,21 @@ struct TimeInputRow: View {
     let onChange: (String) -> Void
     
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 10) {
             Image(systemName: icon)
                 .foregroundColor(.secondary)
-                .frame(width: 20)
+                .frame(width: 18)
             
             Text(title)
-                .font(.system(size: 14, weight: .medium))
+                .font(.system(size: 13, weight: .medium))
                 .foregroundColor(.primary)
             
             Spacer()
             
-            HStack(spacing: 6) {
+            HStack(spacing: 4) {
                 TextField("", text: $value)
                     .textFieldStyle(ModernInputStyle())
-                    .frame(width: 60)
+                    .frame(width: 55)
                     .multilineTextAlignment(.center)
                     .disabled(isDisabled)
                     .onChange(of: value) { _, newValue in
@@ -484,7 +463,7 @@ struct TimeInputRow: View {
                     }
                 
                 Text(unit)
-                    .font(.system(size: 12, weight: .medium))
+                    .font(.system(size: 11, weight: .medium))
                     .foregroundColor(.secondary)
             }
         }
@@ -499,18 +478,18 @@ struct ToggleRow: View {
     @Binding var isOn: Bool
     
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 10) {
             Image(systemName: icon)
                 .foregroundColor(.secondary)
-                .frame(width: 20)
+                .frame(width: 18)
             
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: 1) {
                 Text(title)
-                    .font(.system(size: 14, weight: .medium))
+                    .font(.system(size: 13, weight: .medium))
                     .foregroundColor(.primary)
                 
                 Text(subtitle)
-                    .font(.caption)
+                    .font(.caption2)
                     .foregroundColor(.secondary)
             }
             
@@ -530,13 +509,13 @@ struct SoundSelectionRow: View {
     let onSelectionChange: (SoundType) -> Void
     
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 10) {
             Image(systemName: icon)
                 .foregroundColor(.secondary)
-                .frame(width: 20)
+                .frame(width: 18)
             
             Text(title)
-                .font(.system(size: 14, weight: .medium))
+                .font(.system(size: 13, weight: .medium))
                 .foregroundColor(.primary)
             
             Spacer()
@@ -556,19 +535,19 @@ struct SoundSelectionRow: View {
                     }
                 }
             } label: {
-                HStack(spacing: 6) {
+                HStack(spacing: 4) {
                     Text(selectedSound.displayName)
-                        .font(.system(size: 12, weight: .medium))
+                        .font(.system(size: 11, weight: .medium))
                         .foregroundColor(.primary)
                     
                     Image(systemName: "chevron.up.chevron.down")
                         .font(.caption2)
                         .foregroundColor(.secondary)
                 }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 6)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 5)
                 .background(
-                    RoundedRectangle(cornerRadius: 8)
+                    RoundedRectangle(cornerRadius: 6)
                         .fill(Color(.controlBackgroundColor))
                 )
             }
@@ -581,13 +560,13 @@ struct PermissionStatusBadge: View {
     let isGranted: Bool
     
     var body: some View {
-        HStack(spacing: 6) {
+        HStack(spacing: 4) {
             Image(systemName: isGranted ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
                 .foregroundColor(isGranted ? .green : .orange)
-                .font(.caption)
+                .font(.caption2)
             
             Text(isGranted ? "已授权" : "未授权")
-                .font(.caption)
+                .font(.caption2)
                 .fontWeight(.medium)
                 .foregroundColor(isGranted ? .green : .orange)
             
@@ -601,10 +580,10 @@ struct PermissionStatusBadge: View {
                 .controlSize(.mini)
             }
         }
-        .padding(.horizontal, 8)
-        .padding(.vertical, 4)
+        .padding(.horizontal, 6)
+        .padding(.vertical, 3)
         .background(
-            RoundedRectangle(cornerRadius: 8)
+            RoundedRectangle(cornerRadius: 6)
                 .fill((isGranted ? Color.green : Color.orange).opacity(0.1))
         )
     }
@@ -614,16 +593,16 @@ struct PermissionStatusBadge: View {
 struct ModernInputStyle: TextFieldStyle {
     func _body(configuration: TextField<Self._Label>) -> some View {
         configuration
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
+            .padding(.horizontal, 6)
+            .padding(.vertical, 3)
             .background(
-                RoundedRectangle(cornerRadius: 6)
+                RoundedRectangle(cornerRadius: 5)
                     .fill(Color(.textBackgroundColor))
-                    .shadow(color: .black.opacity(0.05), radius: 2, x: 0, y: 1)
+                    .shadow(color: .black.opacity(0.03), radius: 1, x: 0, y: 0.5)
             )
             .overlay(
-                RoundedRectangle(cornerRadius: 6)
-                    .stroke(Color.accentColor.opacity(0.3), lineWidth: 1)
+                RoundedRectangle(cornerRadius: 5)
+                    .stroke(Color.accentColor.opacity(0.25), lineWidth: 0.5)
             )
     }
 }
@@ -640,15 +619,15 @@ struct ModernToggleStyle: ToggleStyle {
                 configuration.label
                 
                 ZStack {
-                    RoundedRectangle(cornerRadius: 16)
+                    RoundedRectangle(cornerRadius: 14)
                         .fill(configuration.isOn ? Color.accentColor : Color(.controlBackgroundColor))
-                        .frame(width: 44, height: 24)
+                        .frame(width: 40, height: 22)
                     
                     Circle()
                         .fill(.white)
-                        .frame(width: 20, height: 20)
-                        .shadow(color: .black.opacity(0.1), radius: 2, x: 0, y: 1)
-                        .offset(x: configuration.isOn ? 10 : -10)
+                        .frame(width: 18, height: 18)
+                        .shadow(color: .black.opacity(0.08), radius: 1, x: 0, y: 0.5)
+                        .offset(x: configuration.isOn ? 9 : -9)
                 }
             }
         }
