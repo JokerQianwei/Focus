@@ -19,7 +19,6 @@ struct ContentView: View {
     @State private var isHoveringPlayPause = false // State for play/pause hover
     @State private var isHoveringReset = false     // State for reset hover
     @State private var isHoveringSettings = false // State for settings hover
-    @State private var isHoveringClose = false    // State for close button hover
 
     var body: some View {
         ZStack {
@@ -28,62 +27,31 @@ struct ContentView: View {
                 .ignoresSafeArea()
 
             VStack(spacing: 15) {
-                // 顶部栏：关闭按钮、标题和设置按钮
-                ZStack {
+                // 顶部栏：标题和设置按钮
+                HStack {
                     // 标题居中，根据模式改变文本
                     Text(timerManager.isWorkMode ? "Focus" : "Break")
                         .font(.system(size: 36, weight: .bold, design: .rounded))
                         .foregroundColor(.primary)
                         .frame(maxWidth: .infinity)
 
-                    // 左右两侧的按钮
-                    HStack {
-                        // 左侧关闭按钮
-                        Button(action: {
-                            // 隐藏主窗口
-                            if let window = NSApplication.shared.windows.first {
-                                window.orderOut(nil)
-                            }
-                        }) {
-                            Image(systemName: "xmark")
-                                .font(.system(size: 14, weight: .medium))
-                                .foregroundColor(isHoveringClose ? .primary : .secondary)
-                                .frame(width: 28, height: 28)
-                                .background(
-                                    Circle()
-                                        .fill(Color.gray.opacity(isHoveringClose ? 0.2 : 0.1))
-                                )
-                                .scaleEffect(isHoveringClose ? 1.1 : 1.0)
-                        }
-                        .buttonStyle(.plain)
-                        .focusEffectDisabled()
-                        .help("隐藏窗口")
-                        .onHover { hovering in
-                            withAnimation(.easeInOut(duration: 0.1)) {
-                                isHoveringClose = hovering
-                            }
-                        }
-                        
-                        Spacer()
-                        
-                        // 右侧设置按钮
-                        Button(action: {
-                            showingSettings = true
-                        }) {
-                            Image(systemName: "gearshape.fill")
-                                .font(.title2)
-                                .foregroundColor(isHoveringSettings ? .primary : .secondary)
-                                .scaleEffect(isHoveringSettings ? 1.1 : 1.0)
-                        }
-                        .buttonStyle(.plain)
-                        .help("设置")
-                        .onHover { hovering in
-                            withAnimation(.easeInOut(duration: 0.1)) {
-                                isHoveringSettings = hovering
-                            }
-                        }
-                        .keyboardShortcut(",", modifiers: .command)
+                    // 右侧设置按钮
+                    Button(action: {
+                        showingSettings = true
+                    }) {
+                        Image(systemName: "gearshape.fill")
+                            .font(.title2)
+                            .foregroundColor(isHoveringSettings ? .primary : .secondary)
+                            .scaleEffect(isHoveringSettings ? 1.1 : 1.0)
                     }
+                    .buttonStyle(.plain)
+                    .help("设置")
+                    .onHover { hovering in
+                        withAnimation(.easeInOut(duration: 0.1)) {
+                            isHoveringSettings = hovering
+                        }
+                    }
+                    .keyboardShortcut(",", modifiers: .command)
                 }
                 .padding(.horizontal)
                 .padding(.top, -10)
