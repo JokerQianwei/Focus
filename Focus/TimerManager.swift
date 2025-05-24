@@ -16,6 +16,15 @@ enum SoundType: String, CaseIterable, Identifiable {
     case bell = "Blow"
     case hero = "Hero"
     case submarine = "Submarine"
+    case basso = "Basso"
+    case bottle = "Bottle"
+    case frog = "Frog"
+    case funk = "Funk"
+    case morse = "Morse"
+    case ping = "Ping"
+    case pop = "Pop"
+    case purr = "Purr"
+    case sosumi = "Sosumi"
     
     var id: String { self.rawValue }
     
@@ -26,6 +35,15 @@ enum SoundType: String, CaseIterable, Identifiable {
             case .bell: return "Blow.aiff"
             case .hero: return "Hero.aiff"
             case .submarine: return "Submarine.aiff"
+            case .basso: return "Basso.aiff"
+            case .bottle: return "Bottle.aiff"
+            case .frog: return "Frog.aiff"
+            case .funk: return "Funk.aiff"
+            case .morse: return "Morse.aiff"
+            case .ping: return "Ping.aiff"
+            case .pop: return "Pop.aiff"
+            case .purr: return "Purr.aiff"
+            case .sosumi: return "Sosumi.aiff"
         }
     }
     
@@ -35,7 +53,16 @@ enum SoundType: String, CaseIterable, Identifiable {
             case .glass: return "玻璃声"
             case .bell: return "铃声"
             case .hero: return "完成声"
-            case .submarine: return "低音声"
+            case .submarine: return "潜艇声"
+            case .basso: return "低音声"
+            case .bottle: return "瓶子声"
+            case .frog: return "青蛙声"
+            case .funk: return "放克声"
+            case .morse: return "电报声"
+            case .ping: return "乒乓声"
+            case .pop: return "爆破声"
+            case .purr: return "呼噜声"
+            case .sosumi: return "经典声"
         }
     }
 }
