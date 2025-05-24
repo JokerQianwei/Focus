@@ -33,7 +33,6 @@ struct StatisticsView: View {
             ScrollView {
                 LazyVStack(spacing: 24) {
                     controlsSection
-                    periodNavigationSection
                     chartSection
                     summaryCardsSection
                 }
@@ -130,70 +129,6 @@ struct StatisticsView: View {
         .frame(height: 80)
     }
     
-    // MARK: - Period Navigation Section
-    private var periodNavigationSection: some View {
-        ModernCard {
-            VStack(spacing: 20) {
-                // 时间段导航
-                HStack(spacing: 20) {
-                    // 上一个时间段按钮
-                    NavigationButton(
-                        icon: "chevron.left",
-                        isHovering: $isHoveringPrevious,
-                        action: {
-                            withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
-                                statisticsManager.navigateToPrevious()
-                                animateChart = false
-                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-                                    animateChart = true
-                                }
-                            }
-                        }
-                    )
-                    
-                    Spacer()
-                    
-                    // 时间段标题和统计
-                    VStack(spacing: 8) {
-                        Text(statisticsManager.getCurrentPeriodTitle())
-                            .font(.system(size: 20, weight: .semibold, design: .rounded))
-                            .foregroundColor(.primary)
-                            .animation(.spring(response: 0.5, dampingFraction: 0.8), value: statisticsManager.currentDate)
-                        
-                        Text(statisticsManager.getCurrentPeriodTotal())
-                            .font(.system(size: 32, weight: .bold, design: .rounded))
-                            .foregroundStyle(
-                                LinearGradient(
-                                    colors: [.blue, .cyan],
-                                    startPoint: .leading,
-                                    endPoint: .trailing
-                                )
-                            )
-                            .animation(.spring(response: 0.5, dampingFraction: 0.8), value: statisticsManager.currentDate)
-                    }
-                    
-                    Spacer()
-                    
-                    // 下一个时间段按钮
-                    NavigationButton(
-                        icon: "chevron.right",
-                        isHovering: $isHoveringNext,
-                        isEnabled: statisticsManager.canNavigateToNext,
-                        action: {
-                            withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
-                                statisticsManager.navigateToNext()
-                                animateChart = false
-                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-                                    animateChart = true
-                                }
-                            }
-                        }
-                    )
-                }
-            }
-        }
-    }
-    
     // MARK: - Controls Section
     private var controlsSection: some View {
         HStack(spacing: 20) {
@@ -265,6 +200,71 @@ struct StatisticsView: View {
                         )
                     }
                 }
+                
+                // 时间段导航器
+                HStack(spacing: 16) {
+                    // 上一个时间段按钮
+                    NavigationButton(
+                        icon: "chevron.left",
+                        isHovering: $isHoveringPrevious,
+                        action: {
+                            withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
+                                statisticsManager.navigateToPrevious()
+                                animateChart = false
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                                    animateChart = true
+                                }
+                            }
+                        }
+                    )
+                    
+                    // 时间段信息 - 一行显示
+                    HStack(spacing: 8) {
+                        Text(statisticsManager.getCurrentPeriodTitle())
+                            .font(.system(size: 16, weight: .semibold, design: .rounded))
+                            .foregroundColor(.primary)
+                            .animation(.spring(response: 0.5, dampingFraction: 0.8), value: statisticsManager.currentDate)
+                        
+                        Text("-")
+                            .font(.system(size: 16, weight: .medium))
+                            .foregroundColor(.secondary)
+                        
+                        Text(statisticsManager.getCurrentPeriodTotal())
+                            .font(.system(size: 16, weight: .bold, design: .rounded))
+                            .foregroundStyle(
+                                LinearGradient(
+                                    colors: [.blue, .cyan],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
+                            )
+                            .animation(.spring(response: 0.5, dampingFraction: 0.8), value: statisticsManager.currentDate)
+                    }
+                    .frame(maxWidth: .infinity)
+                    
+                    // 下一个时间段按钮
+                    NavigationButton(
+                        icon: "chevron.right",
+                        isHovering: $isHoveringNext,
+                        isEnabled: statisticsManager.canNavigateToNext,
+                        action: {
+                            withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
+                                statisticsManager.navigateToNext()
+                                animateChart = false
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                                    animateChart = true
+                                }
+                            }
+                        }
+                    )
+                }
+                .padding(.horizontal, 8)
+                .padding(.vertical, 12)
+                .background(
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(Color(.controlBackgroundColor).opacity(0.6))
+                        .stroke(Color(.separatorColor).opacity(0.3), lineWidth: 1)
+                )
                 
                 // 图表内容
                 if data.isEmpty {
