@@ -861,7 +861,8 @@ struct ModernBarChartView: View {
         switch period {
         case .day:
             // 天视图：每4小时显示一次 (0, 4, 8, 12, 16, 20)
-            return index % 4 == 0
+            // return index % 4 == 0
+            return true
         case .week:
             // 周视图：显示所有天
             return true
