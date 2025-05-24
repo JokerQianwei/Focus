@@ -11,11 +11,67 @@ import Foundation
 class StatisticsManager: ObservableObject {
     @Published var currentPeriod: StatisticsPeriod = .month
     @Published var currentUnit: StatisticsUnit = .count
+    @Published var currentDate: Date = Date()
     
     private let timerManager: TimerManager
     
     init(timerManager: TimerManager) {
         self.timerManager = timerManager
+    }
+    
+    // MARK: - 时间段导航方法
+    
+    /// 导航到下一个时间段
+    func navigateToNext() {
+        let calendar = Calendar.current
+        switch currentPeriod {
+        case .day:
+            currentDate = calendar.date(byAdding: .day, value: 1, to: currentDate) ?? currentDate
+        case .week:
+            currentDate = calendar.date(byAdding: .weekOfYear, value: 1, to: currentDate) ?? currentDate
+        case .month:
+            currentDate = calendar.date(byAdding: .month, value: 1, to: currentDate) ?? currentDate
+        case .year:
+            currentDate = calendar.date(byAdding: .year, value: 1, to: currentDate) ?? currentDate
+        }
+    }
+    
+    /// 导航到上一个时间段
+    func navigateToPrevious() {
+        let calendar = Calendar.current
+        switch currentPeriod {
+        case .day:
+            currentDate = calendar.date(byAdding: .day, value: -1, to: currentDate) ?? currentDate
+        case .week:
+            currentDate = calendar.date(byAdding: .weekOfYear, value: -1, to: currentDate) ?? currentDate
+        case .month:
+            currentDate = calendar.date(byAdding: .month, value: -1, to: currentDate) ?? currentDate
+        case .year:
+            currentDate = calendar.date(byAdding: .year, value: -1, to: currentDate) ?? currentDate
+        }
+    }
+    
+    /// 检查是否可以导航到下一个时间段
+    var canNavigateToNext: Bool {
+        let calendar = Calendar.current
+        let now = Date()
+        
+        switch currentPeriod {
+        case .day:
+            return calendar.startOfDay(for: currentDate) < calendar.startOfDay(for: now)
+        case .week:
+            let currentWeekStart = calendar.dateInterval(of: .weekOfYear, for: currentDate)?.start ?? currentDate
+            let nowWeekStart = calendar.dateInterval(of: .weekOfYear, for: now)?.start ?? now
+            return currentWeekStart < nowWeekStart
+        case .month:
+            let currentMonthStart = calendar.dateInterval(of: .month, for: currentDate)?.start ?? currentDate
+            let nowMonthStart = calendar.dateInterval(of: .month, for: now)?.start ?? now
+            return currentMonthStart < nowMonthStart
+        case .year:
+            let currentYearStart = calendar.dateInterval(of: .year, for: currentDate)?.start ?? currentDate
+            let nowYearStart = calendar.dateInterval(of: .year, for: now)?.start ?? now
+            return currentYearStart < nowYearStart
+        }
     }
     
     // MARK: - 数据生成方法
@@ -80,25 +136,24 @@ class StatisticsManager: ObservableObject {
     /// 获取当前时间段标题
     func getCurrentPeriodTitle() -> String {
         let calendar = Calendar.current
-        let now = Date()
         
         switch currentPeriod {
         case .day:
             let formatter = DateFormatter()
             formatter.locale = Locale(identifier: "zh_CN")
             formatter.dateFormat = "yyyy年M月d日"
-            return formatter.string(from: now)
+            return formatter.string(from: currentDate)
         case .week:
-            let weekOfYear = calendar.component(.weekOfYear, from: now)
-            let year = calendar.component(.year, from: now)
+            let weekOfYear = calendar.component(.weekOfYear, from: currentDate)
+            let year = calendar.component(.year, from: currentDate)
             return "\(year)年第\(weekOfYear)周"
         case .month:
             let formatter = DateFormatter()
             formatter.locale = Locale(identifier: "zh_CN")
             formatter.dateFormat = "yyyy年M月"
-            return formatter.string(from: now)
+            return formatter.string(from: currentDate)
         case .year:
-            let year = calendar.component(.year, from: now)
+            let year = calendar.component(.year, from: currentDate)
             return "\(year)年"
         }
     }
@@ -110,30 +165,74 @@ class StatisticsManager: ObservableObject {
         
         switch currentUnit {
         case .count:
-            return "\(Int(total)) Sessions"
+            return "\(Int(total)) 次专注"
         case .time:
             let hours = Int(total) / 60
             let minutes = Int(total) % 60
             if hours > 0 {
-                return "\(hours)h \(minutes)m"
+                return "\(hours)小时\(minutes)分钟"
             } else {
-                return "\(minutes)m"
+                return "\(minutes)分钟"
             }
         }
     }
     
     // MARK: - 私有方法
     
+    /// 获取天数据 - 按24小时分组
     private func getDailyData(sessions: [FocusSession]) -> [StatisticsDataPoint] {
         let calendar = Calendar.current
-        let now = Date()
+        let dayStart = calendar.startOfDay(for: currentDate)
+        let dayEnd = calendar.date(byAdding: .day, value: 1, to: dayStart)!
+        
+        // 筛选当天的会话
+        let daySessions = sessions.filter { session in
+            session.startTime >= dayStart && session.startTime < dayEnd
+        }
+        
         var dataPoints: [StatisticsDataPoint] = []
         
-        // 显示最近30天的数据
-        for i in 0..<30 {
-            guard let date = calendar.date(byAdding: .day, value: -i, to: now) else { continue }
-            let dayStart = calendar.startOfDay(for: date)
-            let dayEnd = calendar.date(byAdding: .day, value: 1, to: dayStart)!
+        // 创建24个小时的数据点
+        for hour in 0..<24 {
+            guard let hourStart = calendar.date(byAdding: .hour, value: hour, to: dayStart),
+                  let hourEnd = calendar.date(byAdding: .hour, value: 1, to: hourStart) else { continue }
+            
+            let hourSessions = daySessions.filter { session in
+                session.startTime >= hourStart && session.startTime < hourEnd
+            }
+            
+            let value: Double
+            switch currentUnit {
+            case .count:
+                value = Double(hourSessions.count)
+            case .time:
+                value = Double(hourSessions.reduce(0) { $0 + $1.durationMinutes })
+            }
+            
+            let label = String(format: "%02d", hour)
+            
+            dataPoints.append(StatisticsDataPoint(
+                date: hourStart,
+                value: value,
+                label: label
+            ))
+        }
+        
+        return dataPoints
+    }
+    
+    /// 获取周数据 - 显示一周7天
+    private func getWeeklyData(sessions: [FocusSession]) -> [StatisticsDataPoint] {
+        let calendar = Calendar.current
+        let weekInterval = calendar.dateInterval(of: .weekOfYear, for: currentDate)!
+        let weekStart = weekInterval.start
+        
+        var dataPoints: [StatisticsDataPoint] = []
+        
+        // 创建7天的数据点
+        for dayOffset in 0..<7 {
+            guard let dayStart = calendar.date(byAdding: .day, value: dayOffset, to: weekStart),
+                  let dayEnd = calendar.date(byAdding: .day, value: 1, to: dayStart) else { continue }
             
             let daySessions = sessions.filter { session in
                 session.startTime >= dayStart && session.startTime < dayEnd
@@ -148,68 +247,75 @@ class StatisticsManager: ObservableObject {
             }
             
             let formatter = DateFormatter()
-            formatter.dateFormat = "M-d"
-            let label = formatter.string(from: date)
+            formatter.locale = Locale(identifier: "zh_CN")
+            formatter.dateFormat = "E"
+            let label = formatter.string(from: dayStart)
             
             dataPoints.append(StatisticsDataPoint(
-                date: date,
+                date: dayStart,
                 value: value,
                 label: label
             ))
         }
         
-        return dataPoints.reversed()
+        return dataPoints
     }
     
-    private func getWeeklyData(sessions: [FocusSession]) -> [StatisticsDataPoint] {
+    /// 获取月数据 - 显示当月每一天
+    private func getMonthlyData(sessions: [FocusSession]) -> [StatisticsDataPoint] {
         let calendar = Calendar.current
-        let now = Date()
-        var dataPoints: [StatisticsDataPoint] = []
+        let monthInterval = calendar.dateInterval(of: .month, for: currentDate)!
+        let monthStart = monthInterval.start
+        let monthEnd = monthInterval.end
         
-        // 显示最近12周的数据
-        for i in 0..<12 {
-            guard let weekStart = calendar.date(byAdding: .weekOfYear, value: -i, to: now) else { continue }
-            let weekStartDate = calendar.dateInterval(of: .weekOfYear, for: weekStart)?.start ?? weekStart
-            let weekEndDate = calendar.date(byAdding: .weekOfYear, value: 1, to: weekStartDate)!
+        var dataPoints: [StatisticsDataPoint] = []
+        var currentDay = monthStart
+        
+        while currentDay < monthEnd {
+            let dayEnd = calendar.date(byAdding: .day, value: 1, to: currentDay)!
             
-            let weekSessions = sessions.filter { session in
-                session.startTime >= weekStartDate && session.startTime < weekEndDate
+            let daySessions = sessions.filter { session in
+                session.startTime >= currentDay && session.startTime < dayEnd
             }
             
             let value: Double
             switch currentUnit {
             case .count:
-                value = Double(weekSessions.count)
+                value = Double(daySessions.count)
             case .time:
-                value = Double(weekSessions.reduce(0) { $0 + $1.durationMinutes })
+                value = Double(daySessions.reduce(0) { $0 + $1.durationMinutes })
             }
             
-            let weekNumber = calendar.component(.weekOfYear, from: weekStartDate)
-            let label = "W\(weekNumber)"
+            let day = calendar.component(.day, from: currentDay)
+            let label = "\(day)"
             
             dataPoints.append(StatisticsDataPoint(
-                date: weekStartDate,
+                date: currentDay,
                 value: value,
                 label: label
             ))
+            
+            currentDay = dayEnd
         }
         
-        return dataPoints.reversed()
+        return dataPoints
     }
     
-    private func getMonthlyData(sessions: [FocusSession]) -> [StatisticsDataPoint] {
+    /// 获取年数据 - 显示12个月
+    private func getYearlyData(sessions: [FocusSession]) -> [StatisticsDataPoint] {
         let calendar = Calendar.current
-        let now = Date()
+        let yearInterval = calendar.dateInterval(of: .year, for: currentDate)!
+        let yearStart = yearInterval.start
+        
         var dataPoints: [StatisticsDataPoint] = []
         
-        // 显示最近12个月的数据
-        for i in 0..<12 {
-            guard let monthStart = calendar.date(byAdding: .month, value: -i, to: now) else { continue }
-            let monthStartDate = calendar.dateInterval(of: .month, for: monthStart)?.start ?? monthStart
-            let monthEndDate = calendar.date(byAdding: .month, value: 1, to: monthStartDate)!
+        // 创建12个月的数据点
+        for monthOffset in 0..<12 {
+            guard let monthStart = calendar.date(byAdding: .month, value: monthOffset, to: yearStart),
+                  let monthEnd = calendar.date(byAdding: .month, value: 1, to: monthStart) else { continue }
             
             let monthSessions = sessions.filter { session in
-                session.startTime >= monthStartDate && session.startTime < monthEndDate
+                session.startTime >= monthStart && session.startTime < monthEnd
             }
             
             let value: Double
@@ -220,54 +326,17 @@ class StatisticsManager: ObservableObject {
                 value = Double(monthSessions.reduce(0) { $0 + $1.durationMinutes })
             }
             
-            let formatter = DateFormatter()
-            formatter.dateFormat = "MM"
-            let label = formatter.string(from: monthStartDate)
+            let month = calendar.component(.month, from: monthStart)
+            let label = "\(month)月"
             
             dataPoints.append(StatisticsDataPoint(
-                date: monthStartDate,
+                date: monthStart,
                 value: value,
                 label: label
             ))
         }
         
-        return dataPoints.reversed()
-    }
-    
-    private func getYearlyData(sessions: [FocusSession]) -> [StatisticsDataPoint] {
-        let calendar = Calendar.current
-        let now = Date()
-        var dataPoints: [StatisticsDataPoint] = []
-        
-        // 显示最近5年的数据
-        for i in 0..<5 {
-            guard let yearStart = calendar.date(byAdding: .year, value: -i, to: now) else { continue }
-            let yearStartDate = calendar.dateInterval(of: .year, for: yearStart)?.start ?? yearStart
-            let yearEndDate = calendar.date(byAdding: .year, value: 1, to: yearStartDate)!
-            
-            let yearSessions = sessions.filter { session in
-                session.startTime >= yearStartDate && session.startTime < yearEndDate
-            }
-            
-            let value: Double
-            switch currentUnit {
-            case .count:
-                value = Double(yearSessions.count)
-            case .time:
-                value = Double(yearSessions.reduce(0) { $0 + $1.durationMinutes })
-            }
-            
-            let year = calendar.component(.year, from: yearStartDate)
-            let label = "\(year)"
-            
-            dataPoints.append(StatisticsDataPoint(
-                date: yearStartDate,
-                value: value,
-                label: label
-            ))
-        }
-        
-        return dataPoints.reversed()
+        return dataPoints
     }
     
     private func calculateCurrentStreak(sessions: [FocusSession]) -> Int {
