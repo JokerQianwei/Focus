@@ -188,8 +188,7 @@ struct SettingsView: View {
         ModernSettingsSection(
             title: "计时设置",
             icon: "timer",
-            iconColor: .blue,
-            description: "配置专注和休息时间"
+            iconColor: .blue
         ) {
             VStack(spacing: DesignSystem.Spacing.md) {
                 ModernTimeInputRow(
@@ -229,10 +228,9 @@ struct SettingsView: View {
     // MARK: - 随机提示设置分组
     private var promptSettingsSection: some View {
         ModernSettingsSection(
-            title: "随机提示",
+            title: "随机提示音",
             icon: "waveform.path.ecg",
-            iconColor: .green,
-            description: "智能微休息提醒设置"
+            iconColor: .green
         ) {
             VStack(spacing: DesignSystem.Spacing.md) {
                 ModernTimeInputRow(
@@ -286,8 +284,7 @@ struct SettingsView: View {
         ModernSettingsSection(
             title: "声音效果",
             icon: "speaker.wave.3",
-            iconColor: .purple,
-            description: "自定义提示音和音效"
+            iconColor: .purple
         ) {
             VStack(spacing: DesignSystem.Spacing.md) {
                 ModernToggleRow(
@@ -351,8 +348,7 @@ struct SettingsView: View {
         ModernSettingsSection(
             title: "行为控制",
             icon: "gearshape.2",
-            iconColor: .orange,
-            description: "自定义应用行为和交互"
+            iconColor: .orange
         ) {
             VStack(spacing: DesignSystem.Spacing.md) {
                 ModernToggleRow(
@@ -378,7 +374,7 @@ struct SettingsView: View {
                 VStack(alignment: .leading, spacing: DesignSystem.Spacing.sm) {
                     ModernToggleRow(
                         title: "媒体控制",
-                        subtitle: "自动暂停/播放音视频",
+                        subtitle: "切换暂停/播放音视频状态",
                         icon: "pause.rectangle",
                         iconColor: .pink,
                         isOn: $timerManager.muteAudioDuringBreak
@@ -402,10 +398,9 @@ struct SettingsView: View {
     // MARK: - 通知设置分组
     private var notificationSection: some View {
         ModernSettingsSection(
-            title: "通知权限",
+            title: "权限",
             icon: "bell.badge",
-            iconColor: .red,
-            description: "管理系统通知权限"
+            iconColor: .red
         ) {
             ModernPermissionRow(
                 title: "通知权限",
@@ -439,7 +434,6 @@ struct ModernSettingsSection<Content: View>: View {
     let title: String
     let icon: String
     let iconColor: Color
-    let description: String
     let content: Content
     
     @Environment(\.colorScheme) private var colorScheme
@@ -449,13 +443,11 @@ struct ModernSettingsSection<Content: View>: View {
         title: String,
         icon: String,
         iconColor: Color,
-        description: String,
         @ViewBuilder content: () -> Content
     ) {
         self.title = title
         self.icon = icon
         self.iconColor = iconColor
-        self.description = description
         self.content = content()
     }
     
@@ -477,10 +469,6 @@ struct ModernSettingsSection<Content: View>: View {
                     Text(title)
                         .font(.system(size: 16, weight: .semibold, design: .rounded))
                         .foregroundColor(DesignSystem.Colors.primary)
-                    
-                    Text(description)
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundColor(DesignSystem.Colors.secondary)
                 }
                 
                 Spacer()
