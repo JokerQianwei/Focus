@@ -41,13 +41,12 @@ struct SettingsView: View {
             headerView
             
             ScrollView {
-                LazyVStack(spacing: 12) {
-                    timerSettingsCard
-                    promptSettingsCard
-                    soundSettingsCard
-                    blackoutSettingsCard
-                    videoControlCard
-                    notificationCard
+                LazyVStack(spacing: 20) {
+                    timerSettingsSection
+                    promptSettingsSection
+                    soundSettingsSection
+                    behaviorSettingsSection
+                    notificationSection
                 }
                 .padding(.horizontal, 20)
                 .padding(.vertical, 20)
@@ -110,247 +109,243 @@ struct SettingsView: View {
         )
     }
     
-    // MARK: - 计时设置卡片
-    private var timerSettingsCard: some View {
-        SettingsCard(
-            title: "计时设置",
-            icon: "timer",
-            iconColor: .blue
-        ) {
-            VStack(spacing: 12) {
-                TimeInputRow(
-                    title: "专注时间",
-                    value: $workMinutesInput,
-                    unit: "分钟",
-                    icon: "brain.head.profile",
-                    isDisabled: timerManager.timerRunning
-                ) { newValue in
-                    if let minutes = Int(newValue), minutes > 0 {
-                        timerManager.workMinutes = minutes
-                        if timerManager.isWorkMode && !timerManager.timerRunning {
-                            timerManager.minutes = minutes
+    // MARK: - 计时设置分组
+    private var timerSettingsSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            SectionTitle(title: "计时设置", icon: "timer", iconColor: .blue)
+            
+            SimpleCard {
+                VStack(spacing: 12) {
+                    TimeInputRow(
+                        title: "专注时间",
+                        value: $workMinutesInput,
+                        unit: "分钟",
+                        icon: "brain.head.profile",
+                        isDisabled: timerManager.timerRunning
+                    ) { newValue in
+                        if let minutes = Int(newValue), minutes > 0 {
+                            timerManager.workMinutes = minutes
+                            if timerManager.isWorkMode && !timerManager.timerRunning {
+                                timerManager.minutes = minutes
+                            }
+                        }
+                    }
+                    
+                    Divider()
+                        .padding(.horizontal, -6)
+                    
+                    TimeInputRow(
+                        title: "休息时间",
+                        value: $breakMinutesInput,
+                        unit: "分钟",
+                        icon: "cup.and.saucer",
+                        isDisabled: timerManager.timerRunning
+                    ) { newValue in
+                        if let minutes = Int(newValue), minutes > 0 {
+                            timerManager.breakMinutes = minutes
                         }
                     }
                 }
-                
-                Divider()
-                    .padding(.horizontal, -6)
-                
-                TimeInputRow(
-                    title: "休息时间",
-                    value: $breakMinutesInput,
-                    unit: "分钟",
-                    icon: "cup.and.saucer",
-                    isDisabled: timerManager.timerRunning
-                ) { newValue in
-                    if let minutes = Int(newValue), minutes > 0 {
-                        timerManager.breakMinutes = minutes
+            }
+        }
+    }
+    
+    // MARK: - 随机提示设置分组
+    private var promptSettingsSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            SectionTitle(title: "随机提示", icon: "waveform.path.ecg", iconColor: .green)
+            
+            SimpleCard {
+                VStack(spacing: 12) {
+                    TimeInputRow(
+                        title: "最小间隔",
+                        value: $promptMinInput,
+                        unit: "分钟",
+                        icon: "minus.circle",
+                        isDisabled: timerManager.timerRunning
+                    ) { newValue in
+                        if let minutes = Int(newValue), minutes > 0 {
+                            timerManager.promptMinInterval = minutes
+                        }
+                    }
+                    
+                    Divider()
+                        .padding(.horizontal, -6)
+                    
+                    TimeInputRow(
+                        title: "最大间隔",
+                        value: $promptMaxInput,
+                        unit: "分钟",
+                        icon: "plus.circle",
+                        isDisabled: timerManager.timerRunning
+                    ) { newValue in
+                        if let minutes = Int(newValue), minutes > 0 {
+                            timerManager.promptMaxInterval = minutes
+                        }
+                    }
+                    
+                    Divider()
+                        .padding(.horizontal, -6)
+                    
+                    TimeInputRow(
+                        title: "微休息时长",
+                        value: $microBreakInput,
+                        unit: "秒",
+                        icon: "clock.badge.checkmark",
+                        isDisabled: timerManager.timerRunning
+                    ) { newValue in
+                        if let seconds = Int(newValue), seconds > 0 {
+                            timerManager.microBreakSeconds = seconds
+                        }
                     }
                 }
             }
         }
     }
     
-    // MARK: - 随机提示设置卡片
-    private var promptSettingsCard: some View {
-        SettingsCard(
-            title: "随机提示",
-            icon: "waveform.path.ecg",
-            iconColor: .green
-        ) {
-            VStack(spacing: 12) {
-                TimeInputRow(
-                    title: "最小间隔",
-                    value: $promptMinInput,
-                    unit: "分钟",
-                    icon: "minus.circle",
-                    isDisabled: timerManager.timerRunning
-                ) { newValue in
-                    if let minutes = Int(newValue), minutes > 0 {
-                        timerManager.promptMinInterval = minutes
-                    }
-                }
-                
-                Divider()
-                    .padding(.horizontal, -6)
-                
-                TimeInputRow(
-                    title: "最大间隔",
-                    value: $promptMaxInput,
-                    unit: "分钟",
-                    icon: "plus.circle",
-                    isDisabled: timerManager.timerRunning
-                ) { newValue in
-                    if let minutes = Int(newValue), minutes > 0 {
-                        timerManager.promptMaxInterval = minutes
-                    }
-                }
-                
-                Divider()
-                    .padding(.horizontal, -6)
-                
-                TimeInputRow(
-                    title: "微休息时长",
-                    value: $microBreakInput,
-                    unit: "秒",
-                    icon: "clock.badge.checkmark",
-                    isDisabled: timerManager.timerRunning
-                ) { newValue in
-                    if let seconds = Int(newValue), seconds > 0 {
-                        timerManager.microBreakSeconds = seconds
+    // MARK: - 声音设置分组
+    private var soundSettingsSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            SectionTitle(title: "提示音效", icon: "speaker.wave.3", iconColor: .purple)
+            
+            SimpleCard {
+                VStack(spacing: 12) {
+                    ToggleRow(
+                        title: "启用提示音",
+                        subtitle: "专注期间播放提示音",
+                        icon: "speaker.2",
+                        isOn: $timerManager.promptSoundEnabled
+                    )
+                    
+                    if timerManager.promptSoundEnabled {
+                        VStack(spacing: 10) {
+                            Divider()
+                                .padding(.horizontal, -6)
+                            
+                            SoundSelectionRow(
+                                title: "开始音效",
+                                icon: "play.circle",
+                                selectedSound: timerManager.microBreakStartSoundType,
+                                onSelectionChange: { soundType in
+                                    NotificationCenter.default.post(
+                                        name: .playMicroBreakStartSound,
+                                        object: soundType.rawValue
+                                    )
+                                    timerManager.microBreakStartSoundType = soundType
+                                }
+                            )
+                            
+                            Divider()
+                                .padding(.horizontal, -6)
+                            
+                            SoundSelectionRow(
+                                title: "结束音效",
+                                icon: "stop.circle",
+                                selectedSound: timerManager.microBreakEndSoundType,
+                                onSelectionChange: { soundType in
+                                    NotificationCenter.default.post(
+                                        name: .playMicroBreakEndSound,
+                                        object: soundType.rawValue
+                                    )
+                                    timerManager.microBreakEndSoundType = soundType
+                                }
+                            )
+                            
+                            HStack {
+                                Image(systemName: "info.circle")
+                                    .foregroundColor(.blue)
+                                    .font(.caption2)
+                                Text("每隔 \(timerManager.promptMinInterval)-\(timerManager.promptMaxInterval) 分钟播放提示音")
+                                    .font(.caption2)
+                                    .foregroundColor(.secondary)
+                                Spacer()
+                            }
+                        }
+                        .transition(.opacity.combined(with: .scale(scale: 0.95)))
                     }
                 }
             }
         }
     }
     
-    // MARK: - 声音设置卡片
-    private var soundSettingsCard: some View {
-        SettingsCard(
-            title: "提示音效",
-            icon: "speaker.wave.3",
-            iconColor: .purple
-        ) {
-            VStack(spacing: 12) {
-                ToggleRow(
-                    title: "启用提示音",
-                    subtitle: "专注期间播放提示音",
-                    icon: "speaker.2",
-                    isOn: $timerManager.promptSoundEnabled
-                )
-                
-                if timerManager.promptSoundEnabled {
-                    VStack(spacing: 10) {
-                        Divider()
-                            .padding(.horizontal, -6)
-                        
-                        SoundSelectionRow(
-                            title: "开始音效",
-                            icon: "play.circle",
-                            selectedSound: timerManager.microBreakStartSoundType,
-                            onSelectionChange: { soundType in
-                                NotificationCenter.default.post(
-                                    name: .playMicroBreakStartSound,
-                                    object: soundType.rawValue
-                                )
-                                timerManager.microBreakStartSoundType = soundType
-                            }
+    // MARK: - 行为设置分组
+    private var behaviorSettingsSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            SectionTitle(title: "行为", icon: "gearshape.2", iconColor: .orange)
+            
+            SimpleCard {
+                VStack(spacing: 12) {
+                    ToggleRow(
+                        title: "微休息时全屏模式",
+                        subtitle: "全屏黑色窗口强制休息",
+                        icon: "rectangle.fill",
+                        isOn: $timerManager.blackoutEnabled
+                    )
+                    
+                    Divider()
+                        .padding(.horizontal, -6)
+                    
+                    VStack(alignment: .leading, spacing: 6) {
+                        ToggleRow(
+                            title: "微休息时切换暂停/播放状态",
+                            subtitle: "自动暂停/播放视频内容",
+                            icon: "pause.rectangle",
+                            isOn: $timerManager.muteAudioDuringBreak
                         )
                         
-                        Divider()
-                            .padding(.horizontal, -6)
-                        
-                        SoundSelectionRow(
-                            title: "结束音效",
-                            icon: "stop.circle",
-                            selectedSound: timerManager.microBreakEndSoundType,
-                            onSelectionChange: { soundType in
-                                NotificationCenter.default.post(
-                                    name: .playMicroBreakEndSound,
-                                    object: soundType.rawValue
-                                )
-                                timerManager.microBreakEndSoundType = soundType
+                        if timerManager.muteAudioDuringBreak {
+                            HStack {
+                                Image(systemName: "exclamationmark.triangle")
+                                    .foregroundColor(.orange)
+                                    .font(.caption2)
+                                Text("首次使用需授予辅助功能权限")
+                                    .font(.caption2)
+                                    .foregroundColor(.secondary)
+                                Spacer()
                             }
-                        )
+                            .transition(.opacity.combined(with: .scale(scale: 0.95)))
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    // MARK: - 通知设置分组
+    private var notificationSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            SectionTitle(title: "通知设置", icon: "bell.badge", iconColor: .red)
+            
+            SimpleCard {
+                VStack(spacing: 12) {
+                    ToggleRow(
+                        title: "微休息通知",
+                        subtitle: "发送系统通知提醒",
+                        icon: "bell",
+                        isOn: $timerManager.microBreakNotificationEnabled
+                    )
+                    
+                    Divider()
+                        .padding(.horizontal, -6)
+                    
+                    HStack {
+                        Image(systemName: "key")
+                            .foregroundColor(.secondary)
+                            .frame(width: 18)
                         
-                        HStack {
-                            Image(systemName: "info.circle")
-                                .foregroundColor(.blue)
-                                .font(.caption2)
-                            Text("每隔 \(timerManager.promptMinInterval)-\(timerManager.promptMaxInterval) 分钟播放提示音")
+                        VStack(alignment: .leading, spacing: 1) {
+                            Text("通知权限")
+                                .font(.system(size: 13, weight: .medium))
+                                .foregroundColor(.primary)
+                            Text("需要权限来发送提醒")
                                 .font(.caption2)
                                 .foregroundColor(.secondary)
-                            Spacer()
                         }
-                    }
-                    .transition(.opacity.combined(with: .scale(scale: 0.95)))
-                }
-            }
-        }
-    }
-    
-    // MARK: - 黑屏设置卡片
-    private var blackoutSettingsCard: some View {
-        SettingsCard(
-            title: "黑屏功能",
-            icon: "display",
-            iconColor: .gray
-        ) {
-            ToggleRow(
-                title: "微休息黑屏",
-                subtitle: "全屏黑色窗口强制休息",
-                icon: "rectangle.fill",
-                isOn: $timerManager.blackoutEnabled
-            )
-        }
-    }
-    
-    // MARK: - 视频控制卡片
-    private var videoControlCard: some View {
-        SettingsCard(
-            title: "视频控制",
-            icon: "play.slash",
-            iconColor: .orange
-        ) {
-            VStack(alignment: .leading, spacing: 6) {
-                ToggleRow(
-                    title: "自动暂停视频",
-                    subtitle: "微休息时暂停/播放视频",
-                    icon: "pause.rectangle",
-                    isOn: $timerManager.muteAudioDuringBreak
-                )
-                
-                if timerManager.muteAudioDuringBreak {
-                    HStack {
-                        Image(systemName: "exclamationmark.triangle")
-                            .foregroundColor(.orange)
-                            .font(.caption2)
-                        Text("首次使用需授予辅助功能权限")
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
+                        
                         Spacer()
+                        
+                        PermissionStatusBadge(isGranted: notificationPermissionGranted)
                     }
-                    .transition(.opacity.combined(with: .scale(scale: 0.95)))
-                }
-            }
-        }
-    }
-    
-    // MARK: - 通知设置卡片
-    private var notificationCard: some View {
-        SettingsCard(
-            title: "通知设置",
-            icon: "bell.badge",
-            iconColor: .red
-        ) {
-            VStack(spacing: 12) {
-                ToggleRow(
-                    title: "微休息通知",
-                    subtitle: "发送系统通知提醒",
-                    icon: "bell",
-                    isOn: $timerManager.microBreakNotificationEnabled
-                )
-                
-                Divider()
-                    .padding(.horizontal, -6)
-                
-                HStack {
-                    Image(systemName: "key")
-                        .foregroundColor(.secondary)
-                        .frame(width: 18)
-                    
-                    VStack(alignment: .leading, spacing: 1) {
-                        Text("通知权限")
-                            .font(.system(size: 13, weight: .medium))
-                            .foregroundColor(.primary)
-                        Text("需要权限来发送提醒")
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
-                    }
-                    
-                    Spacer()
-                    
-                    PermissionStatusBadge(isGranted: notificationPermissionGranted)
                 }
             }
         }
@@ -372,7 +367,61 @@ struct SettingsView: View {
     }
 }
 
-// MARK: - 设置卡片组件
+// MARK: - 分组标题组件
+struct SectionTitle: View {
+    let title: String
+    let icon: String
+    let iconColor: Color
+    
+    var body: some View {
+        HStack(spacing: 8) {
+            Image(systemName: icon)
+                .font(.system(size: 14, weight: .medium))
+                .foregroundColor(iconColor)
+                .frame(width: 20, height: 20)
+                .background(
+                    Circle()
+                        .fill(iconColor.opacity(0.12))
+                )
+            
+            Text(title)
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundColor(.primary)
+            
+            Spacer()
+        }
+        .padding(.horizontal, 4)
+    }
+}
+
+// MARK: - 简单卡片组件
+struct SimpleCard<Content: View>: View {
+    let content: Content
+    
+    @Environment(\.colorScheme) private var colorScheme
+    
+    init(@ViewBuilder content: () -> Content) {
+        self.content = content()
+    }
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            content
+        }
+        .padding(16)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(.regularMaterial)
+                .shadow(color: .black.opacity(0.04), radius: 6, x: 0, y: 1)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(Color.secondary.opacity(0.08), lineWidth: 0.5)
+        )
+    }
+}
+
+// MARK: - 设置卡片组件（保留用于兼容性）
 struct SettingsCard<Content: View>: View {
     let title: String
     let icon: String
