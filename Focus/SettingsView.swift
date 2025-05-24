@@ -116,9 +116,9 @@ struct SettingsView: View {
                         .font(.system(size: 22, weight: .bold, design: .rounded))
                         .foregroundColor(DesignSystem.Colors.primary)
                     
-                    Text("个性化您的专注体验")
-                        .font(.system(size: 13, weight: .medium))
-                        .foregroundColor(DesignSystem.Colors.secondary)
+                    // Text("个性化您的专注体验")
+                    //     .font(.system(size: 13, weight: .medium))
+                    //     .foregroundColor(DesignSystem.Colors.secondary)
                 }
                 
                 Spacer()
