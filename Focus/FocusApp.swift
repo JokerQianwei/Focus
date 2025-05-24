@@ -55,16 +55,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
     private var audioPlayers: [SoundType: AVAudioPlayer] = [:]
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        // 请求通知权限
-        let center = UNUserNotificationCenter.current()
-        center.delegate = self
-        center.requestAuthorization(options: [.alert, .sound]) { granted, error in
-            if granted {
-                print("通知权限已获取")
-            } else if let error = error {
-                print("通知权限请求失败: \(error.localizedDescription)")
-            }
-        }
+        // 请求通知权限（改进版本）
+        requestNotificationPermission()
 
         // 初始化菜单栏控制器
         statusBarController = StatusBarController()
@@ -147,6 +139,13 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
             name: .hideBlackout,
             object: nil
         )
+        
+        // 调试：测试通知权限（仅在调试模式下）
+        #if DEBUG
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+            NotificationTest.shared.testNotificationPermission()
+        }
+        #endif
     }
     
     // 当应用程序激活时也确保窗口尺寸
@@ -271,33 +270,43 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
 
     // 发送计时器通知
     @objc private func sendTimerNotification() {
-        let timerManager = TimerManager.shared
-        let content = UNMutableNotificationContent()
+        // 首先检查通知权限
+        checkNotificationPermission { hasPermission in
+            if !hasPermission {
+                print("没有通知权限，无法发送通知")
+                // 可以选择显示权限提示
+                self.showNotificationPermissionAlert()
+                return
+            }
+            
+            let timerManager = TimerManager.shared
+            let content = UNMutableNotificationContent()
 
-        if timerManager.isWorkMode {
-            content.title = "专注时间结束"
-            content.body = "休息一下吧！"
-        } else {
-            content.title = "休息时间结束"
-            content.body = "开始新的专注周期！"
-        }
+            if timerManager.isWorkMode {
+                content.title = "专注时间结束"
+                content.body = "休息一下吧！"
+            } else {
+                content.title = "休息时间结束"
+                content.body = "开始新的专注周期！"
+            }
 
-        content.sound = UNNotificationSound.default
+            content.sound = UNNotificationSound.default
 
-        // 立即触发通知
-        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)
+            // 立即触发通知
+            let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)
 
-        // 创建通知请求
-        let request = UNNotificationRequest(
-            identifier: UUID().uuidString,
-            content: content,
-            trigger: trigger
-        )
+            // 创建通知请求
+            let request = UNNotificationRequest(
+                identifier: UUID().uuidString,
+                content: content,
+                trigger: trigger
+            )
 
-        // 添加通知请求
-        UNUserNotificationCenter.current().add(request) { error in
-            if let error = error {
-                print("通知发送失败: \(error.localizedDescription)")
+            // 添加通知请求
+            UNUserNotificationCenter.current().add(request) { error in
+                if let error = error {
+                    print("通知发送失败: \(error.localizedDescription)")
+                }
             }
         }
     }
@@ -354,5 +363,84 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
         
         // 恢复视频播放（通过恢复系统音量）
         videoControlManager?.resumeVideo()
+    }
+
+    // 改进的通知权限请求方法
+    private func requestNotificationPermission() {
+        let center = UNUserNotificationCenter.current()
+        center.delegate = self
+        
+        // 首先检查当前权限状态
+        center.getNotificationSettings { settings in
+            DispatchQueue.main.async {
+                switch settings.authorizationStatus {
+                case .notDetermined:
+                    // 首次请求权限
+                    self.performNotificationRequest(center: center)
+                    
+                case .denied:
+                    // 权限被拒绝，引导用户到系统设置
+                    print("通知权限被拒绝，需要在系统设置中手动开启")
+                    self.showNotificationPermissionAlert()
+                    
+                case .authorized, .provisional, .ephemeral:
+                    // 权限已获取
+                    print("通知权限已获取")
+                    
+                @unknown default:
+                    // 未知状态，尝试请求
+                    self.performNotificationRequest(center: center)
+                }
+            }
+        }
+    }
+    
+    // 执行通知权限请求
+    private func performNotificationRequest(center: UNUserNotificationCenter) {
+        center.requestAuthorization(options: [.alert, .sound, .badge]) { granted, error in
+            DispatchQueue.main.async {
+                if granted {
+                    print("通知权限已获取")
+                } else if let error = error {
+                    print("通知权限请求失败: \(error.localizedDescription)")
+                    self.showNotificationPermissionAlert()
+                } else {
+                    print("通知权限被用户拒绝")
+                    self.showNotificationPermissionAlert()
+                }
+            }
+        }
+    }
+    
+    // 显示通知权限提示对话框
+    private func showNotificationPermissionAlert() {
+        let alert = NSAlert()
+        alert.messageText = "需要通知权限"
+        alert.informativeText = "Focus 需要通知权限来提醒您工作和休息时间。请在系统偏好设置中开启通知权限。"
+        alert.addButton(withTitle: "打开系统设置")
+        alert.addButton(withTitle: "稍后设置")
+        alert.alertStyle = .informational
+        
+        let response = alert.runModal()
+        if response == .alertFirstButtonReturn {
+            // 打开系统偏好设置的通知页面
+            self.openNotificationSettings()
+        }
+    }
+    
+    // 打开系统通知设置
+    private func openNotificationSettings() {
+        if let url = URL(string: "x-apple.systempreferences:com.apple.preference.notifications") {
+            NSWorkspace.shared.open(url)
+        }
+    }
+    
+    // 检查通知权限状态的公共方法
+    func checkNotificationPermission(completion: @escaping (Bool) -> Void) {
+        UNUserNotificationCenter.current().getNotificationSettings { settings in
+            DispatchQueue.main.async {
+                completion(settings.authorizationStatus == .authorized)
+            }
+        }
     }
 }

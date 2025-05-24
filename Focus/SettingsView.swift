@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import UserNotifications
 
 struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
@@ -25,6 +26,9 @@ struct SettingsView: View {
     // 动画状态
     @State private var activeSection: String? = nil
     @Namespace private var animation
+    
+    // 通知权限状态
+    @State private var notificationPermissionGranted = false
 
     init(timerManager: TimerManager) {
         self.timerManager = timerManager
@@ -404,6 +408,41 @@ struct SettingsView: View {
                                     .foregroundColor(.primary)
                             }
                             .toggleStyle(SwitchToggleStyle(tint: .accentColor))
+                            
+                            Divider()
+                            
+                            // 通知权限状态
+                            HStack {
+                                Text("通知权限")
+                                    .foregroundColor(.primary)
+                                
+                                Spacer()
+                                
+                                HStack(spacing: 8) {
+                                    Image(systemName: notificationPermissionGranted ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
+                                        .foregroundColor(notificationPermissionGranted ? .green : .orange)
+                                    
+                                    Text(notificationPermissionGranted ? "已授权" : "未授权")
+                                        .foregroundColor(notificationPermissionGranted ? .green : .orange)
+                                        .font(.caption)
+                                    
+                                    if !notificationPermissionGranted {
+                                        Button("设置") {
+                                            openNotificationSettings()
+                                        }
+                                        .buttonStyle(.bordered)
+                                        .controlSize(.small)
+                                    }
+                                }
+                            }
+                            
+                            if !notificationPermissionGranted {
+                                Text("需要通知权限来提醒工作和休息时间的结束")
+                                    .font(.footnote)
+                                    .foregroundColor(.secondary)
+                                    .padding(.top, 2)
+                                    .padding(.leading, 4)
+                            }
                         }
                         .padding(.vertical, 8)
                     }
@@ -415,6 +454,25 @@ struct SettingsView: View {
         .frame(width: 340, height: 520)
         .background(Color(NSColor.windowBackgroundColor))
         .fixedSize(horizontal: true, vertical: true)
+        .onAppear {
+            checkNotificationPermission()
+        }
+    }
+    
+    // 检查通知权限状态
+    private func checkNotificationPermission() {
+        UNUserNotificationCenter.current().getNotificationSettings { settings in
+            DispatchQueue.main.async {
+                self.notificationPermissionGranted = settings.authorizationStatus == .authorized
+            }
+        }
+    }
+    
+    // 打开系统通知设置
+    private func openNotificationSettings() {
+        if let url = URL(string: "x-apple.systempreferences:com.apple.preference.notifications") {
+            NSWorkspace.shared.open(url)
+        }
     }
     
     // 通用的设置区块
