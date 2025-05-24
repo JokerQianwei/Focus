@@ -32,7 +32,6 @@ struct StatisticsView: View {
             
             ScrollView {
                 LazyVStack(spacing: 24) {
-                    controlsSection
                     chartSection
                     summaryCardsSection
                 }
@@ -129,76 +128,36 @@ struct StatisticsView: View {
         .frame(height: 80)
     }
     
-    // MARK: - Controls Section
-    private var controlsSection: some View {
-        HStack(spacing: 20) {
-            // 时间段选择器 - 占更多空间
-            ModernSegmentedControl(
-                selection: $statisticsManager.currentPeriod,
-                options: StatisticsPeriod.allCases,
-                onChange: { _ in
-                    withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
-                        animateChart = false
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                            animateChart = true
-                        }
-                    }
-                }
-            )
-            .frame(maxWidth: .infinity)
-            
-            // 单位选择器 - 更紧凑
-            ModernMenu(
-                selection: $statisticsManager.currentUnit,
-                options: StatisticsUnit.allCases,
-                icon: "slider.horizontal.3"
-            )
-            .frame(width: 120)
-        }
-    }
-    
     // MARK: - Chart Section
     private var chartSection: some View {
         ModernCard {
             let data = statisticsManager.getStatisticsData()
             
             VStack(alignment: .leading, spacing: 20) {
-                // 卡片标题
-                HStack(spacing: 12) {
-                    ZStack {
-                        Circle()
-                            .fill(Color.blue.opacity(0.12))
-                            .frame(width: 32, height: 32)
-                        
-                        Image(systemName: "chart.line.uptrend.xyaxis")
-                            .font(.system(size: 16, weight: .medium))
-                            .foregroundColor(.blue)
-                    }
-                    
-                    Text("数据趋势")
-                        .font(.system(size: 18, weight: .semibold))
-                        .foregroundColor(.primary)
-                    
-                    Spacer()
-                    
-                    // 数据点数量指示
-                    if !data.isEmpty {
-                        HStack(spacing: 6) {
-                            Circle()
-                                .fill(.blue)
-                                .frame(width: 8, height: 8)
-                            
-                            Text("\(data.count) 数据点")
-                                .font(.system(size: 12, weight: .medium))
-                                .foregroundColor(.secondary)
+                // 顶部控制区域
+                HStack(spacing: 16) {
+                    // 时间段选择器
+                    ModernSegmentedControl(
+                        selection: $statisticsManager.currentPeriod,
+                        options: StatisticsPeriod.allCases,
+                        onChange: { _ in
+                            withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
+                                animateChart = false
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                                    animateChart = true
+                                }
+                            }
                         }
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 4)
-                        .background(
-                            Capsule()
-                                .fill(Color(.controlBackgroundColor))
-                        )
-                    }
+                    )
+                    .frame(maxWidth: .infinity)
+                    
+                    // 单位选择器
+                    ModernMenu(
+                        selection: $statisticsManager.currentUnit,
+                        options: StatisticsUnit.allCases,
+                        icon: "slider.horizontal.3"
+                    )
+                    .frame(width: 120)
                 }
                 
                 // 时间段导航器
