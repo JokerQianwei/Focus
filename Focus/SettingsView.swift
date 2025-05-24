@@ -93,6 +93,7 @@ struct SettingsView: View {
                                         .frame(width: 70)
                                         .multilineTextAlignment(.trailing)
                                         .disabled(timerManager.timerRunning)
+                                        .focusEffectDisabled()
                                         .onChange(of: workMinutesInput) { _, newValue in
                                             let filtered = newValue.filter { "0123456789".contains($0) }
                                             if filtered != newValue { workMinutesInput = filtered }
@@ -124,6 +125,7 @@ struct SettingsView: View {
                                         .frame(width: 70)
                                         .multilineTextAlignment(.trailing)
                                         .disabled(timerManager.timerRunning)
+                                        .focusEffectDisabled()
                                         .onChange(of: breakMinutesInput) { _, newValue in
                                             let filtered = newValue.filter { "0123456789".contains($0) }
                                             if filtered != newValue { breakMinutesInput = filtered }
@@ -156,6 +158,7 @@ struct SettingsView: View {
                                         .frame(width: 70)
                                         .multilineTextAlignment(.trailing)
                                         .disabled(timerManager.timerRunning)
+                                        .focusEffectDisabled()
                                         .onChange(of: promptMinInput) { _, newValue in
                                             let filtered = newValue.filter { "0123456789".contains($0) }
                                             if filtered != newValue { promptMinInput = filtered }
@@ -184,6 +187,7 @@ struct SettingsView: View {
                                         .frame(width: 70)
                                         .multilineTextAlignment(.trailing)
                                         .disabled(timerManager.timerRunning)
+                                        .focusEffectDisabled()
                                         .onChange(of: promptMaxInput) { _, newValue in
                                             let filtered = newValue.filter { "0123456789".contains($0) }
                                             if filtered != newValue { promptMaxInput = filtered }
@@ -212,6 +216,7 @@ struct SettingsView: View {
                                         .frame(width: 70)
                                         .multilineTextAlignment(.trailing)
                                         .disabled(timerManager.timerRunning)
+                                        .focusEffectDisabled()
                                         .onChange(of: microBreakInput) { _, newValue in
                                             let filtered = newValue.filter { "0123456789".contains($0) }
                                             if filtered != newValue { microBreakInput = filtered }

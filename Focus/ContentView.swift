@@ -56,6 +56,7 @@ struct ContentView: View {
                                 .scaleEffect(isHoveringClose ? 1.1 : 1.0)
                         }
                         .buttonStyle(.plain)
+                        .focusEffectDisabled()
                         .help("隐藏窗口")
                         .onHover { hovering in
                             withAnimation(.easeInOut(duration: 0.1)) {
