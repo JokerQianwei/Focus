@@ -52,7 +52,7 @@ struct SettingsView: View {
                 .padding(.vertical, 14)
             }
         }
-        .frame(width: 360, height: 480)
+        .frame(width: 320, height: 480)
         .background(backgroundGradient)
         .onAppear {
             checkNotificationPermission()
