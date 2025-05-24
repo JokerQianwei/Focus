@@ -30,17 +30,17 @@ struct StatisticsView: View {
             headerView
             
             ScrollView {
-                LazyVStack(spacing: 20) {
+                LazyVStack(spacing: 16) {
                     periodNavigationSection
                     controlsSection
                     chartSection
                     summaryCardsSection
                 }
                 .padding(.horizontal, 20)
-                .padding(.vertical, 16)
+                .padding(.vertical, 12)
             }
         }
-        .frame(width: 560, height: 650)
+        .frame(width: 560, height: 700)
         .background(backgroundGradient)
         .onAppear {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
@@ -267,7 +267,8 @@ struct StatisticsView: View {
                     animate: animateChart,
                     selectedDataPoint: $selectedDataPoint
                 )
-                .frame(height: 220)
+                .frame(height: 180)
+                .frame(maxWidth: .infinity)
             }
         }
     }
@@ -277,9 +278,9 @@ struct StatisticsView: View {
         let summary = statisticsManager.getStatisticsSummary()
         
         return LazyVGrid(columns: [
-            GridItem(.flexible(), spacing: 12),
-            GridItem(.flexible(), spacing: 12)
-        ], spacing: 12) {
+            GridItem(.flexible(), spacing: 10),
+            GridItem(.flexible(), spacing: 10)
+        ], spacing: 10) {
             ModernSummaryCard(
                 title: "总专注次数",
                 value: "\(summary.totalSessions)",
@@ -392,12 +393,12 @@ struct ModernSummaryCard: View {
     @State private var isHovering = false
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 10) {
             HStack {
                 Image(systemName: icon)
-                    .font(.system(size: 18, weight: .medium))
+                    .font(.system(size: 16, weight: .medium))
                     .foregroundColor(color)
-                    .frame(width: 28, height: 28)
+                    .frame(width: 24, height: 24)
                     .background(
                         Circle()
                             .fill(color.opacity(0.12))
@@ -413,9 +414,9 @@ struct ModernSummaryCard: View {
                 }
             }
             
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: 2) {
                 Text(value)
-                    .font(.system(size: 22, weight: .bold, design: .rounded))
+                    .font(.system(size: 20, weight: .bold, design: .rounded))
                     .foregroundColor(.primary)
                 
                 if !subtitle.isEmpty {
@@ -426,12 +427,12 @@ struct ModernSummaryCard: View {
             }
             
             Text(title)
-                .font(.system(size: 12, weight: .medium))
+                .font(.system(size: 11, weight: .medium))
                 .foregroundColor(.secondary)
                 .lineLimit(2)
         }
-        .padding(16)
-        .frame(height: 100)
+        .padding(14)
+        .frame(height: 85)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
             RoundedRectangle(cornerRadius: 12)
@@ -643,7 +644,7 @@ struct EmptyChartView: View {
                     .foregroundColor(.secondary.opacity(0.7))
             }
         }
-        .frame(height: 220)
+        .frame(height: 180)
         .frame(maxWidth: .infinity)
     }
 }
