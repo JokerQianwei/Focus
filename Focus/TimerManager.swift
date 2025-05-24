@@ -16,6 +16,15 @@ enum SoundType: String, CaseIterable, Identifiable {
     case bell = "Blow"
     case hero = "Hero"
     case submarine = "Submarine"
+    case basso = "Basso"
+    case bottle = "Bottle"
+    case frog = "Frog"
+    case funk = "Funk"
+    case morse = "Morse"
+    case ping = "Ping"
+    case pop = "Pop"
+    case purr = "Purr"
+    case sosumi = "Sosumi"
     
     var id: String { self.rawValue }
     
@@ -26,6 +35,15 @@ enum SoundType: String, CaseIterable, Identifiable {
             case .bell: return "Blow.aiff"
             case .hero: return "Hero.aiff"
             case .submarine: return "Submarine.aiff"
+            case .basso: return "Basso.aiff"
+            case .bottle: return "Bottle.aiff"
+            case .frog: return "Frog.aiff"
+            case .funk: return "Funk.aiff"
+            case .morse: return "Morse.aiff"
+            case .ping: return "Ping.aiff"
+            case .pop: return "Pop.aiff"
+            case .purr: return "Purr.aiff"
+            case .sosumi: return "Sosumi.aiff"
         }
     }
     
@@ -35,7 +53,16 @@ enum SoundType: String, CaseIterable, Identifiable {
             case .glass: return "玻璃声"
             case .bell: return "铃声"
             case .hero: return "完成声"
-            case .submarine: return "低音声"
+            case .submarine: return "潜艇声"
+            case .basso: return "低音声"
+            case .bottle: return "瓶子声"
+            case .frog: return "青蛙声"
+            case .funk: return "放克声"
+            case .morse: return "电报声"
+            case .ping: return "乒乓声"
+            case .pop: return "爆破声"
+            case .purr: return "呼噜声"
+            case .sosumi: return "经典声"
         }
     }
 }
@@ -101,12 +128,20 @@ class TimerManager: ObservableObject {
     @Published var promptMinInterval: Int {
         didSet {
             UserDefaults.standard.set(promptMinInterval, forKey: promptMinIntervalKey)
+            // 确保最小间隔不大于最大间隔
+            if promptMinInterval > promptMaxInterval {
+                promptMaxInterval = promptMinInterval
+            }
         }
     }
     
     @Published var promptMaxInterval: Int {
         didSet {
             UserDefaults.standard.set(promptMaxInterval, forKey: promptMaxIntervalKey)
+            // 确保最大间隔不小于最小间隔
+            if promptMaxInterval < promptMinInterval {
+                promptMaxInterval = promptMinInterval
+            }
         }
     }
     
@@ -447,7 +482,12 @@ class TimerManager: ObservableObject {
         // 生成随机间隔（转换为秒）
         let minSeconds = promptMinInterval * 60
         let maxSeconds = promptMaxInterval * 60
-        nextPromptInterval = TimeInterval(Int.random(in: minSeconds...maxSeconds))
+        
+        // 安全检查：确保范围有效
+        let safeMinSeconds = min(minSeconds, maxSeconds)
+        let safeMaxSeconds = max(minSeconds, maxSeconds)
+        
+        nextPromptInterval = TimeInterval(Int.random(in: safeMinSeconds...safeMaxSeconds))
 
         // 创建新的计时器
         promptTimer = Timer.scheduledTimer(withTimeInterval: nextPromptInterval, repeats: false) { [weak self] _ in
