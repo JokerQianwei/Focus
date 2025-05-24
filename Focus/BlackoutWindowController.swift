@@ -340,7 +340,7 @@ struct BlackoutCountdownView: View {
             }
             
             // 倒计时显示，使用共享状态的值，居中显示
-            VStack(spacing: 16) {
+            VStack(spacing: 20) {
                 // 微休息图标
                 Image(systemName: "leaf.fill")
                     .font(.system(size: 32))
@@ -348,18 +348,25 @@ struct BlackoutCountdownView: View {
                     .scaleEffect(breathingEffect ? 1.1 : 1.0)
                     .animation(.easeInOut(duration: 2.0).repeatForever(autoreverses: true), value: breathingEffect)
                 
+                // 倒计时数字
                 Text("\(countdownState.remainingSeconds)")
                     .font(.system(size: 88, weight: .ultraLight, design: .rounded))
                     .foregroundColor(.white)
                     .monospacedDigit()
                     .scaleEffect(scale)
                     .animation(.easeInOut(duration: 1.0), value: scale)
+                    .multilineTextAlignment(.center)
                 
+                // 提示文字 - 确保完全居中
                 Text("闭眼！深呼吸！")
                     .font(.system(size: 18, weight: .regular))
                     .foregroundColor(.white.opacity(0.8))
                     .tracking(2.0)
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: .infinity)
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .multilineTextAlignment(.center)
             
             // 左上角的关闭按钮
             VStack {
