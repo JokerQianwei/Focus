@@ -19,6 +19,51 @@ struct ContentView: View {
     @State private var isHoveringPlayPause = false // State for play/pause hover
     @State private var isHoveringReset = false     // State for reset hover
     @State private var isHoveringSettings = false // State for settings hover
+    
+    // 进度条动画状态
+    @State private var animateProgress = false
+
+    // 计算当前进度比例 (0.0-1.0)
+    private var progressRatio: Double {
+        if timerManager.isWorkMode {
+            let totalSeconds = Double(timerManager.workMinutes * 60)
+            let remainingSeconds = Double(timerManager.minutes * 60 + timerManager.seconds)
+            return remainingSeconds / totalSeconds
+        } else {
+            let totalSeconds = Double(timerManager.breakMinutes * 60)
+            let remainingSeconds = Double(timerManager.minutes * 60 + timerManager.seconds)
+            return remainingSeconds / totalSeconds
+        }
+    }
+    
+    // 工作模式的渐变色
+    private var workModeGradient: LinearGradient {
+        LinearGradient(
+            gradient: Gradient(colors: [
+                Color.blue,
+                Color.blue.opacity(0.8)
+            ]),
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+    }
+    
+    // 休息模式的渐变色
+    private var breakModeGradient: LinearGradient {
+        LinearGradient(
+            gradient: Gradient(colors: [
+                Color(red: 0.4, green: 0.8, blue: 0.6),
+                Color(red: 0.2, green: 0.7, blue: 0.5)
+            ]),
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+    }
+    
+    // 当前模式的渐变色
+    private var currentModeGradient: LinearGradient {
+        timerManager.isWorkMode ? workModeGradient : breakModeGradient
+    }
 
     var body: some View {
         ZStack {
@@ -73,14 +118,43 @@ struct ContentView: View {
 
                 // 时间显示
                 ZStack {
+                    // 时钟背景
                     Circle()
                         .fill(Color(NSColor.controlBackgroundColor))
                         .shadow(color: Color.black.opacity(0.1), radius: 10, x: 0, y: 5)
 
+                    // 底层灰色轨道
                     Circle()
-                        .stroke(timerManager.isWorkMode ? Color.blue : Color(red: 0.4, green: 0.8, blue: 0.6), lineWidth: 4)
-                        .padding(4)
+                        .stroke(
+                            Color.gray.opacity(0.2),
+                            style: StrokeStyle(
+                                lineWidth: 8,
+                                lineCap: .round
+                            )
+                        )
+                        .padding(8)
 
+                    // 进度条圆环
+                    Circle()
+                        .trim(from: 0, to: CGFloat(animateProgress ? progressRatio : 1))
+                        .stroke(
+                            currentModeGradient,
+                            style: StrokeStyle(
+                                lineWidth: 8,
+                                lineCap: .round
+                            )
+                        )
+                        .rotationEffect(.degrees(-90))
+                        .padding(8)
+                        .animation(.easeInOut(duration: 0.7), value: progressRatio)
+                        .animation(.easeOut(duration: 1.0), value: animateProgress)
+                        .onAppear {
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                                animateProgress = true
+                            }
+                        }
+
+                    // 时间文本
                     Text(timerManager.timeString)
                         .font(.system(size: 70, weight: .medium, design: .rounded))
                         .foregroundColor(.primary)
@@ -119,6 +193,11 @@ struct ContentView: View {
                     // 重置按钮
                     Button(action: {
                         timerManager.resetTimer()
+                        // 重置进度动画
+                        animateProgress = false
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                            animateProgress = true
+                        }
                     }) {
                         Image(systemName: "arrow.counterclockwise")
                             .font(.system(size: 26))
@@ -145,6 +224,13 @@ struct ContentView: View {
         }
         .sheet(isPresented: $showingSettings) {
             SettingsView(timerManager: timerManager)
+        }
+        .onChange(of: timerManager.isWorkMode) { _ in
+            // 在模式切换时重新触发进度动画
+            animateProgress = false
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                animateProgress = true
+            }
         }
     }
 
