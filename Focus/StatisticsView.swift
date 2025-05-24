@@ -278,9 +278,9 @@ struct StatisticsView: View {
         let summary = statisticsManager.getStatisticsSummary()
         
         return LazyVGrid(columns: [
-            GridItem(.flexible(), spacing: 10),
-            GridItem(.flexible(), spacing: 10)
-        ], spacing: 10) {
+            GridItem(.flexible(), spacing: 8),
+            GridItem(.flexible(), spacing: 8)
+        ], spacing: 8) {
             ModernSummaryCard(
                 title: "总专注次数",
                 value: "\(summary.totalSessions)",
@@ -313,6 +313,7 @@ struct StatisticsView: View {
                 color: .red
             )
         }
+        .padding(.horizontal, 4)
     }
     
     // MARK: - Background Gradient
@@ -393,12 +394,13 @@ struct ModernSummaryCard: View {
     @State private var isHovering = false
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack {
+        VStack(alignment: .leading, spacing: 8) {
+            // 顶部：图标和数值在同一行
+            HStack(alignment: .center, spacing: 8) {
                 Image(systemName: icon)
-                    .font(.system(size: 16, weight: .medium))
+                    .font(.system(size: 14, weight: .medium))
                     .foregroundColor(color)
-                    .frame(width: 24, height: 24)
+                    .frame(width: 20, height: 20)
                     .background(
                         Circle()
                             .fill(color.opacity(0.12))
@@ -406,33 +408,33 @@ struct ModernSummaryCard: View {
                 
                 Spacer()
                 
-                if isHovering {
-                    Image(systemName: "arrow.up.right")
-                        .font(.caption2)
-                        .foregroundColor(color)
-                        .transition(.opacity.combined(with: .scale))
+                // 数值和单位在同一行
+                HStack(alignment: .firstTextBaseline, spacing: 2) {
+                    Text(value)
+                        .font(.system(size: 18, weight: .bold, design: .rounded))
+                        .foregroundColor(.primary)
+                        .lineLimit(1)
+                    
+                    if !subtitle.isEmpty {
+                        Text(subtitle)
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundColor(.secondary)
+                            .lineLimit(1)
+                    }
                 }
             }
             
-            VStack(alignment: .leading, spacing: 2) {
-                Text(value)
-                    .font(.system(size: 20, weight: .bold, design: .rounded))
-                    .foregroundColor(.primary)
-                
-                if !subtitle.isEmpty {
-                    Text(subtitle)
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
-            }
+            Spacer()
             
+            // 底部：标题
             Text(title)
                 .font(.system(size: 11, weight: .medium))
                 .foregroundColor(.secondary)
                 .lineLimit(2)
+                .multilineTextAlignment(.leading)
         }
-        .padding(14)
-        .frame(height: 85)
+        .padding(12)
+        .frame(height: 80)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
             RoundedRectangle(cornerRadius: 12)
