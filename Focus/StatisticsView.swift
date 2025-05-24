@@ -398,9 +398,9 @@ struct ModernSummaryCard: View {
             // 顶部：图标和数值在同一行
             HStack(alignment: .center, spacing: 8) {
                 Image(systemName: icon)
-                    .font(.system(size: 14, weight: .medium))
+                    .font(.system(size: 16, weight: .medium))
                     .foregroundColor(color)
-                    .frame(width: 20, height: 20)
+                    .frame(width: 24, height: 24)
                     .background(
                         Circle()
                             .fill(color.opacity(0.12))
@@ -428,13 +428,13 @@ struct ModernSummaryCard: View {
             
             // 底部：标题
             Text(title)
-                .font(.system(size: 11, weight: .medium))
-                .foregroundColor(.secondary)
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundColor(.primary)
                 .lineLimit(2)
                 .multilineTextAlignment(.leading)
         }
         .padding(12)
-        .frame(height: 80)
+        .frame(height: 85)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
             RoundedRectangle(cornerRadius: 12)
