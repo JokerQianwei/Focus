@@ -67,10 +67,19 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
         // 初始化视频控制管理器
         videoControlManager = VideoControlManager.shared
         
-        // 初始化主窗口控制器
+        // 初始化主窗口控制器并显示窗口
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            if let mainWindow = NSApp.windows.first(where: { !$0.title.isEmpty }) {
+            if let mainWindow = NSApp.windows.first(where: { window in
+                // 查找主窗口：包含内容且尺寸合理
+                let hasContentView = window.contentViewController != nil
+                let isReasonableSize = window.frame.width > 250 && window.frame.height > 400
+                let isNotStatusBar = window.frame.height > 100
+                return hasContentView && isReasonableSize && isNotStatusBar
+            }) {
                 self.mainWindowController = NSWindowController(window: mainWindow)
+                
+                // 默认显示主窗口
+                self.showMainWindowOnStartup(window: mainWindow)
             }
         }
 
@@ -335,28 +344,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
         completionHandler([.banner, .sound])
     }
 
-    // 状态栏图标可见性变化的处理
+    // 状态栏图标可见性变化的处理（纯菜单栏应用不需要处理）
     @objc private func statusBarIconVisibilityChanged() {
-        // 在这里可以添加额外的逻辑，如果需要的话
-        // 例如，如果图标不可见且窗口也不可见，可以将窗口设为可见
-        if !TimerManager.shared.showStatusBarIcon {
-            let windowsVisible = NSApp.windows.contains(where: { $0.isVisible })
-            if !windowsVisible {
-                // 如果没有可见窗口，显示主窗口
-                NSApp.setActivationPolicy(.regular)
-                // 检查是否已有主窗口控制器，如果没有则尝试获取
-                if mainWindowController == nil {
-                    if let mainWindow = NSApp.windows.first(where: { !$0.title.isEmpty }) {
-                        mainWindowController = NSWindowController(window: mainWindow)
-                    }
-                }
-                
-                if let controller = mainWindowController {
-                    controller.showWindow(self)
-                    NSApp.activate(ignoringOtherApps: true)
-                }
-            }
-        }
+        // 作为纯菜单栏应用，状态栏图标始终保持可见
+        // 此方法保留以兼容现有通知系统，但不执行任何操作
     }
     
     // 处理显示黑屏请求
@@ -515,6 +506,19 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
         if let url = URL(string: "x-apple.systempreferences:com.apple.preference.notifications") {
             NSWorkspace.shared.open(url)
         }
+    }
+    
+    // 应用启动时显示主窗口
+    private func showMainWindowOnStartup(window: NSWindow) {
+        // 设置窗口属性，确保在菜单栏应用模式下正确显示
+        window.level = .floating
+        window.makeKeyAndOrderFront(nil)
+        window.orderFrontRegardless()
+        
+        // 激活应用程序，确保窗口可见
+        NSApp.activate(ignoringOtherApps: true)
+        
+        print("主窗口已在启动时显示")
     }
     
     // 检查通知权限状态的公共方法

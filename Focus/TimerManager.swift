@@ -116,24 +116,8 @@ class TimerManager: ObservableObject {
         }
     }
     
-    @Published var showStatusBarIcon: Bool {
-        didSet {
-            UserDefaults.standard.set(showStatusBarIcon, forKey: showStatusBarIconKey)
-            // 发送通知，告知状态栏控制器更新图标的显示状态
-            NotificationCenter.default.post(name: .statusBarIconVisibilityChanged, object: nil)
-            
-            // 如果隐藏了状态栏图标，确保显示主窗口
-            if !showStatusBarIcon {
-                DispatchQueue.main.async {
-                    let windowsVisible = NSApp.windows.contains(where: { $0.isVisible })
-                    if !windowsVisible {
-                        NSApp.setActivationPolicy(.regular)
-                        NSApp.activate(ignoringOtherApps: true)
-                    }
-                }
-            }
-        }
-    }
+    // 作为纯菜单栏应用，状态栏图标始终显示（只读属性）
+    let showStatusBarIcon: Bool = true
     
     @Published private var completionTimestamps: [Date] = [] // Store completion timestamps
 
@@ -223,12 +207,7 @@ class TimerManager: ObservableObject {
             self.microBreakSeconds = 10 // 默认值
         }
 
-        // 状态栏图标显示设置
-        if UserDefaults.standard.object(forKey: showStatusBarIconKey) != nil {
-            self.showStatusBarIcon = UserDefaults.standard.bool(forKey: showStatusBarIconKey)
-        } else {
-            self.showStatusBarIcon = true // 默认显示
-        }
+        // 作为纯菜单栏应用，状态栏图标始终显示，不需要从UserDefaults加载
         
         // 黑屏功能设置
         if UserDefaults.standard.object(forKey: blackoutEnabledKey) != nil {

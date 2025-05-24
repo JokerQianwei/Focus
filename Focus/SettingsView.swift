@@ -400,11 +400,29 @@ struct SettingsView: View {
                     // 其它设置 Section
                     settingsSection(title: "其他设置", systemImage: "gearshape") {
                         VStack(spacing: 12) {
-                            Toggle(isOn: $timerManager.showStatusBarIcon) {
-                                Text("显示菜单栏图标")
+                            // 菜单栏应用说明（不可修改）
+                            HStack {
+                                Text("菜单栏应用")
                                     .foregroundColor(.primary)
+                                
+                                Spacer()
+                                
+                                HStack(spacing: 6) {
+                                    Image(systemName: "checkmark.circle.fill")
+                                        .foregroundColor(.green)
+                                        .font(.caption)
+                                    
+                                    Text("始终显示")
+                                        .foregroundColor(.secondary)
+                                        .font(.caption)
+                                }
                             }
-                            .toggleStyle(SwitchToggleStyle(tint: .accentColor))
+                            
+                            Text("作为纯菜单栏应用运行，不会在Dock中显示图标")
+                                .font(.footnote)
+                                .foregroundColor(.secondary)
+                                .padding(.top, -4)
+                                .padding(.leading, 4)
                             
                             Divider()
                             
