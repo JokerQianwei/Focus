@@ -41,18 +41,18 @@ struct SettingsView: View {
             headerView
             
             ScrollView {
-                LazyVStack(spacing: 20) {
+                LazyVStack(spacing: 16) {
                     timerSettingsSection
                     promptSettingsSection
                     soundSettingsSection
                     behaviorSettingsSection
                     notificationSection
                 }
-                .padding(.horizontal, 20)
-                .padding(.vertical, 20)
+                .padding(.horizontal, 18)
+                .padding(.vertical, 16)
             }
         }
-        .frame(width: 420, height: 600)
+        .frame(width: 380, height: 520)
         .background(backgroundGradient)
         .onAppear {
             checkNotificationPermission()
@@ -75,12 +75,12 @@ struct SettingsView: View {
                     }
                 }) {
                     Image(systemName: "xmark")
-                        .font(.system(size: 12, weight: .medium))
+                        .font(.system(size: 10, weight: .medium))
                         .foregroundColor(isHoveringClose ? .white : .secondary)
-                        .frame(width: 28, height: 28)
+                        .frame(width: 24, height: 24)
                         .background(
                             Circle()
-                                .fill(isHoveringClose ? .red : Color(.controlBackgroundColor))
+                                .fill(isHoveringClose ? Color(.systemGray) : Color(.controlBackgroundColor))
                         )
                         .shadow(color: .black.opacity(0.08), radius: 1, x: 0, y: 0.5)
                 }
@@ -111,11 +111,11 @@ struct SettingsView: View {
     
     // MARK: - 计时设置分组
     private var timerSettingsSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 6) {
             SectionTitle(title: "计时", icon: "timer", iconColor: .blue)
             
             SimpleCard {
-                VStack(spacing: 12) {
+                VStack(spacing: 10) {
                     TimeInputRow(
                         title: "专注时间",
                         value: $workMinutesInput,
@@ -152,11 +152,11 @@ struct SettingsView: View {
     
     // MARK: - 随机提示设置分组
     private var promptSettingsSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 6) {
             SectionTitle(title: "随机提示音", icon: "waveform.path.ecg", iconColor: .green)
             
             SimpleCard {
-                VStack(spacing: 12) {
+                VStack(spacing: 10) {
                     TimeInputRow(
                         title: "最小间隔",
                         value: $promptMinInput,
@@ -205,11 +205,11 @@ struct SettingsView: View {
     
     // MARK: - 声音设置分组
     private var soundSettingsSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 6) {
             SectionTitle(title: "声音", icon: "speaker.wave.3", iconColor: .purple)
             
             SimpleCard {
-                VStack(spacing: 12) {
+                VStack(spacing: 10) {
                     SimpleToggleRow(
                         title: "启用提示音",
                         icon: "speaker.2",
@@ -217,7 +217,7 @@ struct SettingsView: View {
                     )
                     
                     if timerManager.promptSoundEnabled {
-                        VStack(spacing: 10) {
+                        VStack(spacing: 8) {
                             Divider()
                                 .padding(.horizontal, -6)
                             
@@ -269,11 +269,11 @@ struct SettingsView: View {
     
     // MARK: - 行为设置分组
     private var behaviorSettingsSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 6) {
             SectionTitle(title: "行为", icon: "gearshape.2", iconColor: .orange)
             
             SimpleCard {
-                VStack(spacing: 12) {
+                VStack(spacing: 10) {
                     ToggleRow(
                         title: "微休息通知",
                         subtitle: "微休息开始和结束时发送系统通知提醒",
@@ -293,7 +293,7 @@ struct SettingsView: View {
                     Divider()
                         .padding(.horizontal, -6)
                     
-                    VStack(alignment: .leading, spacing: 6) {
+                    VStack(alignment: .leading, spacing: 4) {
                         ToggleRow(
                             title: "微休息时切换暂停/播放状态",
                             subtitle: "推荐看视频/网课时开启",
@@ -321,11 +321,11 @@ struct SettingsView: View {
     
     // MARK: - 通知设置分组
     private var notificationSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 6) {
             SectionTitle(title: "通知设置", icon: "bell.badge", iconColor: .red)
             
             SimpleCard {
-                VStack(spacing: 12) {
+                VStack(spacing: 10) {
                     HStack {
                         Image(systemName: "key")
                             .foregroundColor(.secondary)
@@ -406,7 +406,7 @@ struct SimpleCard<Content: View>: View {
         VStack(alignment: .leading, spacing: 0) {
             content
         }
-        .padding(16)
+        .padding(14)
         .background(
             RoundedRectangle(cornerRadius: 12)
                 .fill(.regularMaterial)
