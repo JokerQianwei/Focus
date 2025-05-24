@@ -411,6 +411,24 @@ struct SettingsView: View {
                             
                             Divider()
                             
+                            Toggle(isOn: $timerManager.microBreakNotificationEnabled) {
+                                Text("微休息通知")
+                                    .foregroundColor(.primary)
+                            }
+                            .toggleStyle(SwitchToggleStyle(tint: .accentColor))
+                            .disabled(timerManager.timerRunning)
+                            
+                            if timerManager.microBreakNotificationEnabled {
+                                Text("在微休息开始和结束时发送系统通知")
+                                    .font(.footnote)
+                                    .foregroundColor(.secondary)
+                                    .padding(.top, 2)
+                                    .padding(.leading, 4)
+                                    .animation(.easeInOut, value: timerManager.microBreakNotificationEnabled)
+                            }
+                            
+                            Divider()
+                            
                             // 通知权限状态
                             HStack {
                                 Text("通知权限")
@@ -437,7 +455,7 @@ struct SettingsView: View {
                             }
                             
                             if !notificationPermissionGranted {
-                                Text("需要通知权限来提醒工作和休息时间的结束")
+                                Text("需要通知权限来提醒工作和休息时间的结束以及微休息通知")
                                     .font(.footnote)
                                     .foregroundColor(.secondary)
                                     .padding(.top, 2)

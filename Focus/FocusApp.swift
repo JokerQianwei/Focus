@@ -140,6 +140,22 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
             object: nil
         )
         
+        // 监听微休息开始通知
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(sendMicroBreakStartNotification),
+            name: .microBreakStartNotification,
+            object: nil
+        )
+        
+        // 监听微休息结束通知
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(sendMicroBreakEndNotification),
+            name: .microBreakEndNotification,
+            object: nil
+        )
+        
         // 调试：测试通知权限（仅在调试模式下）
         #if DEBUG
         DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
@@ -363,6 +379,72 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
         
         // 恢复视频播放（通过恢复系统音量）
         videoControlManager?.resumeVideo()
+    }
+    
+    // 发送微休息开始通知
+    @objc private func sendMicroBreakStartNotification() {
+        // 首先检查通知权限
+        checkNotificationPermission { hasPermission in
+            if !hasPermission {
+                print("没有通知权限，无法发送微休息通知")
+                return
+            }
+            
+            let content = UNMutableNotificationContent()
+            content.title = "微休息开始"
+            content.body = "休息 \(TimerManager.shared.microBreakSeconds) 秒，放松一下眼睛吧！"
+            content.sound = UNNotificationSound.default
+
+            // 立即触发通知
+            let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)
+
+            // 创建通知请求
+            let request = UNNotificationRequest(
+                identifier: "microbreak-start-\(UUID().uuidString)",
+                content: content,
+                trigger: trigger
+            )
+
+            // 添加通知请求
+            UNUserNotificationCenter.current().add(request) { error in
+                if let error = error {
+                    print("微休息开始通知发送失败: \(error.localizedDescription)")
+                }
+            }
+        }
+    }
+    
+    // 发送微休息结束通知
+    @objc private func sendMicroBreakEndNotification() {
+        // 首先检查通知权限
+        checkNotificationPermission { hasPermission in
+            if !hasPermission {
+                print("没有通知权限，无法发送微休息通知")
+                return
+            }
+            
+            let content = UNMutableNotificationContent()
+            content.title = "微休息结束"
+            content.body = "继续专注工作吧！"
+            content.sound = UNNotificationSound.default
+
+            // 立即触发通知
+            let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)
+
+            // 创建通知请求
+            let request = UNNotificationRequest(
+                identifier: "microbreak-end-\(UUID().uuidString)",
+                content: content,
+                trigger: trigger
+            )
+
+            // 添加通知请求
+            UNUserNotificationCenter.current().add(request) { error in
+                if let error = error {
+                    print("微休息结束通知发送失败: \(error.localizedDescription)")
+                }
+            }
+        }
     }
 
     // 改进的通知权限请求方法
