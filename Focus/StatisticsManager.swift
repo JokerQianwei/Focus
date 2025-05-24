@@ -10,7 +10,7 @@ import Foundation
 /// 统计数据管理器
 class StatisticsManager: ObservableObject {
     @Published var currentPeriod: StatisticsPeriod = .month
-    @Published var currentUnit: StatisticsUnit = .count
+    @Published var currentUnit: StatisticsUnit = .time
     @Published var currentDate: Date = Date()
     
     private let timerManager: TimerManager
