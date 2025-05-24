@@ -184,6 +184,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
             window.styleMask.remove(.resizable)
             window.setContentSize(NSSize(width: 320, height: 490))
             
+            // 隐藏默认的窗口控制按钮（红黄绿按钮）
+            window.standardWindowButton(.closeButton)?.isHidden = true
+            window.standardWindowButton(.miniaturizeButton)?.isHidden = true
+            window.standardWindowButton(.zoomButton)?.isHidden = true
+            
             // 如果窗口处于缩放状态，则取消缩放
             if window.isZoomed {
                 window.zoom(nil)
