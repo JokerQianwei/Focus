@@ -66,10 +66,14 @@ struct StatisticsDataPoint: Identifiable {
     let date: Date
     let value: Double
     let label: String
+    let normalizedValue: Double
     
-    /// 归一化值（0.0-1.0）
-    var normalizedValue: Double {
-        return value
+    // 便捷初始化方法，默认归一化值为原值
+    init(date: Date, value: Double, label: String, normalizedValue: Double? = nil) {
+        self.date = date
+        self.value = value
+        self.label = label
+        self.normalizedValue = normalizedValue ?? value
     }
 }
 

@@ -24,15 +24,38 @@ class StatisticsManager: ObservableObject {
     func getStatisticsData() -> [StatisticsDataPoint] {
         let sessions = timerManager.focusSessions.filter { $0.isWorkSession }
         
+        let rawData: [StatisticsDataPoint]
         switch currentPeriod {
         case .day:
-            return getDailyData(sessions: sessions)
+            rawData = getDailyData(sessions: sessions)
         case .week:
-            return getWeeklyData(sessions: sessions)
+            rawData = getWeeklyData(sessions: sessions)
         case .month:
-            return getMonthlyData(sessions: sessions)
+            rawData = getMonthlyData(sessions: sessions)
         case .year:
-            return getYearlyData(sessions: sessions)
+            rawData = getYearlyData(sessions: sessions)
+        }
+        
+        // 数据归一化处理
+        return normalizeData(rawData)
+    }
+    
+    /// 数据归一化处理
+    private func normalizeData(_ dataPoints: [StatisticsDataPoint]) -> [StatisticsDataPoint] {
+        guard !dataPoints.isEmpty else { return [] }
+        
+        let maxValue = dataPoints.map { $0.value }.max() ?? 1.0
+        
+        // 避免除以0的情况
+        let safeMaxValue = maxValue == 0 ? 1.0 : maxValue
+        
+        return dataPoints.map { dataPoint in
+            StatisticsDataPoint(
+                date: dataPoint.date,
+                value: dataPoint.value,
+                label: dataPoint.label,
+                normalizedValue: dataPoint.value / safeMaxValue
+            )
         }
     }
     
@@ -253,19 +276,25 @@ class StatisticsManager: ObservableObject {
         var streak = 0
         var currentDate = calendar.startOfDay(for: now)
         
-        // 检查连续天数
+        // 检查连续天数，从今天开始向前推
         while true {
             let nextDay = calendar.date(byAdding: .day, value: 1, to: currentDate)!
             let daySessions = sessions.filter { session in
                 session.startTime >= currentDate && session.startTime < nextDay
             }
             
+            // 如果当前日期没有会话，中断连续计数
             if daySessions.isEmpty {
                 break
             }
             
             streak += 1
-            currentDate = calendar.date(byAdding: .day, value: -1, to: currentDate)!
+            
+            // 向前推一天
+            guard let previousDay = calendar.date(byAdding: .day, value: -1, to: currentDate) else {
+                break
+            }
+            currentDate = previousDay
         }
         
         return streak

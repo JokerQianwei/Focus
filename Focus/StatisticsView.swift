@@ -11,113 +11,140 @@ struct StatisticsView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.colorScheme) private var colorScheme
     
+    @ObservedObject var timerManager: TimerManager
     @StateObject private var statisticsManager: StatisticsManager
+    
     @State private var isHoveringClose = false
+    @State private var animateChart = false
+    @State private var selectedDataPoint: StatisticsDataPoint?
     
     init(timerManager: TimerManager) {
-        _statisticsManager = StateObject(wrappedValue: StatisticsManager(timerManager: timerManager))
+        self.timerManager = timerManager
+        self._statisticsManager = StateObject(wrappedValue: StatisticsManager(timerManager: timerManager))
     }
     
     var body: some View {
         VStack(spacing: 0) {
             headerView
             
-            VStack(spacing: 16) {
-                periodAndUnitSelector
-                chartSection
-                summarySection
+            ScrollView {
+                LazyVStack(spacing: 16) {
+                    periodTitleSection
+                    controlsSection
+                    chartSection
+                    summaryCardsSection
+                }
+                .padding(.horizontal, 20)
+                .padding(.vertical, 16)
             }
-            .padding(.horizontal, 20)
-            .padding(.vertical, 16)
         }
-        .frame(width: 520, height: 480)
+        .frame(width: 500, height: 600)
         .background(backgroundGradient)
+        .onAppear {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                withAnimation(.easeOut(duration: 1.0)) {
+                    animateChart = true
+                }
+            }
+        }
     }
     
-    // MARK: - 顶部标题栏
+    // MARK: - Header View
     private var headerView: some View {
-        VStack(spacing: 0) {
-            HStack {
-                Text("专注统计")
-                    .font(.system(size: 20, weight: .semibold, design: .rounded))
-                    .foregroundColor(.primary)
-                
-                Spacer()
-                
-                Button(action: {
-                    withAnimation(.easeInOut(duration: 0.3)) {
-                        dismiss()
-                    }
-                }) {
-                    Image(systemName: "xmark")
-                        .font(.system(size: 8, weight: .medium))
-                        .foregroundColor(isHoveringClose ? .white : .secondary)
-                        .frame(width: 22, height: 22)
-                        .background(
-                            Circle()
-                                .fill(isHoveringClose ? Color.gray.opacity(0.6) : Color(.controlBackgroundColor))
-                        )
-                        .shadow(color: .black.opacity(0.08), radius: 1, x: 0, y: 0.5)
+        HStack {
+            Image(systemName: "chart.bar.fill")
+                .font(.title2)
+                .foregroundColor(.blue)
+            
+            Text("专注统计")
+                .font(.system(size: 20, weight: .semibold, design: .rounded))
+                .foregroundColor(.primary)
+            
+            Spacer()
+            
+            Button(action: {
+                withAnimation(.easeInOut(duration: 0.3)) {
+                    dismiss()
                 }
-                .buttonStyle(PlainButtonStyle())
-                .onHover { hovering in
-                    withAnimation(.easeInOut(duration: 0.2)) {
-                        isHoveringClose = hovering
-                    }
+            }) {
+                Image(systemName: "xmark")
+                    .font(.system(size: 8, weight: .medium))
+                    .foregroundColor(isHoveringClose ? .white : .secondary)
+                    .frame(width: 22, height: 22)
+                    .background(
+                        Circle()
+                            .fill(isHoveringClose ? Color.gray.opacity(0.6) : Color(.controlBackgroundColor))
+                    )
+                    .shadow(color: .black.opacity(0.08), radius: 1, x: 0, y: 0.5)
+            }
+            .buttonStyle(PlainButtonStyle())
+            .onHover { hovering in
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    isHoveringClose = hovering
                 }
             }
-            .padding(.horizontal, 24)
-            .padding(.top, 18)
-            .padding(.bottom, 12)
         }
+        .padding(.horizontal, 24)
+        .padding(.top, 18)
+        .padding(.bottom, 12)
         .background(.ultraThinMaterial)
     }
     
-    // MARK: - 背景渐变
-    private var backgroundGradient: some View {
-        LinearGradient(
-            colors: colorScheme == .dark
-                ? [Color(.windowBackgroundColor), Color(.windowBackgroundColor).opacity(0.8)]
-                : [Color(.windowBackgroundColor), Color(.controlBackgroundColor).opacity(0.3)],
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-        )
+    // MARK: - Period Title Section
+    private var periodTitleSection: some View {
+        VStack(spacing: 4) {
+            Text(statisticsManager.getCurrentPeriodTitle())
+                .font(.system(size: 16, weight: .medium))
+                .foregroundColor(.primary)
+            
+            Text(statisticsManager.getCurrentPeriodTotal())
+                .font(.system(size: 28, weight: .bold, design: .rounded))
+                .foregroundColor(.blue)
+        }
+        .padding(.vertical, 8)
     }
     
-    // MARK: - 时间段和单位选择器
-    private var periodAndUnitSelector: some View {
+    // MARK: - Controls Section
+    private var controlsSection: some View {
         HStack(spacing: 12) {
             // 时间段选择器
-            HStack(spacing: 4) {
+            HStack(spacing: 0) {
                 ForEach(StatisticsPeriod.allCases) { period in
                     Button(action: {
-                        withAnimation(.easeInOut(duration: 0.2)) {
+                        withAnimation(.easeInOut(duration: 0.3)) {
                             statisticsManager.currentPeriod = period
+                            animateChart = false
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                                animateChart = true
+                            }
                         }
                     }) {
                         Text(period.rawValue)
-                            .font(.system(size: 13, weight: .medium))
-                            .foregroundColor(statisticsManager.currentPeriod == period ? .white : .primary)
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 6)
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundColor(statisticsManager.currentPeriod == period ? .white : .secondary)
+                            .frame(width: 32, height: 28)
                             .background(
-                                Capsule()
-                                    .fill(statisticsManager.currentPeriod == period 
-                                          ? Color.accentColor 
-                                          : Color(.controlBackgroundColor))
+                                Rectangle()
+                                    .fill(statisticsManager.currentPeriod == period ? Color.blue : Color.clear)
                             )
                     }
                     .buttonStyle(PlainButtonStyle())
                 }
             }
+            .background(
+                RoundedRectangle(cornerRadius: 6)
+                    .fill(Color(.controlBackgroundColor))
+                    .shadow(color: .black.opacity(0.05), radius: 2, x: 0, y: 1)
+            )
+            .clipShape(RoundedRectangle(cornerRadius: 6))
             
             Spacer()
             
-            // 单位选择菜单
+            // 单位选择器
             Menu {
                 ForEach(StatisticsUnit.allCases) { unit in
                     Button(action: {
-                        withAnimation(.easeInOut(duration: 0.2)) {
+                        withAnimation(.easeInOut(duration: 0.3)) {
                             statisticsManager.currentUnit = unit
                         }
                     }) {
@@ -132,74 +159,61 @@ struct StatisticsView: View {
                 }
             } label: {
                 HStack(spacing: 6) {
-                    Text("单位")
-                        .font(.system(size: 13, weight: .medium))
-                        .foregroundColor(.secondary)
-                    
+                    Image(systemName: "slider.horizontal.3")
+                        .font(.caption)
                     Text(statisticsManager.currentUnit.rawValue)
-                        .font(.system(size: 13, weight: .medium))
-                        .foregroundColor(.primary)
-                    
+                        .font(.system(size: 12, weight: .medium))
                     Image(systemName: "chevron.up.chevron.down")
                         .font(.caption2)
-                        .foregroundColor(.secondary)
                 }
-                .padding(.horizontal, 12)
+                .foregroundColor(.secondary)
+                .padding(.horizontal, 10)
                 .padding(.vertical, 6)
                 .background(
-                    Capsule()
+                    RoundedRectangle(cornerRadius: 6)
                         .fill(Color(.controlBackgroundColor))
+                        .shadow(color: .black.opacity(0.05), radius: 2, x: 0, y: 1)
                 )
             }
         }
+        .padding(.horizontal, 4)
     }
     
-    // MARK: - 图表区域
+    // MARK: - Chart Section
     private var chartSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            // 图表标题
-            HStack {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(statisticsManager.getCurrentPeriodTitle())
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundColor(.primary)
-                    
-                    Text(statisticsManager.getCurrentPeriodTotal())
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundColor(.secondary)
-                }
-                
-                Spacer()
-            }
+        StatisticsCard(
+            title: "数据趋势",
+            icon: "chart.line.uptrend.xyaxis",
+            iconColor: .blue
+        ) {
+            let data = statisticsManager.getStatisticsData()
             
-            // 数据图表
-            StatisticsChart(
-                data: statisticsManager.getStatisticsData(),
-                unit: statisticsManager.currentUnit,
-                period: statisticsManager.currentPeriod
-            )
-            .frame(height: 200)
+            if data.isEmpty {
+                EmptyChartView()
+            } else {
+                BarChartView(
+                    data: data,
+                    unit: statisticsManager.currentUnit,
+                    animate: animateChart,
+                    selectedDataPoint: $selectedDataPoint
+                )
+                .frame(height: 200)
+            }
         }
-        .padding(16)
-        .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(.regularMaterial)
-                .shadow(color: .black.opacity(0.04), radius: 6, x: 0, y: 1)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(Color.secondary.opacity(0.08), lineWidth: 0.5)
-        )
     }
     
-    // MARK: - 统计摘要
-    private var summarySection: some View {
+    // MARK: - Summary Cards Section
+    private var summaryCardsSection: some View {
         let summary = statisticsManager.getStatisticsSummary()
         
-        return HStack(spacing: 12) {
+        return LazyVGrid(columns: [
+            GridItem(.flexible(), spacing: 8),
+            GridItem(.flexible(), spacing: 8)
+        ], spacing: 8) {
             SummaryCard(
                 title: "总专注次数",
                 value: "\(summary.totalSessions)",
+                subtitle: "Sessions",
                 icon: "target",
                 color: .blue
             )
@@ -207,149 +221,134 @@ struct StatisticsView: View {
             SummaryCard(
                 title: "总专注时长",
                 value: summary.formattedTotalTime,
+                subtitle: "",
                 icon: "clock",
                 color: .green
             )
             
             SummaryCard(
                 title: "平均时长",
-                value: "\(summary.averageSessionLength)分钟",
-                icon: "chart.bar",
+                value: "\(summary.averageSessionLength)",
+                subtitle: "分钟",
+                icon: "gauge.medium",
                 color: .orange
             )
             
             SummaryCard(
                 title: "连续天数",
-                value: "\(summary.currentStreak)天",
+                value: "\(summary.currentStreak)",
+                subtitle: "天",
                 icon: "flame",
                 color: .red
             )
         }
     }
+    
+    // MARK: - Background Gradient
+    private var backgroundGradient: some View {
+        LinearGradient(
+            colors: colorScheme == .dark
+                ? [Color(.windowBackgroundColor), Color(.windowBackgroundColor).opacity(0.8)]
+                : [Color(.windowBackgroundColor), Color(.controlBackgroundColor).opacity(0.3)],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+    }
 }
 
-// MARK: - 统计图表组件
-struct StatisticsChart: View {
-    let data: [StatisticsDataPoint]
-    let unit: StatisticsUnit
-    let period: StatisticsPeriod
+// MARK: - Statistics Card Component
+struct StatisticsCard<Content: View>: View {
+    let title: String
+    let icon: String
+    let iconColor: Color
+    let content: Content
     
-    private var maxValue: Double {
-        data.map(\.value).max() ?? 1.0
+    @Environment(\.colorScheme) private var colorScheme
+    
+    init(
+        title: String,
+        icon: String,
+        iconColor: Color,
+        @ViewBuilder content: () -> Content
+    ) {
+        self.title = title
+        self.icon = icon
+        self.iconColor = iconColor
+        self.content = content()
     }
     
     var body: some View {
-        HStack(alignment: .bottom, spacing: period == .day ? 2 : 4) {
-            ForEach(data) { point in
-                VStack(spacing: 4) {
-                    // 数据条
-                    Rectangle()
-                        .fill(
-                            LinearGradient(
-                                colors: [
-                                    Color(red: 0.4, green: 0.8, blue: 0.6),
-                                    Color(red: 0.2, green: 0.7, blue: 0.5)
-                                ],
-                                startPoint: .top,
-                                endPoint: .bottom
-                            )
-                        )
-                        .frame(
-                            width: period == .day ? 8 : 12,
-                            height: point.value == 0 ? 2 : max(4, (point.value / maxValue) * 150)
-                        )
-                        .opacity(point.value == 0 ? 0.2 : 1.0)
-                        .cornerRadius(period == .day ? 2 : 3)
-                    
-                    // 标签
-                    if shouldShowLabel(for: point) {
-                        Text(point.label)
-                            .font(.system(size: 9, weight: .medium))
-                            .foregroundColor(.secondary)
-                            .rotationEffect(.degrees(period == .day ? -45 : 0))
-                    }
-                }
-                .help(getTooltipText(for: point))
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 8) {
+                Image(systemName: icon)
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundColor(iconColor)
+                    .frame(width: 20, height: 20)
+                    .background(
+                        Circle()
+                            .fill(iconColor.opacity(0.12))
+                    )
+                
+                Text(title)
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundColor(.primary)
+                
+                Spacer()
             }
+            
+            content
         }
-        .padding(.horizontal, 8)
-    }
-    
-    private func shouldShowLabel(for point: StatisticsDataPoint) -> Bool {
-        switch period {
-        case .day:
-            // 每5个显示一个标签
-            let index = data.firstIndex(where: { $0.id == point.id }) ?? 0
-            return index % 5 == 0
-        case .week, .month, .year:
-            return true
-        }
-    }
-    
-    private func getTooltipText(for point: StatisticsDataPoint) -> String {
-        let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "zh_CN")
-        
-        switch period {
-        case .day:
-            formatter.dateFormat = "M月d日"
-        case .week:
-            formatter.dateFormat = "yyyy年第w周"
-        case .month:
-            formatter.dateFormat = "yyyy年M月"
-        case .year:
-            formatter.dateFormat = "yyyy年"
-        }
-        
-        let dateString = formatter.string(from: point.date)
-        
-        switch unit {
-        case .count:
-            return "\(dateString): \(Int(point.value)) 次专注"
-        case .time:
-            let hours = Int(point.value) / 60
-            let minutes = Int(point.value) % 60
-            if hours > 0 {
-                return "\(dateString): \(hours)小时\(minutes)分钟"
-            } else {
-                return "\(dateString): \(minutes)分钟"
-            }
-        }
+        .padding(16)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(.regularMaterial)
+                .shadow(color: .black.opacity(0.04), radius: 6, x: 0, y: 2)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(Color.secondary.opacity(0.08), lineWidth: 0.5)
+        )
     }
 }
 
-// MARK: - 摘要卡片组件
+// MARK: - Summary Card Component
 struct SummaryCard: View {
     let title: String
     let value: String
+    let subtitle: String
     let icon: String
     let color: Color
     
     var body: some View {
-        VStack(spacing: 8) {
-            Image(systemName: icon)
-                .font(.system(size: 16, weight: .medium))
-                .foregroundColor(color)
-                .frame(width: 24, height: 24)
-                .background(
-                    Circle()
-                        .fill(color.opacity(0.12))
-                )
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Image(systemName: icon)
+                    .font(.system(size: 16, weight: .medium))
+                    .foregroundColor(color)
+                
+                Spacer()
+            }
             
-            VStack(spacing: 2) {
+            VStack(alignment: .leading, spacing: 2) {
                 Text(value)
-                    .font(.system(size: 16, weight: .semibold))
+                    .font(.system(size: 20, weight: .bold, design: .rounded))
                     .foregroundColor(.primary)
                 
-                Text(title)
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundColor(.secondary)
-                    .multilineTextAlignment(.center)
+                if !subtitle.isEmpty {
+                    Text(subtitle)
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                }
             }
+            
+            Text(title)
+                .font(.caption)
+                .foregroundColor(.secondary)
+                .lineLimit(1)
         }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 12)
-        .padding(.horizontal, 8)
+        .padding(12)
+        .frame(height: 80)
+        .frame(maxWidth: .infinity, alignment: .leading)
         .background(
             RoundedRectangle(cornerRadius: 10)
                 .fill(.regularMaterial)
@@ -357,8 +356,183 @@ struct SummaryCard: View {
         )
         .overlay(
             RoundedRectangle(cornerRadius: 10)
-                .stroke(Color.secondary.opacity(0.06), lineWidth: 0.5)
+                .stroke(color.opacity(0.2), lineWidth: 1)
         )
+    }
+}
+
+// MARK: - Bar Chart Component
+struct BarChartView: View {
+    let data: [StatisticsDataPoint]
+    let unit: StatisticsUnit
+    let animate: Bool
+    @Binding var selectedDataPoint: StatisticsDataPoint?
+    
+    private let barSpacing: CGFloat = 4
+    private let barCornerRadius: CGFloat = 3
+    
+    var body: some View {
+        GeometryReader { geometry in
+            let chartWidth = geometry.size.width
+            let chartHeight = geometry.size.height - 40 // 留出底部标签空间
+            let barWidth = (chartWidth - CGFloat(data.count - 1) * barSpacing) / CGFloat(data.count)
+            
+            VStack(spacing: 0) {
+                // 图表区域
+                ZStack(alignment: .bottom) {
+                    // 背景网格线
+                    GridLinesView(height: chartHeight)
+                    
+                    // 柱状图
+                    HStack(alignment: .bottom, spacing: barSpacing) {
+                        ForEach(Array(data.enumerated()), id: \.element.id) { index, dataPoint in
+                            VStack(spacing: 4) {
+                                ZStack {
+                                    // 背景柱
+                                    RoundedRectangle(cornerRadius: barCornerRadius)
+                                        .fill(Color.gray.opacity(0.1))
+                                        .frame(width: barWidth, height: chartHeight)
+                                    
+                                    // 数据柱
+                                    VStack {
+                                        Spacer()
+                                        RoundedRectangle(cornerRadius: barCornerRadius)
+                                            .fill(barGradient)
+                                            .frame(
+                                                width: barWidth,
+                                                height: animate ? chartHeight * dataPoint.normalizedValue : 0
+                                            )
+                                            .animation(
+                                                .easeOut(duration: 0.8)
+                                                .delay(Double(index) * 0.05),
+                                                value: animate
+                                            )
+                                    }
+                                }
+                                .onTapGesture {
+                                    selectedDataPoint = selectedDataPoint?.id == dataPoint.id ? nil : dataPoint
+                                }
+                                .onHover { hovering in
+                                    if hovering {
+                                        selectedDataPoint = dataPoint
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    
+                    // 数值显示
+                    if let selected = selectedDataPoint {
+                        ValueTooltip(dataPoint: selected, unit: unit)
+                    }
+                }
+                .frame(height: chartHeight)
+                
+                // 底部标签
+                HStack(alignment: .center, spacing: barSpacing) {
+                    ForEach(data) { dataPoint in
+                        Text(dataPoint.label)
+                            .font(.system(size: 10, weight: .medium))
+                            .foregroundColor(.secondary)
+                            .frame(width: barWidth)
+                            .multilineTextAlignment(.center)
+                    }
+                }
+                .padding(.top, 8)
+            }
+        }
+    }
+    
+    private var barGradient: LinearGradient {
+        LinearGradient(
+            gradient: Gradient(colors: [
+                Color.blue,
+                Color.blue.opacity(0.7)
+            ]),
+            startPoint: .top,
+            endPoint: .bottom
+        )
+    }
+}
+
+// MARK: - Grid Lines Component
+struct GridLinesView: View {
+    let height: CGFloat
+    
+    var body: some View {
+        VStack {
+            ForEach(0..<5) { i in
+                Rectangle()
+                    .fill(Color.secondary.opacity(0.1))
+                    .frame(height: 0.5)
+                
+                if i < 4 {
+                    Spacer()
+                }
+            }
+        }
+        .frame(height: height)
+    }
+}
+
+// MARK: - Value Tooltip Component
+struct ValueTooltip: View {
+    let dataPoint: StatisticsDataPoint
+    let unit: StatisticsUnit
+    
+    var body: some View {
+        VStack(spacing: 4) {
+            Text(formatValue())
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundColor(.white)
+            
+            Text(dataPoint.label)
+                .font(.caption2)
+                .foregroundColor(.white.opacity(0.8))
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 4)
+        .background(
+            RoundedRectangle(cornerRadius: 6)
+                .fill(Color.black.opacity(0.8))
+        )
+        .shadow(color: .black.opacity(0.2), radius: 4, x: 0, y: 2)
+    }
+    
+    private func formatValue() -> String {
+        switch unit {
+        case .count:
+            return "\(Int(dataPoint.value))"
+        case .time:
+            let hours = Int(dataPoint.value) / 60
+            let minutes = Int(dataPoint.value) % 60
+            if hours > 0 {
+                return "\(hours)h \(minutes)m"
+            } else {
+                return "\(minutes)m"
+            }
+        }
+    }
+}
+
+// MARK: - Empty Chart View
+struct EmptyChartView: View {
+    var body: some View {
+        VStack(spacing: 12) {
+            Image(systemName: "chart.bar")
+                .font(.system(size: 40))
+                .foregroundColor(.secondary.opacity(0.5))
+            
+            Text("暂无数据")
+                .font(.system(size: 14, weight: .medium))
+                .foregroundColor(.secondary)
+            
+            Text("开始你的第一个专注会话")
+                .font(.caption)
+                .foregroundColor(.secondary.opacity(0.7))
+        }
+        .frame(height: 200)
+        .frame(maxWidth: .infinity)
     }
 }
 
