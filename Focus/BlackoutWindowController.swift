@@ -36,6 +36,7 @@ class BlackoutCountdownState: ObservableObject {
     
     func stopCountdown() {
         cancellable?.cancel()
+        remainingSeconds = 0
     }
     
     deinit {
@@ -62,9 +63,18 @@ class BlackoutWindowController: NSWindowController {
     // 添加倒计时状态管理器
     private let countdownState = BlackoutCountdownState()
     
+    // 深绿色主题色 - 移到类级别作为静态属性
+    private static var primaryGreenColor: NSColor {
+        return NSColor(red: 0.106, green: 0.263, blue: 0.196, alpha: 1.0) // #1B4332
+    }
+    
+    private static var secondaryGreenColor: NSColor {
+        return NSColor(red: 0.157, green: 0.392, blue: 0.294, alpha: 1.0) // #28634B
+    }
+    
     // 初始化方法
     private override init(window: NSWindow?) {
-        // 创建全屏黑色窗口
+        // 创建全屏深绿色窗口
         let customWindow = NSWindow(
             contentRect: NSScreen.main?.frame ?? NSRect(x: 0, y: 0, width: 800, height: 600),
             styleMask: [.borderless, .fullSizeContentView],
@@ -72,14 +82,14 @@ class BlackoutWindowController: NSWindowController {
             defer: false
         )
         
-        // 设置窗口属性
-        customWindow.backgroundColor = .black
+        // 设置窗口属性 - 使用静态属性
+        customWindow.backgroundColor = Self.primaryGreenColor
         customWindow.isOpaque = true
         customWindow.hasShadow = false
-        customWindow.level = .screenSaver // 使窗口保持在很高层级，但允许系统菜单仍可交互
+        customWindow.level = .screenSaver
         customWindow.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
         customWindow.isReleasedWhenClosed = false
-        customWindow.ignoresMouseEvents = false // 允许鼠标事件以便点击跳过按钮
+        customWindow.ignoresMouseEvents = false
         
         // 先完成基本的初始化
         super.init(window: customWindow)
@@ -107,7 +117,7 @@ class BlackoutWindowController: NSWindowController {
     private func setupContentView() {
         let countdownView = BlackoutCountdownView(
             onSkip: { self.hideBlackoutWindow() },
-            countdownState: countdownState  // 传递状态对象
+            countdownState: countdownState
         )
         
         let hostingController = NSHostingController(rootView: countdownView)
@@ -123,13 +133,13 @@ class BlackoutWindowController: NSWindowController {
         stopCountdownTimer()
     }
     
-    // 显示黑屏窗口
+    // 显示黑屏窗口（直接进入黑屏状态）
     @objc func showBlackoutWindow() {
         guard !isActive, timerManager.blackoutEnabled else { return }
         
         isActive = true
         
-        // 为每个屏幕创建覆盖窗口
+        // 直接创建全屏黑屏窗口
         createOverlayWindowsForAllScreens()
         
         // 启动倒计时
@@ -151,9 +161,10 @@ class BlackoutWindowController: NSWindowController {
                 mainWindow.orderFront(nil)
                 mainWindow.makeKey()
                 
-                // 淡入动画
+                // 温和的淡入动画
                 NSAnimationContext.runAnimationGroup({ context in
-                    context.duration = 0.5
+                    context.duration = 1.0 // 适中的过渡时间
+                    context.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
                     mainWindow.animator().alphaValue = 1.0
                 })
             }
@@ -168,9 +179,10 @@ class BlackoutWindowController: NSWindowController {
             overlayWindow.alphaValue = 0
             overlayWindow.orderFront(nil)
             
-            // 淡入动画
+            // 温和的淡入动画
             NSAnimationContext.runAnimationGroup({ context in
-                context.duration = 0.5
+                context.duration = 1.0
+                context.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
                 overlayWindow.animator().alphaValue = 1.0
             })
         }
@@ -185,20 +197,31 @@ class BlackoutWindowController: NSWindowController {
             defer: false
         )
         
-        // 设置窗口属性
-        overlayWindow.backgroundColor = .black
+        // 设置窗口属性 - 使用深绿色
+        overlayWindow.backgroundColor = Self.primaryGreenColor
         overlayWindow.isOpaque = true
         overlayWindow.hasShadow = false
         overlayWindow.level = .screenSaver
         overlayWindow.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
         overlayWindow.isReleasedWhenClosed = false
         
-        // 创建简单的黑色视图
-        let blackView = NSView()
-        blackView.wantsLayer = true
-        blackView.layer?.backgroundColor = NSColor.black.cgColor
+        // 创建深绿色渐变视图
+        let greenView = NSView()
+        greenView.wantsLayer = true
         
-        overlayWindow.contentView = blackView
+        // 创建渐变层
+        let gradientLayer = CAGradientLayer()
+        gradientLayer.colors = [
+            Self.primaryGreenColor.cgColor,
+            Self.secondaryGreenColor.cgColor,
+            Self.primaryGreenColor.cgColor
+        ]
+        gradientLayer.locations = [0.0, 0.5, 1.0]
+        gradientLayer.startPoint = CGPoint(x: 0, y: 0)
+        gradientLayer.endPoint = CGPoint(x: 1, y: 1)
+        
+        greenView.layer = gradientLayer
+        overlayWindow.contentView = greenView
         
         return overlayWindow
     }
@@ -210,9 +233,10 @@ class BlackoutWindowController: NSWindowController {
         isActive = false
         stopCountdownTimer()
         
-        // 淡出主窗口
+        // 温和的淡出主窗口
         NSAnimationContext.runAnimationGroup({ context in
-            context.duration = 0.3
+            context.duration = 0.6 // 适中的淡出时间
+            context.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
             window?.animator().alphaValue = 0.0
         }, completionHandler: { [weak self] in
             self?.window?.orderOut(nil)
@@ -222,7 +246,8 @@ class BlackoutWindowController: NSWindowController {
         // 淡出并关闭所有覆盖窗口
         for overlayWindow in blackoutWindows {
             NSAnimationContext.runAnimationGroup({ context in
-                context.duration = 0.3
+                context.duration = 0.6
+                context.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
                 overlayWindow.animator().alphaValue = 0.0
             }, completionHandler: { [weak overlayWindow] in
                 overlayWindow?.close()
@@ -270,26 +295,70 @@ struct BlackoutCountdownView: View {
     var onSkip: () -> Void
     @State private var scale: CGFloat = 1.0
     @State private var closeScale: CGFloat = 1.0
+    @State private var breathingEffect: Bool = false
     
     // 使用ObservedObject而不是State来观察共享的倒计时状态
     @ObservedObject var countdownState: BlackoutCountdownState
     
+    // 深绿色主题
+    private var primaryGreen: Color {
+        Color(red: 0.106, green: 0.263, blue: 0.196) // #1B4332
+    }
+    
+    private var secondaryGreen: Color {
+        Color(red: 0.157, green: 0.392, blue: 0.294) // #28634B
+    }
+    
+    private var accentGreen: Color {
+        Color(red: 0.239, green: 0.549, blue: 0.420) // #3D8C6B
+    }
+    
     var body: some View {
         ZStack {
-            // 简单黑色背景
-            Color.black.edgesIgnoringSafeArea(.all)
+            // 深绿色渐变背景
+            LinearGradient(
+                gradient: Gradient(colors: [primaryGreen, secondaryGreen, primaryGreen]),
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            .edgesIgnoringSafeArea(.all)
+            .scaleEffect(breathingEffect ? 1.02 : 1.0)
+            .animation(.easeInOut(duration: 3.0).repeatForever(autoreverses: true), value: breathingEffect)
+            
+            // 装饰性圆圈
+            ForEach(0..<3, id: \.self) { index in
+                Circle()
+                    .stroke(accentGreen.opacity(0.2), lineWidth: 2)
+                    .frame(width: CGFloat(200 + index * 100))
+                    .scaleEffect(breathingEffect ? 1.1 : 0.9)
+                    .animation(
+                        .easeInOut(duration: 4.0 + Double(index) * 0.5)
+                        .repeatForever(autoreverses: true)
+                        .delay(Double(index) * 0.3),
+                        value: breathingEffect
+                    )
+            }
             
             // 倒计时显示，使用共享状态的值，居中显示
-            VStack(spacing: 8) {
+            VStack(spacing: 16) {
+                // 微休息图标
+                Image(systemName: "leaf.fill")
+                    .font(.system(size: 32))
+                    .foregroundColor(accentGreen)
+                    .scaleEffect(breathingEffect ? 1.1 : 1.0)
+                    .animation(.easeInOut(duration: 2.0).repeatForever(autoreverses: true), value: breathingEffect)
+                
                 Text("\(countdownState.remainingSeconds)")
-                    .font(.system(size: 72, weight: .light, design: .rounded))
+                    .font(.system(size: 88, weight: .ultraLight, design: .rounded))
                     .foregroundColor(.white)
                     .monospacedDigit()
+                    .scaleEffect(scale)
+                    .animation(.easeInOut(duration: 1.0), value: scale)
                 
-                // Text("seconds")
-                //     .font(.system(size: 20, weight: .regular, design: .rounded))
-                //     .foregroundColor(.white.opacity(0.8))
-                //     .tracking(1.2)
+                Text("闭眼休息！")
+                    .font(.system(size: 18, weight: .regular))
+                    .foregroundColor(.white.opacity(0.8))
+                    .tracking(2.0)
             }
             
             // 左上角的关闭按钮
@@ -300,10 +369,10 @@ struct BlackoutCountdownView: View {
                             .font(.system(size: 12, weight: .semibold))
                             .foregroundColor(.white)
                             .frame(width: 32, height: 32)
-                            .background(Circle().fill(Color.white.opacity(0.2)))
+                            .background(Circle().fill(accentGreen.opacity(0.3)))
                             .overlay(
                                 Circle()
-                                    .stroke(Color.white.opacity(0.3), lineWidth: 1)
+                                    .stroke(accentGreen.opacity(0.5), lineWidth: 1)
                             )
                     }
                     .buttonStyle(PlainButtonStyle())
@@ -319,10 +388,22 @@ struct BlackoutCountdownView: View {
                 
                 Spacer()
             }
-            .padding(16)
+            .padding(20)
         }
         .onAppear {
+            breathingEffect = true
             print("BlackoutCountdownView appeared with \(countdownState.remainingSeconds) seconds")
+        }
+        .onChange(of: countdownState.remainingSeconds) { oldValue, newValue in
+            // 数字变化时的脉冲效果
+            withAnimation(.easeInOut(duration: 0.3)) {
+                scale = 1.1
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                withAnimation(.easeInOut(duration: 0.3)) {
+                    scale = 1.0
+                }
+            }
         }
     }
 }
