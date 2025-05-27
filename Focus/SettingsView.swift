@@ -388,16 +388,7 @@ struct SettingsView: View {
                         isOn: $timerManager.muteAudioDuringBreak
                     )
                     
-                    if timerManager.muteAudioDuringBreak {
-                        ModernWarningBox(
-                            icon: "exclamationmark.triangle",
-                            text: "首次使用需授予辅助功能权限"
-                        )
-                        .transition(.asymmetric(
-                            insertion: .opacity.combined(with: .scale(scale: 0.95)).combined(with: .offset(y: -10)),
-                            removal: .opacity.combined(with: .scale(scale: 0.95))
-                        ))
-                    }
+
                 }
             }
         }
