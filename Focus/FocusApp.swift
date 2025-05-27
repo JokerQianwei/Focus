@@ -224,6 +224,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
     
     // 播放特定类型的声音
     private func playSound(of type: SoundType) {
+        // 如果选择了"无"，则不播放任何声音
+        if type == .none {
+            return
+        }
+        
         // 首先尝试使用预加载的播放器
         if let player = audioPlayers[type] {
             // 重置播放器并播放
