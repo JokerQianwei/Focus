@@ -498,6 +498,7 @@ struct ModernSegmentedControl: View {
                 .foregroundColor(selection == option ? .white : .secondary)
                 .frame(minWidth: 80)
                 .frame(height: 36)
+                .frame(maxWidth: .infinity) // 确保按钮占满可用宽度
                 .background(
                     ZStack {
                         if selection == option {
@@ -505,6 +506,7 @@ struct ModernSegmentedControl: View {
                         }
                     }
                 )
+                .contentShape(Rectangle()) // 确保整个矩形区域都可以点击
         }
         .buttonStyle(PlainButtonStyle())
     }

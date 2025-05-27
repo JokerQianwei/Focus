@@ -7,6 +7,7 @@
 
 import SwiftUI
 import UserNotifications
+import ApplicationServices
 
 // MARK: - 设计系统
 struct DesignSystem {
@@ -63,8 +64,9 @@ struct SettingsView: View {
     @State private var microBreakInput: String
     @State private var isHoveringClose = false
     
-    // 通知权限状态
+    // 权限状态
     @State private var notificationPermissionGranted = false
+    @State private var accessibilityPermissionGranted = false
     
     // 动画状态
     @State private var isVisible = false
@@ -88,8 +90,8 @@ struct SettingsView: View {
                     timerSettingsSection
                     promptSettingsSection
                     soundSettingsSection
-                    behaviorSettingsSection
                     notificationSection
+                    behaviorSettingsSection
                 }
                 .padding(.horizontal, DesignSystem.Spacing.xl)
                 .padding(.vertical, DesignSystem.Spacing.lg)
@@ -101,9 +103,15 @@ struct SettingsView: View {
         .background(modernBackgroundGradient)
         .onAppear {
             checkNotificationPermission()
+            checkAccessibilityPermission()
             withAnimation(.easeOut(duration: 0.6).delay(0.1)) {
                 isVisible = true
             }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+            // 当应用重新激活时（比如从系统设置返回），重新检查权限
+            checkNotificationPermission()
+            checkAccessibilityPermission()
         }
     }
     
@@ -288,7 +296,7 @@ struct SettingsView: View {
         ) {
             VStack(spacing: DesignSystem.Spacing.md) {
                 ModernToggleRow(
-                    title: "启用提示音",
+                    title: "启用微休息",
                     icon: "speaker.2",
                     iconColor: .purple,
                     isOn: $timerManager.promptSoundEnabled
@@ -380,36 +388,40 @@ struct SettingsView: View {
                         isOn: $timerManager.muteAudioDuringBreak
                     )
                     
-                    if timerManager.muteAudioDuringBreak {
-                        ModernWarningBox(
-                            icon: "exclamationmark.triangle",
-                            text: "首次使用需授予辅助功能权限"
-                        )
-                        .transition(.asymmetric(
-                            insertion: .opacity.combined(with: .scale(scale: 0.95)).combined(with: .offset(y: -10)),
-                            removal: .opacity.combined(with: .scale(scale: 0.95))
-                        ))
-                    }
+
                 }
             }
         }
     }
     
-    // MARK: - 通知设置分组
+    // MARK: - 权限设置分组
     private var notificationSection: some View {
         ModernSettingsSection(
             title: "权限",
             icon: "bell.badge",
             iconColor: .red
         ) {
-            ModernPermissionRow(
-                title: "通知权限",
-                subtitle: "允许应用发送通知提醒",
-                icon: "key",
-                iconColor: .red,
-                isGranted: notificationPermissionGranted,
-                onSettingsAction: openNotificationSettings
-            )
+            VStack(spacing: DesignSystem.Spacing.md) {
+                ModernPermissionRow(
+                    title: "通知权限",
+                    subtitle: "「微休息通知」需要此权限",
+                    icon: "bell",
+                    iconColor: .orange,
+                    isGranted: notificationPermissionGranted,
+                    onSettingsAction: openNotificationSettings
+                )
+                
+                ModernDivider()
+                
+                ModernPermissionRow(
+                    title: "辅助功能权限",
+                    subtitle: "「媒体控制」需要此权限",
+                    icon: "accessibility",
+                    iconColor: .blue,
+                    isGranted: accessibilityPermissionGranted,
+                    onSettingsAction: openAccessibilitySettings
+                )
+            }
         }
     }
     
@@ -422,8 +434,75 @@ struct SettingsView: View {
         }
     }
     
+    private func checkAccessibilityPermission() {
+        // 使用更可靠的检测方法，包括带提示的检查
+        let isGrantedBasic = AXIsProcessTrusted()
+        
+        // 尝试使用带选项的检查方法
+        let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: false]
+        let isGrantedWithOptions = AXIsProcessTrustedWithOptions(options as CFDictionary)
+        
+        let finalResult = isGrantedBasic || isGrantedWithOptions
+        
+        #if DEBUG
+        print("🔍 辅助功能权限检测:")
+        print("  - 基础检测: \(isGrantedBasic ? "已授权" : "未授权")")
+        print("  - 选项检测: \(isGrantedWithOptions ? "已授权" : "未授权")")
+        print("  - 最终结果: \(finalResult ? "已授权" : "未授权")")
+        #endif
+        
+        DispatchQueue.main.async {
+            self.accessibilityPermissionGranted = finalResult
+        }
+        
+        // 如果权限未授予，启动定时器定期检查
+        if !finalResult {
+            startAccessibilityPermissionMonitoring()
+        }
+    }
+    
+    // 启动辅助功能权限监听
+    private func startAccessibilityPermissionMonitoring() {
+        #if DEBUG
+        print("🔄 开始监听辅助功能权限变化...")
+        #endif
+        
+        Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { timer in
+            // 使用与检测相同的逻辑
+            let isGrantedBasic = AXIsProcessTrusted()
+            let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: false]
+            let isGrantedWithOptions = AXIsProcessTrustedWithOptions(options as CFDictionary)
+            let finalResult = isGrantedBasic || isGrantedWithOptions
+            
+            DispatchQueue.main.async {
+                if finalResult != self.accessibilityPermissionGranted {
+                    #if DEBUG
+                    print("✅ 辅助功能权限状态变化:")
+                    print("  - 基础检测: \(isGrantedBasic ? "已授权" : "未授权")")
+                    print("  - 选项检测: \(isGrantedWithOptions ? "已授权" : "未授权")")
+                    print("  - 最终结果: \(finalResult ? "已授权" : "未授权")")
+                    #endif
+                    
+                    self.accessibilityPermissionGranted = finalResult
+                    if finalResult {
+                        timer.invalidate() // 权限获得后停止监听
+                        #if DEBUG
+                        print("🛑 停止监听辅助功能权限变化")
+                        #endif
+                    }
+                }
+            }
+        }
+    }
+    
     private func openNotificationSettings() {
         if let url = URL(string: "x-apple.systempreferences:com.apple.preference.notifications") {
+            NSWorkspace.shared.open(url)
+        }
+    }
+    
+    private func openAccessibilitySettings() {
+        if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") {
             NSWorkspace.shared.open(url)
         }
     }
@@ -730,38 +809,56 @@ struct ModernPermissionBadge: View {
     @State private var isHovered = false
     
     var body: some View {
-        HStack(spacing: DesignSystem.Spacing.sm) {
-            Image(systemName: isGranted ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
-                .foregroundColor(isGranted ? .green : .orange)
-                .font(.system(size: 14, weight: .semibold))
-            
-            Text(isGranted ? "已授权" : "未授权")
-                .font(.system(size: 12, weight: .semibold))
-                .foregroundColor(isGranted ? .green : .orange)
-            
-            if !isGranted {
-                Button("设置") {
+        if isGranted {
+            // 已授权状态 - 紧凑水平布局
+            HStack(spacing: 6) {
+                Image(systemName: "checkmark.circle.fill")
+                    .foregroundColor(.green)
+                    .font(.system(size: 12, weight: .semibold))
+                
+                Text("已授权")
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundColor(.green)
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 6)
+            .background(
+                RoundedRectangle(cornerRadius: 6)
+                    .fill(Color.green.opacity(0.12))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 6)
+                    .stroke(Color.green.opacity(0.25), lineWidth: 0.5)
+            )
+        } else {
+            // 未授权状态 - 居左紧凑布局
+            HStack(spacing: 6) {
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .foregroundColor(.orange)
+                    .font(.system(size: 12, weight: .semibold))
+                
+                Button("前往授权") {
                     onSettingsAction()
                 }
-                .buttonStyle(ModernMiniButtonStyle())
-                .scaleEffect(isHovered ? 1.05 : 1.0)
+                .buttonStyle(CompactMiniButtonStyle())
+                .scaleEffect(isHovered ? 1.02 : 1.0)
                 .onHover { hovering in
-                    withAnimation(.easeInOut(duration: 0.2)) {
+                    withAnimation(.easeInOut(duration: 0.15)) {
                         isHovered = hovering
                     }
                 }
             }
+            .padding(.horizontal, 6)
+            .padding(.vertical, 6)
+            .background(
+                RoundedRectangle(cornerRadius: 6)
+                    .fill(Color.orange.opacity(0.12))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 6)
+                    .stroke(Color.orange.opacity(0.25), lineWidth: 0.5)
+            )
         }
-        .padding(.horizontal, DesignSystem.Spacing.md)
-        .padding(.vertical, DesignSystem.Spacing.sm)
-        .background(
-            RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.sm)
-                .fill((isGranted ? Color.green : Color.orange).opacity(0.1))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.sm)
-                .stroke((isGranted ? Color.green : Color.orange).opacity(0.3), lineWidth: 1)
-        )
     }
 }
 
@@ -906,19 +1003,62 @@ struct ModernMiniButtonStyle: ButtonStyle {
         configuration.label
             .font(.system(size: 11, weight: .semibold))
             .foregroundColor(.white)
-            .padding(.horizontal, DesignSystem.Spacing.sm)
-            .padding(.vertical, 4)
+            .padding(.horizontal, DesignSystem.Spacing.md)
+            .padding(.vertical, 6)
+            .frame(minWidth: 60, minHeight: 24)
             .background(
-                RoundedRectangle(cornerRadius: 6)
-                    .fill(Color.accentColor)
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(
+                        LinearGradient(
+                            colors: configuration.isPressed 
+                                ? [Color.accentColor.opacity(0.8), Color.accentColor.opacity(0.9)]
+                                : [Color.accentColor, Color.accentColor.opacity(0.8)],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    )
                     .shadow(
-                        color: DesignSystem.Shadow.subtle.color,
-                        radius: DesignSystem.Shadow.subtle.radius,
-                        x: DesignSystem.Shadow.subtle.x,
-                        y: DesignSystem.Shadow.subtle.y
+                        color: DesignSystem.Shadow.soft.color,
+                        radius: configuration.isPressed ? 2 : DesignSystem.Shadow.soft.radius,
+                        x: DesignSystem.Shadow.soft.x,
+                        y: configuration.isPressed ? 1 : DesignSystem.Shadow.soft.y
                     )
             )
-            .scaleEffect(configuration.isPressed ? 0.95 : 1.0)
+            .scaleEffect(configuration.isPressed ? 0.96 : 1.0)
+            .animation(.easeInOut(duration: 0.1), value: configuration.isPressed)
+    }
+}
+
+// MARK: - 紧凑迷你按钮样式
+struct CompactMiniButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(.system(size: 10, weight: .semibold))
+            .foregroundColor(.white)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+            .frame(minWidth: 60, minHeight: 20)
+            .lineLimit(1)
+            .background(
+                RoundedRectangle(cornerRadius: 5)
+                    .fill(
+                        LinearGradient(
+                            colors: configuration.isPressed 
+                                ? [Color.accentColor.opacity(0.8), Color.accentColor.opacity(0.9)]
+                                : [Color.accentColor, Color.accentColor.opacity(0.8)],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    )
+                    .shadow(
+                        color: Color.black.opacity(0.1),
+                        radius: configuration.isPressed ? 1 : 2,
+                        x: 0,
+                        y: configuration.isPressed ? 0.5 : 1
+                    )
+            )
+            .scaleEffect(configuration.isPressed ? 0.98 : 1.0)
+            .animation(.easeInOut(duration: 0.08), value: configuration.isPressed)
     }
 }
 

@@ -55,9 +55,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
     private var audioPlayers: [SoundType: AVAudioPlayer] = [:]
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        // 请求通知权限（改进版本）
-        requestNotificationPermission()
-
+        // 设置通知中心代理（不主动申请权限）
+        UNUserNotificationCenter.current().delegate = self
+        
         // 初始化菜单栏控制器
         statusBarController = StatusBarController()
         
@@ -224,6 +224,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
     
     // 播放特定类型的声音
     private func playSound(of type: SoundType) {
+        // 如果选择了"无"，则不播放任何声音
+        if type == .none {
+            return
+        }
+        
         // 首先尝试使用预加载的播放器
         if let player = audioPlayers[type] {
             // 重置播放器并播放

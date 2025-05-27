@@ -10,5 +10,7 @@
 	<string>alert</string>
 	<key>NSUserNotificationsUsageDescription</key>
 	<string>我们需要发送通知来提醒您工作和休息时间的结束。</string>
+	<key>NSAppleEventsUsageDescription</key>
+	<string>我们需要辅助功能权限来控制媒体播放，在微休息期间暂停/恢复音视频播放。</string>
 </dict>
 </plist>

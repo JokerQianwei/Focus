@@ -11,6 +11,7 @@ import AppKit
 
 // 声音类型枚举
 enum SoundType: String, CaseIterable, Identifiable {
+    case none = "None"
     case tink = "Tink"
     case glass = "Glass"
     case bell = "Blow"
@@ -30,6 +31,7 @@ enum SoundType: String, CaseIterable, Identifiable {
     
     var fileName: String {
         switch self {
+            case .none: return ""
             case .tink: return "Tink.aiff"
             case .glass: return "Glass.aiff"
             case .bell: return "Blow.aiff"
@@ -49,6 +51,7 @@ enum SoundType: String, CaseIterable, Identifiable {
     
     var displayName: String {
         switch self {
+            case .none: return "无"
             case .tink: return "水滴声"
             case .glass: return "玻璃声"
             case .bell: return "铃声"
@@ -283,7 +286,7 @@ class TimerManager: ObservableObject {
         if UserDefaults.standard.object(forKey: microBreakNotificationEnabledKey) != nil {
             self.microBreakNotificationEnabled = UserDefaults.standard.bool(forKey: microBreakNotificationEnabledKey)
         } else {
-            self.microBreakNotificationEnabled = true // 默认启用微休息通知
+            self.microBreakNotificationEnabled = false // 默认不启用微休息通知
         }
 
         // 初始化计时器状态
