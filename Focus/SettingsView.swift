@@ -7,6 +7,7 @@
 
 import SwiftUI
 import UserNotifications
+import ApplicationServices
 
 // MARK: - 设计系统
 struct DesignSystem {
@@ -63,8 +64,9 @@ struct SettingsView: View {
     @State private var microBreakInput: String
     @State private var isHoveringClose = false
     
-    // 通知权限状态
+    // 权限状态
     @State private var notificationPermissionGranted = false
+    @State private var accessibilityPermissionGranted = false
     
     // 动画状态
     @State private var isVisible = false
@@ -101,6 +103,7 @@ struct SettingsView: View {
         .background(modernBackgroundGradient)
         .onAppear {
             checkNotificationPermission()
+            checkAccessibilityPermission()
             withAnimation(.easeOut(duration: 0.6).delay(0.1)) {
                 isVisible = true
             }
@@ -395,21 +398,34 @@ struct SettingsView: View {
         }
     }
     
-    // MARK: - 通知设置分组
+    // MARK: - 权限设置分组
     private var notificationSection: some View {
         ModernSettingsSection(
             title: "权限",
             icon: "bell.badge",
             iconColor: .red
         ) {
-            ModernPermissionRow(
-                title: "通知权限",
-                subtitle: "允许应用发送通知提醒",
-                icon: "key",
-                iconColor: .red,
-                isGranted: notificationPermissionGranted,
-                onSettingsAction: openNotificationSettings
-            )
+            VStack(spacing: DesignSystem.Spacing.md) {
+                ModernPermissionRow(
+                    title: "通知权限",
+                    subtitle: "允许应用发送通知提醒",
+                    icon: "bell",
+                    iconColor: .orange,
+                    isGranted: notificationPermissionGranted,
+                    onSettingsAction: openNotificationSettings
+                )
+                
+                ModernDivider()
+                
+                ModernPermissionRow(
+                    title: "辅助功能权限",
+                    subtitle: "媒体控制功能需要此权限",
+                    icon: "accessibility",
+                    iconColor: .blue,
+                    isGranted: accessibilityPermissionGranted,
+                    onSettingsAction: openAccessibilitySettings
+                )
+            }
         }
     }
     
@@ -422,8 +438,20 @@ struct SettingsView: View {
         }
     }
     
+    private func checkAccessibilityPermission() {
+        DispatchQueue.main.async {
+            self.accessibilityPermissionGranted = AXIsProcessTrusted()
+        }
+    }
+    
     private func openNotificationSettings() {
         if let url = URL(string: "x-apple.systempreferences:com.apple.preference.notifications") {
+            NSWorkspace.shared.open(url)
+        }
+    }
+    
+    private func openAccessibilitySettings() {
+        if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") {
             NSWorkspace.shared.open(url)
         }
     }
@@ -730,38 +758,68 @@ struct ModernPermissionBadge: View {
     @State private var isHovered = false
     
     var body: some View {
-        HStack(spacing: DesignSystem.Spacing.sm) {
-            Image(systemName: isGranted ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
-                .foregroundColor(isGranted ? .green : .orange)
-                .font(.system(size: 14, weight: .semibold))
-            
-            Text(isGranted ? "已授权" : "未授权")
-                .font(.system(size: 12, weight: .semibold))
-                .foregroundColor(isGranted ? .green : .orange)
-            
-            if !isGranted {
-                Button("设置") {
-                    onSettingsAction()
+        if isGranted {
+            // 已授权状态 - 紧凑布局
+            HStack(spacing: DesignSystem.Spacing.sm) {
+                Image(systemName: "checkmark.circle.fill")
+                    .foregroundColor(.green)
+                    .font(.system(size: 14, weight: .semibold))
+                
+                Text("已授权")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundColor(.green)
+            }
+            .padding(.horizontal, DesignSystem.Spacing.md)
+            .padding(.vertical, DesignSystem.Spacing.sm)
+            .background(
+                RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.sm)
+                    .fill(Color.green.opacity(0.1))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.sm)
+                    .stroke(Color.green.opacity(0.3), lineWidth: 1)
+            )
+        } else {
+            // 未授权状态 - 垂直布局避免拥挤
+            VStack(spacing: DesignSystem.Spacing.xs) {
+                HStack(spacing: DesignSystem.Spacing.sm) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .foregroundColor(.orange)
+                        .font(.system(size: 14, weight: .semibold))
+                    
+                    Text("未授权")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundColor(.orange)
+                    
+                    Spacer()
                 }
-                .buttonStyle(ModernMiniButtonStyle())
-                .scaleEffect(isHovered ? 1.05 : 1.0)
-                .onHover { hovering in
-                    withAnimation(.easeInOut(duration: 0.2)) {
-                        isHovered = hovering
+                
+                HStack {
+                    Spacer()
+                    
+                    Button("前往设置") {
+                        onSettingsAction()
+                    }
+                    .buttonStyle(ModernMiniButtonStyle())
+                    .scaleEffect(isHovered ? 1.05 : 1.0)
+                    .onHover { hovering in
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            isHovered = hovering
+                        }
                     }
                 }
             }
+            .padding(.horizontal, DesignSystem.Spacing.md)
+            .padding(.vertical, DesignSystem.Spacing.md)
+            .background(
+                RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.sm)
+                    .fill(Color.orange.opacity(0.1))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.sm)
+                    .stroke(Color.orange.opacity(0.3), lineWidth: 1)
+            )
         }
-        .padding(.horizontal, DesignSystem.Spacing.md)
-        .padding(.vertical, DesignSystem.Spacing.sm)
-        .background(
-            RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.sm)
-                .fill((isGranted ? Color.green : Color.orange).opacity(0.1))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.sm)
-                .stroke((isGranted ? Color.green : Color.orange).opacity(0.3), lineWidth: 1)
-        )
     }
 }
 
@@ -906,19 +964,29 @@ struct ModernMiniButtonStyle: ButtonStyle {
         configuration.label
             .font(.system(size: 11, weight: .semibold))
             .foregroundColor(.white)
-            .padding(.horizontal, DesignSystem.Spacing.sm)
-            .padding(.vertical, 4)
+            .padding(.horizontal, DesignSystem.Spacing.md)
+            .padding(.vertical, 6)
+            .frame(minWidth: 60, minHeight: 24)
             .background(
-                RoundedRectangle(cornerRadius: 6)
-                    .fill(Color.accentColor)
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(
+                        LinearGradient(
+                            colors: configuration.isPressed 
+                                ? [Color.accentColor.opacity(0.8), Color.accentColor.opacity(0.9)]
+                                : [Color.accentColor, Color.accentColor.opacity(0.8)],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    )
                     .shadow(
-                        color: DesignSystem.Shadow.subtle.color,
-                        radius: DesignSystem.Shadow.subtle.radius,
-                        x: DesignSystem.Shadow.subtle.x,
-                        y: DesignSystem.Shadow.subtle.y
+                        color: DesignSystem.Shadow.soft.color,
+                        radius: configuration.isPressed ? 2 : DesignSystem.Shadow.soft.radius,
+                        x: DesignSystem.Shadow.soft.x,
+                        y: configuration.isPressed ? 1 : DesignSystem.Shadow.soft.y
                     )
             )
-            .scaleEffect(configuration.isPressed ? 0.95 : 1.0)
+            .scaleEffect(configuration.isPressed ? 0.96 : 1.0)
+            .animation(.easeInOut(duration: 0.1), value: configuration.isPressed)
     }
 }
 
