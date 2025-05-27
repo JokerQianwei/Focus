@@ -840,32 +840,30 @@ struct ModernPermissionBadge: View {
                     .stroke(Color.green.opacity(0.25), lineWidth: 0.5)
             )
         } else {
-            // 未授权状态 - 水平布局保持对齐
-            HStack(spacing: 8) {
+            // 未授权状态 - 紧凑布局
+            HStack {
+                Spacer()
+                
                 HStack(spacing: 6) {
                     Image(systemName: "exclamationmark.triangle.fill")
                         .foregroundColor(.orange)
                         .font(.system(size: 12, weight: .semibold))
                     
-                    Text("未授权")
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundColor(.orange)
+                    Button("前往授权") {
+                        onSettingsAction()
+                    }
+                    .buttonStyle(CompactMiniButtonStyle())
+                    .scaleEffect(isHovered ? 1.02 : 1.0)
+                    .onHover { hovering in
+                        withAnimation(.easeInOut(duration: 0.15)) {
+                            isHovered = hovering
+                        }
+                    }
                 }
                 
                 Spacer()
-                
-                Button("前往设置") {
-                    onSettingsAction()
-                }
-                .buttonStyle(CompactMiniButtonStyle())
-                .scaleEffect(isHovered ? 1.02 : 1.0)
-                .onHover { hovering in
-                    withAnimation(.easeInOut(duration: 0.15)) {
-                        isHovered = hovering
-                    }
-                }
             }
-            .padding(.horizontal, 10)
+            .padding(.horizontal, 6)
             .padding(.vertical, 6)
             .background(
                 RoundedRectangle(cornerRadius: 6)
@@ -1054,7 +1052,8 @@ struct CompactMiniButtonStyle: ButtonStyle {
             .foregroundColor(.white)
             .padding(.horizontal, 8)
             .padding(.vertical, 4)
-            .frame(minWidth: 50, minHeight: 20)
+            .frame(minWidth: 60, minHeight: 20)
+            .lineLimit(1)
             .background(
                 RoundedRectangle(cornerRadius: 5)
                     .fill(
