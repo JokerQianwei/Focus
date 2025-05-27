@@ -840,28 +840,22 @@ struct ModernPermissionBadge: View {
                     .stroke(Color.green.opacity(0.25), lineWidth: 0.5)
             )
         } else {
-            // 未授权状态 - 紧凑布局
-            HStack {
-                Spacer()
+            // 未授权状态 - 居左紧凑布局
+            HStack(spacing: 6) {
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .foregroundColor(.orange)
+                    .font(.system(size: 12, weight: .semibold))
                 
-                HStack(spacing: 6) {
-                    Image(systemName: "exclamationmark.triangle.fill")
-                        .foregroundColor(.orange)
-                        .font(.system(size: 12, weight: .semibold))
-                    
-                    Button("前往授权") {
-                        onSettingsAction()
-                    }
-                    .buttonStyle(CompactMiniButtonStyle())
-                    .scaleEffect(isHovered ? 1.02 : 1.0)
-                    .onHover { hovering in
-                        withAnimation(.easeInOut(duration: 0.15)) {
-                            isHovered = hovering
-                        }
+                Button("前往授权") {
+                    onSettingsAction()
+                }
+                .buttonStyle(CompactMiniButtonStyle())
+                .scaleEffect(isHovered ? 1.02 : 1.0)
+                .onHover { hovering in
+                    withAnimation(.easeInOut(duration: 0.15)) {
+                        isHovered = hovering
                     }
                 }
-                
-                Spacer()
             }
             .padding(.horizontal, 6)
             .padding(.vertical, 6)
