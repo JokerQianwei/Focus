@@ -286,7 +286,7 @@ class TimerManager: ObservableObject {
         if UserDefaults.standard.object(forKey: microBreakNotificationEnabledKey) != nil {
             self.microBreakNotificationEnabled = UserDefaults.standard.bool(forKey: microBreakNotificationEnabledKey)
         } else {
-            self.microBreakNotificationEnabled = true // 默认启用微休息通知
+            self.microBreakNotificationEnabled = false // 默认不启用微休息通知
         }
 
         // 初始化计时器状态
