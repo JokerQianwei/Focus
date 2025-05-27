@@ -55,9 +55,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
     private var audioPlayers: [SoundType: AVAudioPlayer] = [:]
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        // 请求通知权限（改进版本）
-        requestNotificationPermission()
-
+        // 设置通知中心代理（不主动申请权限）
+        UNUserNotificationCenter.current().delegate = self
+        
         // 初始化菜单栏控制器
         statusBarController = StatusBarController()
         
