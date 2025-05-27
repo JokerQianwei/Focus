@@ -90,8 +90,8 @@ struct SettingsView: View {
                     timerSettingsSection
                     promptSettingsSection
                     soundSettingsSection
-                    behaviorSettingsSection
                     notificationSection
+                    behaviorSettingsSection
                 }
                 .padding(.horizontal, DesignSystem.Spacing.xl)
                 .padding(.vertical, DesignSystem.Spacing.lg)
@@ -296,7 +296,7 @@ struct SettingsView: View {
         ) {
             VStack(spacing: DesignSystem.Spacing.md) {
                 ModernToggleRow(
-                    title: "启用提示音",
+                    title: "启用微休息",
                     icon: "speaker.2",
                     iconColor: .purple,
                     isOn: $timerManager.promptSoundEnabled
@@ -404,7 +404,7 @@ struct SettingsView: View {
             VStack(spacing: DesignSystem.Spacing.md) {
                 ModernPermissionRow(
                     title: "通知权限",
-                    subtitle: "允许应用发送通知提醒",
+                    subtitle: "「微休息通知」需要此权限",
                     icon: "bell",
                     iconColor: .orange,
                     isGranted: notificationPermissionGranted,
@@ -415,7 +415,7 @@ struct SettingsView: View {
                 
                 ModernPermissionRow(
                     title: "辅助功能权限",
-                    subtitle: "媒体控制功能需要此权限",
+                    subtitle: "「媒体控制」需要此权限",
                     icon: "accessibility",
                     iconColor: .blue,
                     isGranted: accessibilityPermissionGranted,
