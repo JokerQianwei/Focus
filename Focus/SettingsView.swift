@@ -819,65 +819,61 @@ struct ModernPermissionBadge: View {
     
     var body: some View {
         if isGranted {
-            // 已授权状态 - 紧凑布局
-            HStack(spacing: DesignSystem.Spacing.sm) {
+            // 已授权状态 - 紧凑水平布局
+            HStack(spacing: 6) {
                 Image(systemName: "checkmark.circle.fill")
                     .foregroundColor(.green)
-                    .font(.system(size: 14, weight: .semibold))
+                    .font(.system(size: 12, weight: .semibold))
                 
                 Text("已授权")
-                    .font(.system(size: 12, weight: .semibold))
+                    .font(.system(size: 11, weight: .medium))
                     .foregroundColor(.green)
             }
-            .padding(.horizontal, DesignSystem.Spacing.md)
-            .padding(.vertical, DesignSystem.Spacing.sm)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 6)
             .background(
-                RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.sm)
-                    .fill(Color.green.opacity(0.1))
+                RoundedRectangle(cornerRadius: 6)
+                    .fill(Color.green.opacity(0.12))
             )
             .overlay(
-                RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.sm)
-                    .stroke(Color.green.opacity(0.3), lineWidth: 1)
+                RoundedRectangle(cornerRadius: 6)
+                    .stroke(Color.green.opacity(0.25), lineWidth: 0.5)
             )
         } else {
-            // 未授权状态 - 垂直布局避免拥挤
-            VStack(spacing: DesignSystem.Spacing.xs) {
-                HStack(spacing: DesignSystem.Spacing.sm) {
+            // 未授权状态 - 水平布局保持对齐
+            HStack(spacing: 8) {
+                HStack(spacing: 6) {
                     Image(systemName: "exclamationmark.triangle.fill")
                         .foregroundColor(.orange)
-                        .font(.system(size: 14, weight: .semibold))
+                        .font(.system(size: 12, weight: .semibold))
                     
                     Text("未授权")
-                        .font(.system(size: 12, weight: .semibold))
+                        .font(.system(size: 11, weight: .medium))
                         .foregroundColor(.orange)
-                    
-                    Spacer()
                 }
                 
-                HStack {
-                    Spacer()
-                    
-                    Button("前往设置") {
-                        onSettingsAction()
-                    }
-                    .buttonStyle(ModernMiniButtonStyle())
-                    .scaleEffect(isHovered ? 1.05 : 1.0)
-                    .onHover { hovering in
-                        withAnimation(.easeInOut(duration: 0.2)) {
-                            isHovered = hovering
-                        }
+                Spacer()
+                
+                Button("前往设置") {
+                    onSettingsAction()
+                }
+                .buttonStyle(CompactMiniButtonStyle())
+                .scaleEffect(isHovered ? 1.02 : 1.0)
+                .onHover { hovering in
+                    withAnimation(.easeInOut(duration: 0.15)) {
+                        isHovered = hovering
                     }
                 }
             }
-            .padding(.horizontal, DesignSystem.Spacing.md)
-            .padding(.vertical, DesignSystem.Spacing.md)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 6)
             .background(
-                RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.sm)
-                    .fill(Color.orange.opacity(0.1))
+                RoundedRectangle(cornerRadius: 6)
+                    .fill(Color.orange.opacity(0.12))
             )
             .overlay(
-                RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.sm)
-                    .stroke(Color.orange.opacity(0.3), lineWidth: 1)
+                RoundedRectangle(cornerRadius: 6)
+                    .stroke(Color.orange.opacity(0.25), lineWidth: 0.5)
             )
         }
     }
@@ -1047,6 +1043,38 @@ struct ModernMiniButtonStyle: ButtonStyle {
             )
             .scaleEffect(configuration.isPressed ? 0.96 : 1.0)
             .animation(.easeInOut(duration: 0.1), value: configuration.isPressed)
+    }
+}
+
+// MARK: - 紧凑迷你按钮样式
+struct CompactMiniButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(.system(size: 10, weight: .semibold))
+            .foregroundColor(.white)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+            .frame(minWidth: 50, minHeight: 20)
+            .background(
+                RoundedRectangle(cornerRadius: 5)
+                    .fill(
+                        LinearGradient(
+                            colors: configuration.isPressed 
+                                ? [Color.accentColor.opacity(0.8), Color.accentColor.opacity(0.9)]
+                                : [Color.accentColor, Color.accentColor.opacity(0.8)],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    )
+                    .shadow(
+                        color: Color.black.opacity(0.1),
+                        radius: configuration.isPressed ? 1 : 2,
+                        x: 0,
+                        y: configuration.isPressed ? 0.5 : 1
+                    )
+            )
+            .scaleEffect(configuration.isPressed ? 0.98 : 1.0)
+            .animation(.easeInOut(duration: 0.08), value: configuration.isPressed)
     }
 }
 
