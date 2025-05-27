@@ -108,6 +108,11 @@ struct SettingsView: View {
                 isVisible = true
             }
         }
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+            // 当应用重新激活时（比如从系统设置返回），重新检查权限
+            checkNotificationPermission()
+            checkAccessibilityPermission()
+        }
     }
     
     // MARK: - 顶部标题栏
@@ -439,8 +444,63 @@ struct SettingsView: View {
     }
     
     private func checkAccessibilityPermission() {
+        // 使用更可靠的检测方法，包括带提示的检查
+        let isGrantedBasic = AXIsProcessTrusted()
+        
+        // 尝试使用带选项的检查方法
+        let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: false]
+        let isGrantedWithOptions = AXIsProcessTrustedWithOptions(options as CFDictionary)
+        
+        let finalResult = isGrantedBasic || isGrantedWithOptions
+        
+        #if DEBUG
+        print("🔍 辅助功能权限检测:")
+        print("  - 基础检测: \(isGrantedBasic ? "已授权" : "未授权")")
+        print("  - 选项检测: \(isGrantedWithOptions ? "已授权" : "未授权")")
+        print("  - 最终结果: \(finalResult ? "已授权" : "未授权")")
+        #endif
+        
         DispatchQueue.main.async {
-            self.accessibilityPermissionGranted = AXIsProcessTrusted()
+            self.accessibilityPermissionGranted = finalResult
+        }
+        
+        // 如果权限未授予，启动定时器定期检查
+        if !finalResult {
+            startAccessibilityPermissionMonitoring()
+        }
+    }
+    
+    // 启动辅助功能权限监听
+    private func startAccessibilityPermissionMonitoring() {
+        #if DEBUG
+        print("🔄 开始监听辅助功能权限变化...")
+        #endif
+        
+        Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { timer in
+            // 使用与检测相同的逻辑
+            let isGrantedBasic = AXIsProcessTrusted()
+            let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: false]
+            let isGrantedWithOptions = AXIsProcessTrustedWithOptions(options as CFDictionary)
+            let finalResult = isGrantedBasic || isGrantedWithOptions
+            
+            DispatchQueue.main.async {
+                if finalResult != self.accessibilityPermissionGranted {
+                    #if DEBUG
+                    print("✅ 辅助功能权限状态变化:")
+                    print("  - 基础检测: \(isGrantedBasic ? "已授权" : "未授权")")
+                    print("  - 选项检测: \(isGrantedWithOptions ? "已授权" : "未授权")")
+                    print("  - 最终结果: \(finalResult ? "已授权" : "未授权")")
+                    #endif
+                    
+                    self.accessibilityPermissionGranted = finalResult
+                    if finalResult {
+                        timer.invalidate() // 权限获得后停止监听
+                        #if DEBUG
+                        print("🛑 停止监听辅助功能权限变化")
+                        #endif
+                    }
+                }
+            }
         }
     }
     
