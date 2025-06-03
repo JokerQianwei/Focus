@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Focus - 专注时钟 | 基于科学研究的macOS专注计时器</title>
+    <meta name="description" content="Focus是一款基于神经科学研究的macOS专注计时器，采用随机微休息提醒，提升学习和工作效率。">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f8f9fa;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem 0;
+            text-align: center;
+        }
+        
+        .hero h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            font-weight: 700;
+        }
+        
+        .hero p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .features {
+            padding: 4rem 0;
+            background: white;
+        }
+        
+        .features h2 {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 3rem;
+            color: #2c3e50;
+        }
+        
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+        
+        .feature-card {
+            background: #f8f9fa;
+            padding: 2rem;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .feature-card h3 {
+            color: #2c3e50;
+            margin-bottom: 1rem;
+            font-size: 1.3rem;
+        }
+        
+        .screenshots {
+            padding: 4rem 0;
+            background: #f8f9fa;
+        }
+        
+        .screenshots h2 {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 3rem;
+            color: #2c3e50;
+        }
+        
+        .screenshot-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+        
+        .screenshot-item {
+            text-align: center;
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .screenshot-item img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+        
+        .download {
+            padding: 4rem 0;
+            background: white;
+            text-align: center;
+        }
+        
+        .download h2 {
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+            color: #2c3e50;
+        }
+        
+        .system-requirements {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin: 2rem 0;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .btn {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem 2rem;
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: transform 0.3s ease;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        footer {
+            background: #2c3e50;
+            color: white;
+            padding: 2rem 0;
+            text-align: center;
+        }
+        
+        .footer-links {
+            margin-bottom: 1rem;
+        }
+        
+        .footer-links a {
+            color: #ecf0f1;
+            text-decoration: none;
+            margin: 0 1rem;
+            transition: color 0.3s ease;
+        }
+        
+        .footer-links a:hover {
+            color: #667eea;
+        }
+        
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2rem;
+            }
+            
+            .hero p {
+                font-size: 1rem;
+            }
+            
+            .features h2, .screenshots h2, .download h2 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="hero">
+                <h1>Focus</h1>
+                <p>基于科学研究的macOS专注计时器，采用随机微休息提醒，提升学习和工作效率</p>
+            </div>
+        </div>
+    </header>
+
+    <section class="features">
+        <div class="container">
+            <h2>核心功能</h2>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h3>⏱️ 专注计时</h3>
+                    <p>默认90分钟专注，20分钟休息，可自定义调整时间参数</p>
+                </div>
+                <div class="feature-card">
+                    <h3>🔔 微休息提醒</h3>
+                    <p>每隔3-5分钟随机提示音，基于神经科学研究的间隔效应原理</p>
+                </div>
+                <div class="feature-card">
+                    <h3>📬 系统通知</h3>
+                    <p>可开启微休息开始和结束时的系统通知，提供更直观的提醒</p>
+                </div>
+                <div class="feature-card">
+                    <h3>🖥️ 全屏黑屏</h3>
+                    <p>微休息时自动覆盖所有显示器画面，帮助完全脱离视觉干扰</p>
+                </div>
+                <div class="feature-card">
+                    <h3>🎵 自定义音效</h3>
+                    <p>支持选择微休息开始和结束的提示音效</p>
+                </div>
+                <div class="feature-card">
+                    <h3>🎞️ 视频控制</h3>
+                    <p>微休息期间自动暂停/播放视频，观看网课时特别有用</p>
+                </div>
+                <div class="feature-card">
+                    <h3>📊 数据统计</h3>
+                    <p>可视化图表展示专注数据，支持日/周/月/年多时间段查看</p>
+                </div>
+                <div class="feature-card">
+                    <h3>📊 状态栏显示</h3>
+                    <p>在macOS菜单栏实时显示剩余时间，支持浅色与深色模式</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="screenshots">
+        <div class="container">
+            <h2>界面展示</h2>
+            <div class="screenshot-grid">
+                <div class="screenshot-item">
+                    <img src="../images/clock_setting.png" alt="设置界面">
+                    <h3>设置界面</h3>
+                    <p>现代化设计的设置界面，支持自定义所有参数</p>
+                </div>
+                <div class="screenshot-item">
+                    <img src="../images/data_analysis.png" alt="数据统计界面">
+                    <h3>数据统计</h3>
+                    <p>详细的专注数据分析，帮助了解和改进专注习惯</p>
+                </div>
+                <div class="screenshot-item">
+                    <img src="../images/all_screen.png" alt="全屏模式">
+                    <h3>全屏模式</h3>
+                    <p>微休息时的全屏黑屏模式，完全脱离视觉干扰</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="download">
+        <div class="container">
+            <h2>下载使用</h2>
+            <div class="system-requirements">
+                <h3>系统要求</h3>
+                <p>• macOS 14.1 或更高版本</p>
+                <p>• 兼容 Intel 和 M 芯片</p>
+            </div>
+            <p style="margin: 2rem 0;">Focus现已在App Store上架，点击下方按钮下载</p>
+            <a href="#" class="btn">在App Store中下载</a>
+            <p style="margin-top: 2rem; font-size: 0.9rem; color: #666;">
+                首次打开应用时，若系统提示安全性问题，请前往"系统设置" → "隐私与安全性" → "安全性"部分点击"仍要打开"
+            </p>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <div class="footer-links">
+                <a href="support.html">技术支持</a>
+                <a href="privacy.html">隐私政策</a>
+                <a href="contact.html">联系我们</a>
+                <a href="https://github.com/your-username/Focus">GitHub</a>
+            </div>
+            <p>&copy; 2024 Focus. 采用 CC BY-NC 4.0 许可协议开源</p>
+        </div>
+    </footer>
+</body>
+</html> 

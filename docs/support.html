@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>技术支持 - Focus专注时钟</title>
+    <meta name="description" content="Focus专注时钟技术支持页面，包含使用帮助、常见问题解答和故障排除指南。">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f8f9fa;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem 0;
+            text-align: center;
+        }
+        
+        .hero h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .hero p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .support-content {
+            background: white;
+            padding: 3rem 0;
+        }
+        
+        .section {
+            margin-bottom: 3rem;
+        }
+        
+        .section h2 {
+            color: #2c3e50;
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 0.5rem;
+        }
+        
+        .faq-item {
+            background: #f8f9fa;
+            margin-bottom: 1rem;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .faq-question {
+            background: #e9ecef;
+            padding: 1rem 1.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        
+        .faq-question:hover {
+            background: #dee2e6;
+        }
+        
+        .faq-answer {
+            padding: 1.5rem;
+            display: none;
+        }
+        
+        .faq-answer.active {
+            display: block;
+        }
+        
+        .step-list {
+            counter-reset: step-counter;
+        }
+        
+        .step-item {
+            counter-increment: step-counter;
+            margin-bottom: 1.5rem;
+            padding-left: 3rem;
+            position: relative;
+        }
+        
+        .step-item::before {
+            content: counter(step-counter);
+            position: absolute;
+            left: 0;
+            top: 0;
+            background: #667eea;
+            color: white;
+            width: 2rem;
+            height: 2rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        
+        .feature-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .feature-list li {
+            padding: 0.5rem 0;
+            padding-left: 2rem;
+            position: relative;
+        }
+        
+        .feature-list li::before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #28a745;
+            font-weight: bold;
+        }
+        
+        .warning {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .warning::before {
+            content: "⚠️ ";
+            font-weight: bold;
+        }
+        
+        .contact-info {
+            background: #f8f9fa;
+            padding: 2rem;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .btn {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 0.8rem 1.5rem;
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: 600;
+            margin: 0.5rem;
+            transition: transform 0.3s ease;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        footer {
+            background: #2c3e50;
+            color: white;
+            padding: 2rem 0;
+            text-align: center;
+        }
+        
+        .footer-links a {
+            color: #ecf0f1;
+            text-decoration: none;
+            margin: 0 1rem;
+        }
+        
+        .footer-links a:hover {
+            color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="hero">
+                <h1>技术支持</h1>
+                <p>Focus专注时钟使用帮助与问题解答</p>
+            </div>
+        </div>
+    </header>
+
+    <section class="support-content">
+        <div class="container">
+            <!-- 快速开始 -->
+            <div class="section">
+                <h2>快速开始</h2>
+                <div class="step-list">
+                    <div class="step-item">
+                        <h3>下载安装</h3>
+                        <p>从App Store下载Focus应用，或从官网下载dmg文件后拖拽到应用程序文件夹</p>
+                    </div>
+                    <div class="step-item">
+                        <h3>首次启动</h3>
+                        <p>打开应用后，如遇安全提示，请前往"系统设置" → "隐私与安全性" → 点击"仍要打开"</p>
+                    </div>
+                    <div class="step-item">
+                        <h3>开始专注</h3>
+                        <p>点击"开始"按钮即可开始专注计时，听到提示音时短暂休息10秒</p>
+                    </div>
+                    <div class="step-item">
+                        <h3>个性化设置</h3>
+                        <p>点击设置按钮，根据个人习惯调整专注时间、休息时间和提示音间隔</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 功能说明 -->
+            <div class="section">
+                <h2>功能说明</h2>
+                <ul class="feature-list">
+                    <li><strong>专注计时</strong>：默认90分钟专注时间，可在设置中自定义</li>
+                    <li><strong>微休息提醒</strong>：基于科学研究，每3-5分钟随机提示音提醒短暂休息</li>
+                    <li><strong>系统通知</strong>：可开启微休息开始和结束时的macOS通知</li>
+                    <li><strong>全屏黑屏</strong>：微休息时覆盖所有屏幕，强制休息眼睛</li>
+                    <li><strong>视频控制</strong>：微休息期间自动暂停/恢复视频播放</li>
+                    <li><strong>数据统计</strong>：查看专注历史数据和趋势分析</li>
+                    <li><strong>状态栏显示</strong>：在菜单栏实时显示剩余时间</li>
+                </ul>
+            </div>
+
+            <!-- 常见问题 -->
+            <div class="section">
+                <h2>常见问题</h2>
+                
+                <div class="faq-item">
+                    <div class="faq-question" onclick="toggleFAQ(this)">
+                        应用无法打开，提示安全性问题怎么办？
+                    </div>
+                    <div class="faq-answer">
+                        <p>这是macOS的安全机制。请按以下步骤操作：</p>
+                        <ol>
+                            <li>打开"系统设置"</li>
+                            <li>点击"隐私与安全性"</li>
+                            <li>在"安全性"部分找到Focus相关提示</li>
+                            <li>点击"仍要打开"按钮</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question" onclick="toggleFAQ(this)">
+                        视频暂停功能不工作怎么办？
+                    </div>
+                    <div class="faq-answer">
+                        <p>视频控制功能需要辅助功能权限：</p>
+                        <ol>
+                            <li>打开"系统设置" → "隐私与安全性" → "辅助功能"</li>
+                            <li>找到Focus应用并开启权限</li>
+                            <li>重启Focus应用</li>
+                        </ol>
+                        <div class="warning">
+                            注意：此功能主要支持Safari、Chrome等主流浏览器和部分视频播放器
+                        </div>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question" onclick="toggleFAQ(this)">
+                        收不到系统通知怎么办？
+                    </div>
+                    <div class="faq-answer">
+                        <p>请检查通知权限设置：</p>
+                        <ol>
+                            <li>打开"系统设置" → "通知"</li>
+                            <li>找到Focus应用</li>
+                            <li>确保"允许通知"已开启</li>
+                            <li>选择合适的通知样式（横幅或提醒）</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question" onclick="toggleFAQ(this)">
+                        如何自定义专注和休息时间？
+                    </div>
+                    <div class="faq-answer">
+                        <p>在应用主界面：</p>
+                        <ol>
+                            <li>点击"设置"按钮（齿轮图标）</li>
+                            <li>在"时间设置"部分调整各项参数</li>
+                            <li>专注时间：建议25-90分钟</li>
+                            <li>休息时间：建议5-20分钟</li>
+                            <li>微休息间隔：建议3-8分钟</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question" onclick="toggleFAQ(this)">
+                        状态栏图标消失了怎么办？
+                    </div>
+                    <div class="faq-answer">
+                        <p>可能的解决方案：</p>
+                        <ol>
+                            <li>重启Focus应用</li>
+                            <li>检查菜单栏是否被其他应用占满</li>
+                            <li>在设置中重新开启"状态栏显示"</li>
+                            <li>重启系统（如问题持续）</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question" onclick="toggleFAQ(this)">
+                        数据统计不准确怎么办？
+                    </div>
+                    <div class="faq-answer">
+                        <p>数据统计基于完整的专注周期：</p>
+                        <ul>
+                            <li>只有完成整个专注周期才会被记录</li>
+                            <li>中途停止的专注不会计入统计</li>
+                            <li>数据每天自动保存，无需手动操作</li>
+                            <li>如需重置数据，可在设置中找到相关选项</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 故障排除 -->
+            <div class="section">
+                <h2>故障排除</h2>
+                
+                <h3>应用崩溃或无响应</h3>
+                <ol>
+                    <li>强制退出应用（Command + Option + Esc）</li>
+                    <li>重新启动应用</li>
+                    <li>重启Mac系统</li>
+                    <li>重新安装应用</li>
+                </ol>
+
+                <h3>音效无法播放</h3>
+                <ol>
+                    <li>检查系统音量设置</li>
+                    <li>确认音频输出设备正常</li>
+                    <li>在设置中重新选择音效</li>
+                    <li>重启应用</li>
+                </ol>
+
+                <h3>性能问题</h3>
+                <ul>
+                    <li>关闭不必要的功能（如全屏黑屏）</li>
+                    <li>减少微休息提醒频率</li>
+                    <li>关闭视频控制功能</li>
+                    <li>重启应用释放内存</li>
+                </ul>
+            </div>
+
+            <!-- 联系我们 -->
+            <div class="section">
+                <h2>联系我们</h2>
+                <div class="contact-info">
+                    <p>如果以上信息无法解决您的问题，请通过以下方式联系我们：</p>
+                    <a href="mailto:support@focus-app.com" class="btn">发送邮件</a>
+                    <a href="https://github.com/your-username/Focus/issues" class="btn">GitHub Issues</a>
+                    <p style="margin-top: 1rem; font-size: 0.9rem; color: #666;">
+                        我们通常在24小时内回复邮件，GitHub Issues会更快得到响应
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <div class="footer-links">
+                <a href="index.html">首页</a>
+                <a href="privacy.html">隐私政策</a>
+                <a href="contact.html">联系我们</a>
+            </div>
+            <p>&copy; 2024 Focus. 保留所有权利</p>
+        </div>
+    </footer>
+
+    <script>
+        function toggleFAQ(element) {
+            const answer = element.nextElementSibling;
+            const isActive = answer.classList.contains('active');
+            
+            // 关闭所有其他FAQ
+            document.querySelectorAll('.faq-answer').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // 切换当前FAQ
+            if (!isActive) {
+                answer.classList.add('active');
+            }
+        }
+    </script>
+</body>
+</html> 
