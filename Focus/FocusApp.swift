@@ -56,7 +56,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         // 设置通知中心代理（不主动申请权限）
-        UNUserNotificationCenter.current().delegate = self
+        // UNUserNotificationCenter.current().delegate = self
+        requestNotificationPermission()
         
         // 初始化菜单栏控制器
         statusBarController = StatusBarController()
