@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>联系我们 - Focus专注时钟</title>
+    <meta name="description" content="联系Focus专注时钟开发团队，获取技术支持、提供反馈建议或商务合作。">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f8f9fa;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem 0;
+            text-align: center;
+        }
+        
+        .hero h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .hero p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .contact-content {
+            background: white;
+            padding: 3rem 0;
+        }
+        
+        .contact-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+        
+        .contact-card {
+            background: #f8f9fa;
+            padding: 2rem;
+            border-radius: 10px;
+            text-align: center;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+        
+        .contact-card:hover {
+            border-color: #667eea;
+            transform: translateY(-5px);
+        }
+        
+        .contact-card .icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+        
+        .contact-card h3 {
+            color: #2c3e50;
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
+        
+        .contact-card p {
+            margin-bottom: 1.5rem;
+            color: #666;
+        }
+        
+        .btn {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 0.8rem 1.5rem;
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: 600;
+            transition: transform 0.3s ease;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+        }
+        
+        .section {
+            margin-bottom: 3rem;
+        }
+        
+        .section h2 {
+            color: #2c3e50;
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+            text-align: center;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 0.5rem;
+        }
+        
+        .faq-section {
+            background: #f8f9fa;
+            padding: 2rem;
+            border-radius: 10px;
+            margin: 2rem 0;
+        }
+        
+        .response-time {
+            background: #e8f5e8;
+            border-left: 4px solid #28a745;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 4px;
+        }
+        
+        .business-contact {
+            background: #fff3e0;
+            border-left: 4px solid #ff9800;
+            padding: 2rem;
+            border-radius: 10px;
+            margin: 2rem 0;
+        }
+        
+        .social-links {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+        
+        .social-link {
+            display: inline-block;
+            width: 50px;
+            height: 50px;
+            background: #667eea;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            font-size: 1.5rem;
+            transition: transform 0.3s ease;
+        }
+        
+        .social-link:hover {
+            transform: scale(1.1);
+        }
+        
+        footer {
+            background: #2c3e50;
+            color: white;
+            padding: 2rem 0;
+            text-align: center;
+        }
+        
+        .footer-links a {
+            color: #ecf0f1;
+            text-decoration: none;
+            margin: 0 1rem;
+        }
+        
+        .footer-links a:hover {
+            color: #667eea;
+        }
+        
+        @media (max-width: 768px) {
+            .contact-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .social-links {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="hero">
+                <h1>联系我们</h1>
+                <p>我们很乐意听到您的声音，为您提供帮助</p>
+            </div>
+        </div>
+    </header>
+
+    <section class="contact-content">
+        <div class="container">
+            <!-- 联系方式 -->
+            <div class="section">
+                <h2>联系方式</h2>
+                <div class="contact-grid">
+                    <div class="contact-card">
+                        <div class="icon">📧</div>
+                        <h3>技术支持</h3>
+                        <p>遇到使用问题？需要技术帮助？我们的技术团队随时为您服务。</p>
+                        <a href="mailto:support@focus-app.com" class="btn">发送邮件</a>
+                    </div>
+                    
+                    <div class="contact-card">
+                        <div class="icon">💡</div>
+                        <h3>功能建议</h3>
+                        <p>有好的想法或功能建议？我们非常欢迎您的创意和反馈。</p>
+                        <a href="mailto:feedback@focus-app.com" class="btn">提交建议</a>
+                    </div>
+                    
+                    <div class="contact-card">
+                        <div class="icon">🐛</div>
+                        <h3>Bug报告</h3>
+                        <p>发现了应用问题？请通过GitHub Issues报告，我们会尽快修复。</p>
+                        <a href="https://github.com/your-username/Focus/issues" class="btn">报告问题</a>
+                    </div>
+                    
+                    <div class="contact-card">
+                        <div class="icon">🤝</div>
+                        <h3>商务合作</h3>
+                        <p>商业许可、合作伙伴关系或其他商务事宜，请联系我们。</p>
+                        <a href="mailto:business@focus-app.com" class="btn">商务咨询</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 响应时间 -->
+            <div class="section">
+                <div class="response-time">
+                    <h3>📅 响应时间承诺</h3>
+                    <ul style="margin-top: 1rem; padding-left: 2rem;">
+                        <li><strong>技术支持邮件</strong>：24小时内回复</li>
+                        <li><strong>GitHub Issues</strong>：通常在12小时内响应</li>
+                        <li><strong>功能建议</strong>：48小时内确认收到</li>
+                        <li><strong>商务咨询</strong>：3个工作日内回复</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- 常见问题快速链接 -->
+            <div class="section">
+                <h2>快速帮助</h2>
+                <div class="faq-section">
+                    <h3>在联系我们之前，您可以先查看：</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin-top: 1rem;">
+                        <a href="support.html" class="btn btn-secondary">技术支持页面</a>
+                        <a href="support.html#faq" class="btn btn-secondary">常见问题解答</a>
+                        <a href="https://github.com/your-username/Focus/wiki" class="btn btn-secondary">使用文档</a>
+                        <a href="https://github.com/your-username/Focus/releases" class="btn btn-secondary">更新日志</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 商业许可 -->
+            <div class="section">
+                <div class="business-contact">
+                    <h3>🏢 商业许可说明</h3>
+                    <p>Focus采用CC BY-NC 4.0许可协议，个人和教育用途免费。如需商业使用，请联系我们获取商业许可。</p>
+                    <p style="margin-top: 1rem;"><strong>商业许可包括：</strong></p>
+                    <ul style="margin-top: 0.5rem; padding-left: 2rem;">
+                        <li>企业内部使用权限</li>
+                        <li>定制开发服务</li>
+                        <li>优先技术支持</li>
+                        <li>白标解决方案</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- 社交媒体 -->
+            <div class="section">
+                <h2>关注我们</h2>
+                <p style="text-align: center; margin-bottom: 2rem;">通过社交媒体获取最新动态和更新信息</p>
+                <div class="social-links">
+                    <a href="https://github.com/your-username/Focus" class="social-link" title="GitHub">
+                        🐙
+                    </a>
+                    <a href="https://twitter.com/focus-app" class="social-link" title="Twitter">
+                        🐦
+                    </a>
+                    <a href="https://weibo.com/focus-app" class="social-link" title="微博">
+                        📱
+                    </a>
+                    <a href="mailto:hello@focus-app.com" class="social-link" title="邮件">
+                        📧
+                    </a>
+                </div>
+            </div>
+
+            <!-- 反馈表单提示 -->
+            <div class="section">
+                <h2>发送邮件时请包含</h2>
+                <div style="background: #f8f9fa; padding: 2rem; border-radius: 10px;">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem;">
+                        <div>
+                            <h4>🔧 技术支持</h4>
+                            <ul style="margin-top: 0.5rem; padding-left: 1.5rem;">
+                                <li>macOS版本</li>
+                                <li>Focus应用版本</li>
+                                <li>问题详细描述</li>
+                                <li>重现步骤</li>
+                                <li>错误截图（如有）</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4>💡 功能建议</h4>
+                            <ul style="margin-top: 0.5rem; padding-left: 1.5rem;">
+                                <li>功能描述</li>
+                                <li>使用场景</li>
+                                <li>预期效果</li>
+                                <li>参考案例（如有）</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4>🤝 商务合作</h4>
+                            <ul style="margin-top: 0.5rem; padding-left: 1.5rem;">
+                                <li>公司/组织名称</li>
+                                <li>合作类型</li>
+                                <li>预期规模</li>
+                                <li>联系方式</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 开发者信息 -->
+            <div class="section">
+                <h2>关于开发团队</h2>
+                <div style="text-align: center; background: #f8f9fa; padding: 2rem; border-radius: 10px;">
+                    <p>Focus由独立开发者团队开发，我们专注于创造简洁、高效的生产力工具。</p>
+                    <p style="margin-top: 1rem;">我们相信好的软件应该简单易用，同时基于科学研究，真正帮助用户提升效率。</p>
+                    <p style="margin-top: 1rem; font-style: italic; color: #666;">
+                        "专注于专注，让技术服务于人的成长"
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <div class="footer-links">
+                <a href="index.html">首页</a>
+                <a href="support.html">技术支持</a>
+                <a href="privacy.html">隐私政策</a>
+            </div>
+            <p>&copy; 2024 Focus. 保留所有权利</p>
+        </div>
+    </footer>
+</body>
+</html> 
