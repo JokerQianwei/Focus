@@ -9,7 +9,7 @@ import Foundation
 
 /// 统计数据管理器
 class StatisticsManager: ObservableObject {
-    @Published var currentPeriod: StatisticsPeriod = .month
+    @Published var currentPeriod: StatisticsPeriod = .day
     @Published var currentUnit: StatisticsUnit = .time
     @Published var currentDate: Date = Date()
     
