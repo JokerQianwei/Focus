@@ -167,9 +167,11 @@ struct ContentView: View {
 
                     // 时间文本
                     Text(timerManager.timeString)
-                        .font(.system(size: 70, weight: .medium, design: .rounded))
+                        .font(.system(size: dynamicFontSize, weight: .medium, design: .rounded))
                         .foregroundColor(.primary)
                         .monospacedDigit()
+                        .minimumScaleFactor(0.5) // 允许缩放到50%
+                        .lineLimit(1)
                 }
                 .frame(width: 250, height: 250)
 
@@ -248,7 +250,25 @@ struct ContentView: View {
         }
     }
 
-
+    /// 根据时间字符串长度动态调整字体大小
+    private var dynamicFontSize: CGFloat {
+        let timeString = timerManager.timeString
+        let length = timeString.count
+        
+        // 根据字符串长度调整字体大小，确保在250x250的圆圈内显示良好
+        switch length {
+        case 0...4:  // "1:23" 或 "12:34" - 正常大小
+            return 80
+        case 5:      // "123:45" - 3位数分钟（如90:00, 123:45）
+            return 78
+        case 6:      // "1234:56" - 4位数分钟（如908:00）
+            return 65
+        case 7:      // "12345:67" - 5位数分钟
+            return 48
+        default:     // 更长的情况 - 极端情况
+            return 42
+        }
+    }
 }
 
 #Preview {
