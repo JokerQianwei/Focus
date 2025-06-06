@@ -28,7 +28,7 @@ class StatusBarController {
         
         // 设置初始宽度
         let initialText = timerManager.timeString
-        currentWidth = 40 // 先设置默认值，稍后在updateStatusBarText中会自动调整
+        currentWidth = 36 // 先设置默认值，稍后在updateStatusBarText中会自动调整
         
         // 作为纯菜单栏应用，状态栏图标必须始终存在
         statusItem = statusBar.statusItem(withLength: currentWidth)
@@ -146,7 +146,7 @@ class StatusBarController {
         if statusItem.length == 0 {
             // 设置默认宽度
             let text = timerManager.timeString
-            currentWidth = 40
+            currentWidth = 36
             
             // 创建新的状态栏项
             statusItem = statusBar.statusItem(withLength: currentWidth)
@@ -277,12 +277,12 @@ class StatusBarController {
         let attributes = [NSAttributedString.Key.font: font]
         let size = (text as NSString).size(withAttributes: attributes)
         
-        // 添加一些边距确保文本完整显示
-        let padding: CGFloat = 16
+        // 减少边距，只保留必要的空间
+        let padding: CGFloat = 8
         let calculatedWidth = size.width + padding
         
-        // 设置最小宽度为40，最大宽度为80（避免过宽）
-        return max(40, min(80, calculatedWidth))
+        // 设置最小宽度为36，最大宽度为70（更紧凑）
+        return max(36, min(70, calculatedWidth))
     }
     
     // 更新状态栏项宽度
@@ -429,7 +429,7 @@ class StatusBarController {
         if statusItem.length == 0 {
             // 设置默认宽度
             let text = timerManager.timeString
-            currentWidth = 40
+            currentWidth = 36
             
             // 创建新的状态栏项
             statusItem = statusBar.statusItem(withLength: currentWidth)
