@@ -192,7 +192,7 @@ class TimerManager: ObservableObject {
 
     // 格式化时间显示
     var timeString: String {
-        String(format: "%02d:%02d", minutes, seconds)
+        String(format: "%d:%02d", minutes, seconds)
     }
 
     // 当前模式文本
