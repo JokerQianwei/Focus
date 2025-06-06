@@ -755,6 +755,7 @@ struct ModernBarChartView: View {
     
     private let barSpacing: CGFloat = 4
     private let barCornerRadius: CGFloat = 6
+    @State private var hoverPosition: CGPoint = .zero
     
     var body: some View {
         GeometryReader { geometry in
@@ -813,22 +814,37 @@ struct ModernBarChartView: View {
                                     }
                                 }
                                 .onHover { hovering in
-                                    if hovering {
-                                        selectedDataPoint = dataPoint
+                                    withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                                        if hovering {
+                                            selectedDataPoint = dataPoint
+                                        } else {
+                                            selectedDataPoint = nil
+                                        }
                                     }
                                 }
+                                .gesture(
+                                    DragGesture(minimumDistance: 0)
+                                        .onChanged { value in
+                                            hoverPosition = value.location
+                                        }
+                                )
                             }
                         }
                     }
                     
-                    // 悬停提示
+                    // 悬停提示 - 改进版本
                     if let selected = selectedDataPoint {
-                        ModernValueTooltip(dataPoint: selected, unit: unit, period: period)
-                            .transition(.asymmetric(
-                                insertion: .scale(scale: 0.8).combined(with: .opacity),
-                                removal: .opacity.animation(.easeInOut(duration: 0.15))
-                            ))
-                            .zIndex(100)
+                        ModernFloatingTooltip(
+                            dataPoint: selected,
+                            unit: unit,
+                            period: period,
+                            chartHeight: chartHeight
+                        )
+                        .transition(.asymmetric(
+                            insertion: .scale(scale: 0.9).combined(with: .opacity),
+                            removal: .opacity.animation(.easeInOut(duration: 0.2))
+                        ))
+                        .zIndex(100)
                     }
                 }
                 .frame(height: chartHeight)
@@ -927,7 +943,137 @@ struct ModernGridLinesView: View {
     }
 }
 
-// MARK: - Modern Value Tooltip Component
+// MARK: - Modern Floating Tooltip Component  
+struct ModernFloatingTooltip: View {
+    let dataPoint: StatisticsDataPoint
+    let unit: StatisticsUnit
+    let period: StatisticsPeriod
+    let chartHeight: CGFloat
+    
+    @State private var animateIn = false
+    @Environment(\.colorScheme) private var colorScheme
+    
+    var body: some View {
+        // 主要内容区域
+        HStack(spacing: 12) {
+            // 左侧图标
+            iconView
+            
+            // 中间内容
+            VStack(alignment: .leading, spacing: 4) {
+                Text(formatValue())
+                    .font(.system(size: 15, weight: .bold, design: .rounded))
+                    .foregroundColor(.primary)
+                
+                Text(formatLabel())
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundColor(.secondary)
+            }
+            
+            Spacer()
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .background(tooltipBackground)
+        .overlay(tooltipBorder)
+        .frame(width: 200, height: 60)
+        .offset(y: -80) // 悬浮在图表上方
+        .scaleEffect(animateIn ? 1.0 : 0.8)
+        .opacity(animateIn ? 1.0 : 0.0)
+        .onAppear {
+            withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+                animateIn = true
+            }
+        }
+    }
+    
+    private var iconView: some View {
+        ZStack {
+            Circle()
+                .fill(
+                    LinearGradient(
+                        colors: [.blue.opacity(0.15), .cyan.opacity(0.1)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+                .frame(width: 32, height: 32)
+            
+            Image(systemName: unit == .time ? "clock.fill" : "target")
+                .font(.system(size: 14, weight: .medium))
+                .foregroundStyle(
+                    LinearGradient(
+                        colors: [.blue, .cyan],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+        }
+    }
+    
+    private var tooltipBackground: some View {
+        RoundedRectangle(cornerRadius: 16)
+            .fill(.ultraThinMaterial)
+            .shadow(
+                color: colorScheme == .dark 
+                    ? .black.opacity(0.3) 
+                    : .black.opacity(0.15),
+                radius: 16,
+                x: 0,
+                y: 8
+            )
+    }
+    
+    private var tooltipBorder: some View {
+        RoundedRectangle(cornerRadius: 16)
+            .stroke(
+                LinearGradient(
+                    colors: [
+                        .white.opacity(colorScheme == .dark ? 0.15 : 0.3),
+                        .clear
+                    ],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                ),
+                lineWidth: 1
+            )
+    }
+    
+    private func formatValue() -> String {
+        switch unit {
+        case .count:
+            let count = Int(dataPoint.value)
+            return "\(count) 次"
+        case .time:
+            let hours = Int(dataPoint.value) / 60
+            let minutes = Int(dataPoint.value) % 60
+            if hours > 0 {
+                return "\(hours)小时\(minutes)分钟"
+            } else {
+                return "\(minutes)分钟"
+            }
+        }
+    }
+    
+    private func formatLabel() -> String {
+        switch period {
+        case .day:
+            return "\(dataPoint.label):00"
+        case .week:
+            return dataPoint.label
+        case .month:
+            let calendar = Calendar.current
+            let formatter = DateFormatter()
+            formatter.locale = Locale(identifier: "zh_CN")
+            formatter.dateFormat = "M月d日 E"
+            return formatter.string(from: dataPoint.date)
+        case .year:
+            return dataPoint.label
+        }
+    }
+}
+
+// MARK: - Legacy Value Tooltip Component (keeping for reference)
 struct ModernValueTooltip: View {
     let dataPoint: StatisticsDataPoint
     let unit: StatisticsUnit
@@ -963,7 +1109,7 @@ struct ModernValueTooltip: View {
             }
         )
     }
-    
+
     private func formatValue() -> String {
         switch unit {
         case .count:

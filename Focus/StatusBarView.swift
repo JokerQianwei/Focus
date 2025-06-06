@@ -61,7 +61,7 @@ class StatusBarView: NSView {
         NSLayoutConstraint.activate([
             textField.centerXAnchor.constraint(equalTo: centerXAnchor),
             textField.centerYAnchor.constraint(equalTo: centerYAnchor),
-            textField.widthAnchor.constraint(equalTo: widthAnchor, multiplier: 0.98),
+            textField.widthAnchor.constraint(equalTo: widthAnchor),
             textField.heightAnchor.constraint(equalTo: heightAnchor)
         ])
     }

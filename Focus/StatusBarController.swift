@@ -18,6 +18,7 @@ class StatusBarController {
     private var statusBarView: StatusBarView?
     private var soundPlayer: NSSound?
     private var mainWindowController: NSWindowController?
+    private var currentWidth: CGFloat = 40
 
     init() {
         statusBar = NSStatusBar.system
@@ -25,15 +26,19 @@ class StatusBarController {
         // 获取TimerManager实例
         timerManager = TimerManager.shared
         
+        // 设置初始宽度
+        let initialText = timerManager.timeString
+        currentWidth = 36 // 先设置默认值，稍后在updateStatusBarText中会自动调整
+        
         // 作为纯菜单栏应用，状态栏图标必须始终存在
-        statusItem = statusBar.statusItem(withLength: 40)
+        statusItem = statusBar.statusItem(withLength: currentWidth)
         
         // 创建并设置自定义视图
         if let button = statusItem.button {
-            let frame = NSRect(x: 0, y: 0, width: 40, height: button.frame.height)
+            let frame = NSRect(x: 0, y: 0, width: currentWidth, height: button.frame.height)
             statusBarView = StatusBarView(
                 frame: frame,
-                text: timerManager.timeString,
+                text: initialText,
                 textColor: NSColor.controlTextColor
             )
             button.subviews.forEach { $0.removeFromSuperview() }
@@ -139,15 +144,19 @@ class StatusBarController {
         // 应用程序即将变为活跃状态，确保状态栏项始终存在
         // 检查statusItem是否有效，如果无效或长度为0则重新创建
         if statusItem.length == 0 {
+            // 设置默认宽度
+            let text = timerManager.timeString
+            currentWidth = 36
+            
             // 创建新的状态栏项
-            statusItem = statusBar.statusItem(withLength: 40)
+            statusItem = statusBar.statusItem(withLength: currentWidth)
             
             // 重新设置自定义视图
             if let button = statusItem.button {
-                let frame = NSRect(x: 0, y: 0, width: 40, height: button.frame.height)
+                let frame = NSRect(x: 0, y: 0, width: currentWidth, height: button.frame.height)
                 statusBarView = StatusBarView(
                     frame: frame,
-                    text: timerManager.timeString,
+                    text: text,
                     textColor: NSColor.controlTextColor
                 )
                 button.subviews.forEach { $0.removeFromSuperview() }
@@ -262,6 +271,40 @@ class StatusBarController {
         }
     }
 
+    // 计算状态栏项的适当宽度
+    private func calculateStatusBarWidth(for text: String) -> CGFloat {
+        let font = NSFont.monospacedDigitSystemFont(ofSize: 12, weight: .medium)
+        let attributes = [NSAttributedString.Key.font: font]
+        let size = (text as NSString).size(withAttributes: attributes)
+        
+        // 减少边距，只保留必要的空间
+        let padding: CGFloat = 8
+        let calculatedWidth = size.width + padding
+        
+        // 设置最小宽度为36，最大宽度为70（更紧凑）
+        return max(36, min(70, calculatedWidth))
+    }
+    
+    // 更新状态栏项宽度
+    private func updateStatusBarWidth(for text: String) {
+        let newWidth = calculateStatusBarWidth(for: text)
+        
+        if abs(newWidth - currentWidth) > 1 { // 只有在宽度变化超过1像素时才更新
+            currentWidth = newWidth
+            statusItem.length = newWidth
+            
+            // 更新自定义视图的frame
+            if let button = statusItem.button, let statusBarView = statusBarView {
+                let newFrame = NSRect(x: 0, y: 0, width: newWidth, height: button.frame.height)
+                statusBarView.frame = newFrame
+                
+                // 确保视图重新布局
+                statusBarView.needsLayout = true
+                button.needsDisplay = true
+            }
+        }
+    }
+
     // 更新菜单栏项的文本
     private func updateStatusBarText() {
         let text = timerManager.statusBarText
@@ -270,6 +313,9 @@ class StatusBarController {
 
         // 在主线程上更新UI
         DispatchQueue.main.async { [weak self] in
+            // 先更新宽度
+            self?.updateStatusBarWidth(for: text)
+            
             // 更新自定义视图
             self?.statusBarView?.update(text: text, textColor: textColor)
 
@@ -381,15 +427,19 @@ class StatusBarController {
         // 作为纯菜单栏应用，状态栏图标必须始终可见
         // 如果不存在，则创建
         if statusItem.length == 0 {
+            // 设置默认宽度
+            let text = timerManager.timeString
+            currentWidth = 36
+            
             // 创建新的状态栏项
-            statusItem = statusBar.statusItem(withLength: 40)
+            statusItem = statusBar.statusItem(withLength: currentWidth)
             
             // 重新创建并设置自定义视图
             if let button = statusItem.button {
-                let frame = NSRect(x: 0, y: 0, width: 40, height: button.frame.height)
+                let frame = NSRect(x: 0, y: 0, width: currentWidth, height: button.frame.height)
                 statusBarView = StatusBarView(
                     frame: frame,
-                    text: timerManager.timeString,
+                    text: text,
                     textColor: NSColor.controlTextColor
                 )
                 button.subviews.forEach { $0.removeFromSuperview() }
