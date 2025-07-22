@@ -62,7 +62,6 @@ struct SettingsView: View {
     @State private var promptMinInput: String
     @State private var promptMaxInput: String
     @State private var microBreakInput: String
-    @State private var isHoveringClose = false
     
     // 权限状态
     @State private var notificationPermissionGranted = false
@@ -138,13 +137,11 @@ struct SettingsView: View {
                 }) {
                     Image(systemName: "xmark")
                         .font(.system(size: 10, weight: .semibold))
-                        .foregroundColor(isHoveringClose ? .white : DesignSystem.Colors.secondary)
+                        .foregroundColor(DesignSystem.Colors.secondary)
                         .frame(width: 28, height: 28)
                         .background(
                             Circle()
-                                .fill(isHoveringClose ? 
-                                     Color.red.opacity(0.8) : 
-                                     DesignSystem.Colors.cardBackground)
+                                .fill(DesignSystem.Colors.cardBackground)
                                 .shadow(
                                     color: DesignSystem.Shadow.subtle.color,
                                     radius: DesignSystem.Shadow.subtle.radius,
@@ -154,12 +151,6 @@ struct SettingsView: View {
                         )
                 }
                 .buttonStyle(PlainButtonStyle())
-                .onHover { hovering in
-                    withAnimation(.easeInOut(duration: 0.2)) {
-                        isHoveringClose = hovering
-                    }
-                }
-                .scaleEffect(isHoveringClose ? 1.05 : 1.0)
             }
             .padding(.horizontal, DesignSystem.Spacing.xxl)
             .padding(.top, DesignSystem.Spacing.xl)
@@ -516,7 +507,6 @@ struct ModernSettingsSection<Content: View>: View {
     let content: Content
     
     @Environment(\.colorScheme) private var colorScheme
-    @State private var isHovered = false
     
     init(
         title: String,
@@ -564,7 +554,7 @@ struct ModernSettingsSection<Content: View>: View {
                     .fill(.regularMaterial)
                     .shadow(
                         color: DesignSystem.Shadow.soft.color,
-                        radius: isHovered ? DesignSystem.Shadow.medium.radius : DesignSystem.Shadow.soft.radius,
+                        radius: DesignSystem.Shadow.soft.radius,
                         x: DesignSystem.Shadow.soft.x,
                         y: DesignSystem.Shadow.soft.y
                     )
@@ -584,12 +574,6 @@ struct ModernSettingsSection<Content: View>: View {
                         lineWidth: 1
                     )
             )
-            .scaleEffect(isHovered ? 1.02 : 1.0)
-            .onHover { hovering in
-                withAnimation(.easeInOut(duration: 0.2)) {
-                    isHovered = hovering
-                }
-            }
         }
     }
 }
@@ -806,7 +790,6 @@ struct ModernPermissionBadge: View {
     let isGranted: Bool
     let onSettingsAction: () -> Void
     
-    @State private var isHovered = false
     
     var body: some View {
         if isGranted {
@@ -841,12 +824,6 @@ struct ModernPermissionBadge: View {
                     onSettingsAction()
                 }
                 .buttonStyle(CompactMiniButtonStyle())
-                .scaleEffect(isHovered ? 1.02 : 1.0)
-                .onHover { hovering in
-                    withAnimation(.easeInOut(duration: 0.15)) {
-                        isHovered = hovering
-                    }
-                }
             }
             .padding(.horizontal, 6)
             .padding(.vertical, 6)
