@@ -279,6 +279,55 @@ struct SettingsView: View {
             title: "声音效果"
         ) {
             VStack(spacing: DesignSystem.Spacing.md) {
+                // 专注开始音效（固定）
+                HStack(spacing: DesignSystem.Spacing.md) {
+                    Image(systemName: "play.fill")
+                        .font(.system(size: 14, weight: .regular))
+                        .foregroundColor(.blue)
+                        .frame(width: 16)
+                    
+                    Text("专注开始")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundColor(DesignSystem.Colors.primary)
+                    
+                    Spacer()
+                    
+                    Text("Ding")
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundColor(DesignSystem.Colors.secondary)
+                }
+                
+                ModernDivider()
+                
+                // 专注结束音效
+                ModernSoundSelectionRow(
+                    title: "专注结束",
+                    icon: "checkmark.circle.fill",
+                    iconColor: .green,
+                    selectedSound: SoundManager.shared.endSoundName,
+                    onSelectionChange: { soundName in
+                        SoundManager.shared.endSoundName = soundName
+                        SoundManager.shared.playPreviewSound(named: soundName)
+                    }
+                )
+                
+                ModernDivider()
+                
+                // 休息结束音效
+                ModernSoundSelectionRow(
+                    title: "休息结束",
+                    icon: "bell.fill",
+                    iconColor: .orange,
+                    selectedSound: SoundManager.shared.breakEndSoundName,
+                    onSelectionChange: { soundName in
+                        SoundManager.shared.breakEndSoundName = soundName
+                        SoundManager.shared.playPreviewSound(named: soundName)
+                    }
+                )
+                
+                ModernDivider()
+                
+                // 微休息设置
                 ModernToggleRow(
                     title: "启用微休息",
                     icon: "speaker.wave.2",
@@ -291,32 +340,26 @@ struct SettingsView: View {
                         ModernDivider()
                         
                         ModernSoundSelectionRow(
-                            title: "开始音效",
-                            icon: "play.circle.fill",
-                            iconColor: .green,
-                            selectedSound: timerManager.microBreakStartSoundType,
-                            onSelectionChange: { soundType in
-                                NotificationCenter.default.post(
-                                    name: .playMicroBreakStartSound,
-                                    object: soundType.rawValue
-                                )
-                                timerManager.microBreakStartSoundType = soundType
+                            title: "微休息开始",
+                            icon: "pause.circle",
+                            iconColor: .indigo,
+                            selectedSound: SoundManager.shared.microBreakStartSoundName,
+                            onSelectionChange: { soundName in
+                                SoundManager.shared.microBreakStartSoundName = soundName
+                                SoundManager.shared.playPreviewSound(named: soundName)
                             }
                         )
                         
                         ModernDivider()
                         
                         ModernSoundSelectionRow(
-                            title: "结束音效",
-                            icon: "stop.circle.fill",
-                            iconColor: .red,
-                            selectedSound: timerManager.microBreakEndSoundType,
-                            onSelectionChange: { soundType in
-                                NotificationCenter.default.post(
-                                    name: .playMicroBreakEndSound,
-                                    object: soundType.rawValue
-                                )
-                                timerManager.microBreakEndSoundType = soundType
+                            title: "微休息结束",
+                            icon: "play.circle",
+                            iconColor: .teal,
+                            selectedSound: SoundManager.shared.microBreakEndSoundName,
+                            onSelectionChange: { soundName in
+                                SoundManager.shared.microBreakEndSoundName = soundName
+                                SoundManager.shared.playPreviewSound(named: soundName)
                             }
                         )
                         
@@ -650,8 +693,8 @@ struct ModernSoundSelectionRow: View {
     let title: String
     let icon: String
     let iconColor: Color
-    let selectedSound: SoundType
-    let onSelectionChange: (SoundType) -> Void
+    let selectedSound: String
+    let onSelectionChange: (String) -> Void
     
     @State private var isMenuOpen = false
     
@@ -669,13 +712,13 @@ struct ModernSoundSelectionRow: View {
             Spacer()
             
             Menu {
-                ForEach(SoundType.allCases) { soundType in
+                ForEach(SoundManager.systemSoundOptions, id: \.self) { soundName in
                     Button(action: {
-                        onSelectionChange(soundType)
+                        onSelectionChange(soundName)
                     }) {
                         HStack {
-                            Text(soundType.displayName)
-                            if selectedSound == soundType {
+                            Text(SoundManager.getDisplayName(for: soundName))
+                            if selectedSound == soundName {
                                 Spacer()
                                 Image(systemName: "checkmark")
                                     .foregroundColor(.accentColor)
@@ -685,7 +728,7 @@ struct ModernSoundSelectionRow: View {
                 }
             } label: {
                 HStack(spacing: DesignSystem.Spacing.sm) {
-                    Text(selectedSound.displayName)
+                    Text(SoundManager.getDisplayName(for: selectedSound))
                         .font(.system(size: 13, weight: .medium))
                         .foregroundColor(DesignSystem.Colors.primary)
                     
