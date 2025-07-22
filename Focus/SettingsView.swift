@@ -269,6 +269,12 @@ struct SettingsView: View {
                         timerManager.microBreakSeconds = seconds
                     }
                 }
+                
+                ModernInfoBox(
+                    icon: "info.circle",
+                    text: "每隔 \(timerManager.promptMinInterval)-\(timerManager.promptMaxInterval) 分钟随机播放微休息提示音，并在 \(timerManager.microBreakSeconds) 秒后结束",
+                    color: .blue
+                )
             }
         }
     }
@@ -315,11 +321,7 @@ struct SettingsView: View {
                             }
                         )
                         
-                        ModernInfoBox(
-                            icon: "info.circle",
-                            text: "每隔 \(timerManager.promptMinInterval)-\(timerManager.promptMaxInterval) 分钟播放提示音",
-                            color: .blue
-                        )
+
                     }
                     .transition(.asymmetric(
                         insertion: .opacity.combined(with: .scale(scale: 0.95)).combined(with: .offset(y: -10)),
