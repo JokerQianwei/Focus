@@ -743,11 +743,8 @@ struct ModernSoundSelectionRow: View {
                         .stroke(DesignSystem.Colors.separator.opacity(0.3), lineWidth: 0.5)
                 )
             }
-            .scaleEffect(isMenuOpen ? 0.98 : 1.0)
             .onMenuOpen { isOpen in
-                withAnimation(.easeInOut(duration: 0.1)) {
-                    isMenuOpen = isOpen
-                }
+                isMenuOpen = isOpen
             }
         }
     }

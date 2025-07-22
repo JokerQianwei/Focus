@@ -284,21 +284,33 @@ class SoundManager: ObservableObject {
         playSystemSound(named: breakEndSoundName)
     }
     
+    // 停止所有正在播放的音效
+    private func stopAllSounds() {
+        for (_, player) in audioPlayerCache {
+            if player.isPlaying {
+                player.stop()
+                player.currentTime = 0
+            }
+        }
+    }
+    
     // 播放系统声音的通用方法
     private func playSystemSound(named soundName: String) {
         // 如果是"无"声音，播放系统声音ID为0但不播放实际音效
         if soundName == "无" {
             print("选择了无声音，不播放音效")
+            // 停止所有正在播放的音效
+            stopAllSounds()
             return
         }
         
+        // 停止所有其他正在播放的音效
+        stopAllSounds()
+        
         // 从缓存中获取播放器
         if let player = audioPlayerCache[soundName] {
-            // 如果播放器正在播放，先停止
-            if player.isPlaying {
-                player.stop()
-                player.currentTime = 0
-            }
+            // 重置播放器位置
+            player.currentTime = 0
             
             player.play()
             print("使用缓存的播放器播放: \(soundName)")
