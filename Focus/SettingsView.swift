@@ -169,16 +169,21 @@ struct SettingsView: View {
     private var modernBackgroundGradient: some View {
         ZStack {
             // 主背景
-            DesignSystem.Colors.background
+            Color(.windowBackgroundColor)
             
             // 渐变装饰
-            LinearGradient(
-                colors: colorScheme == .dark 
-                    ? [Color.blue.opacity(0.02), Color.purple.opacity(0.02), Color.clear]
-                    : [Color.blue.opacity(0.03), Color.purple.opacity(0.03), Color.clear],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
+            RadialGradient(
+                colors: colorScheme == .dark
+                    ? [Color.blue.opacity(0.08), Color.clear]
+                    : [Color.blue.opacity(0.04), Color.clear],
+                center: .topTrailing,
+                startRadius: 100,
+                endRadius: 400
             )
+            
+            // 噪点纹理
+            Rectangle()
+                .fill(Color(.controlBackgroundColor).opacity(0.3))
         }
     }
     
