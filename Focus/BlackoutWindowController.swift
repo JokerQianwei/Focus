@@ -357,13 +357,13 @@ struct BlackoutCountdownView: View {
                     .animation(.easeInOut(duration: 1.0), value: scale)
                     .multilineTextAlignment(.center)
                 
-                // 提示文字 
-                Text("闭眼！深呼吸！")
-                    .font(.system(size: 18, weight: .regular))
-                    .foregroundColor(.white.opacity(0.8))
-                    .tracking(2.0)
-                    .multilineTextAlignment(.center)
-                    .frame(maxWidth: .infinity)
+                // // 提示文字 
+                // Text("闭眼！深呼吸！")
+                //     .font(.system(size: 18, weight: .regular))
+                //     .foregroundColor(.white.opacity(0.8))
+                //     .tracking(2.0)
+                //     .multilineTextAlignment(.center)
+                //     .frame(maxWidth: .infinity)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .multilineTextAlignment(.center)
