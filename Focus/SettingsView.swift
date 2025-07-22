@@ -9,6 +9,34 @@ import SwiftUI
 import UserNotifications
 import ApplicationServices
 
+// MARK: - Color Extension for Hex
+extension Color {
+    init(hex: String) {
+        let hex = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
+        var int: UInt64 = 0
+        Scanner(string: hex).scanHexInt64(&int)
+        let a, r, g, b: UInt64
+        switch hex.count {
+        case 3: // RGB (12-bit)
+            (a, r, g, b) = (255, (int >> 8) * 17, (int >> 4 & 0xF) * 17, (int & 0xF) * 17)
+        case 6: // RGB (24-bit)
+            (a, r, g, b) = (255, int >> 16, int >> 8 & 0xFF, int & 0xFF)
+        case 8: // ARGB (32-bit)
+            (a, r, g, b) = (int >> 24, int >> 16 & 0xFF, int >> 8 & 0xFF, int & 0xFF)
+        default:
+            (a, r, g, b) = (1, 1, 1, 0)
+        }
+        
+        self.init(
+            .sRGB,
+            red: Double(r) / 255,
+            green: Double(g) / 255,
+            blue:  Double(b) / 255,
+            opacity: Double(a) / 255
+        )
+    }
+}
+
 // MARK: - 设计系统
 struct DesignSystem {
     // 间距系统
@@ -55,6 +83,9 @@ struct SettingsView: View {
 
     // 使用TimerManager
     @ObservedObject var timerManager: TimerManager
+    
+    // 观察SoundManager以确保音效选择后视图更新
+    @ObservedObject private var soundManager = SoundManager.shared
 
     // 临时存储输入值的状态
     @State private var workMinutesInput: String
@@ -62,7 +93,6 @@ struct SettingsView: View {
     @State private var promptMinInput: String
     @State private var promptMaxInput: String
     @State private var microBreakInput: String
-    @State private var isHoveringClose = false
     
     // 权限状态
     @State private var notificationPermissionGranted = false
@@ -123,10 +153,6 @@ struct SettingsView: View {
                     Text("设置")
                         .font(.system(size: 22, weight: .bold, design: .rounded))
                         .foregroundColor(DesignSystem.Colors.primary)
-                    
-                    // Text("个性化您的专注体验")
-                    //     .font(.system(size: 13, weight: .medium))
-                    //     .foregroundColor(DesignSystem.Colors.secondary)
                 }
                 
                 Spacer()
@@ -138,72 +164,37 @@ struct SettingsView: View {
                 }) {
                     Image(systemName: "xmark")
                         .font(.system(size: 10, weight: .semibold))
-                        .foregroundColor(isHoveringClose ? .white : DesignSystem.Colors.secondary)
+                        .foregroundColor(DesignSystem.Colors.secondary)
                         .frame(width: 28, height: 28)
                         .background(
                             Circle()
-                                .fill(isHoveringClose ? 
-                                     Color.red.opacity(0.8) : 
-                                     DesignSystem.Colors.cardBackground)
-                                .shadow(
-                                    color: DesignSystem.Shadow.subtle.color,
-                                    radius: DesignSystem.Shadow.subtle.radius,
-                                    x: DesignSystem.Shadow.subtle.x,
-                                    y: DesignSystem.Shadow.subtle.y
-                                )
+                                .fill(Color(hex: "ebebea"))
                         )
                 }
                 .buttonStyle(PlainButtonStyle())
-                .onHover { hovering in
-                    withAnimation(.easeInOut(duration: 0.2)) {
-                        isHoveringClose = hovering
-                    }
-                }
-                .scaleEffect(isHoveringClose ? 1.05 : 1.0)
             }
             .padding(.horizontal, DesignSystem.Spacing.xxl)
             .padding(.top, DesignSystem.Spacing.xl)
             .padding(.bottom, DesignSystem.Spacing.lg)
         }
-        .background(.ultraThinMaterial)
-        .overlay(
-            Rectangle()
-                .fill(DesignSystem.Colors.separator.opacity(0.3))
-                .frame(height: 0.5),
-            alignment: .bottom
-        )
     }
     
     // MARK: - 现代背景渐变
     private var modernBackgroundGradient: some View {
-        ZStack {
-            // 主背景
-            DesignSystem.Colors.background
-            
-            // 渐变装饰
-            LinearGradient(
-                colors: colorScheme == .dark 
-                    ? [Color.blue.opacity(0.02), Color.purple.opacity(0.02), Color.clear]
-                    : [Color.blue.opacity(0.03), Color.purple.opacity(0.03), Color.clear],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-        }
+        Color(hex: "efeeee")
     }
     
     // MARK: - 计时设置分组
     private var timerSettingsSection: some View {
         ModernSettingsSection(
-            title: "计时设置",
-            icon: "timer",
-            iconColor: .blue
+            title: "计时"
         ) {
             VStack(spacing: DesignSystem.Spacing.md) {
                 ModernTimeInputRow(
                     title: "专注时间",
                     value: $workMinutesInput,
                     unit: "分钟",
-                    icon: "brain.head.profile",
+                    icon: "timer",
                     iconColor: .blue,
                     isDisabled: timerManager.timerRunning
                 ) { newValue in
@@ -221,7 +212,7 @@ struct SettingsView: View {
                     title: "休息时间",
                     value: $breakMinutesInput,
                     unit: "分钟",
-                    icon: "cup.and.saucer",
+                    icon: "pause.circle.fill",
                     iconColor: .orange,
                     isDisabled: timerManager.timerRunning
                 ) { newValue in
@@ -236,16 +227,14 @@ struct SettingsView: View {
     // MARK: - 随机提示设置分组
     private var promptSettingsSection: some View {
         ModernSettingsSection(
-            title: "随机提示音",
-            icon: "waveform.path.ecg",
-            iconColor: .green
+            title: "随机提示音"
         ) {
             VStack(spacing: DesignSystem.Spacing.md) {
                 ModernTimeInputRow(
                     title: "最小间隔",
                     value: $promptMinInput,
                     unit: "分钟",
-                    icon: "minus.circle",
+                    icon: "arrow.down.circle",
                     iconColor: .green,
                     isDisabled: timerManager.timerRunning
                 ) { newValue in
@@ -260,7 +249,7 @@ struct SettingsView: View {
                     title: "最大间隔",
                     value: $promptMaxInput,
                     unit: "分钟",
-                    icon: "plus.circle",
+                    icon: "arrow.up.circle",
                     iconColor: .green,
                     isDisabled: timerManager.timerRunning
                 ) { newValue in
@@ -275,7 +264,7 @@ struct SettingsView: View {
                     title: "微休息时长",
                     value: $microBreakInput,
                     unit: "秒",
-                    icon: "clock.badge.checkmark",
+                    icon: "clock.arrow.circlepath",
                     iconColor: .mint,
                     isDisabled: timerManager.timerRunning
                 ) { newValue in
@@ -283,6 +272,12 @@ struct SettingsView: View {
                         timerManager.microBreakSeconds = seconds
                     }
                 }
+                
+                ModernInfoBox(
+                    icon: "info.circle",
+                    text: "每隔 \(timerManager.promptMinInterval)-\(timerManager.promptMaxInterval) 分钟随机播放微休息提示音，并在 \(timerManager.microBreakSeconds) 秒后结束",
+                    color: .blue
+                )
             }
         }
     }
@@ -290,14 +285,13 @@ struct SettingsView: View {
     // MARK: - 声音设置分组
     private var soundSettingsSection: some View {
         ModernSettingsSection(
-            title: "声音效果",
-            icon: "speaker.wave.3",
-            iconColor: .purple
+            title: "声音"
         ) {
             VStack(spacing: DesignSystem.Spacing.md) {
+                // 微休息设置
                 ModernToggleRow(
-                    title: "启用微休息",
-                    icon: "speaker.2",
+                    title: "专注期间提示音",
+                    icon: "speaker.wave.2",
                     iconColor: .purple,
                     isOn: $timerManager.promptSoundEnabled
                 )
@@ -307,46 +301,68 @@ struct SettingsView: View {
                         ModernDivider()
                         
                         ModernSoundSelectionRow(
-                            title: "开始音效",
-                            icon: "play.circle",
-                            iconColor: .green,
-                            selectedSound: timerManager.microBreakStartSoundType,
-                            onSelectionChange: { soundType in
-                                NotificationCenter.default.post(
-                                    name: .playMicroBreakStartSound,
-                                    object: soundType.rawValue
-                                )
-                                timerManager.microBreakStartSoundType = soundType
+                            title: "微休息开始",
+                            icon: "pause.circle",
+                            iconColor: .indigo,
+                            selectedSound: soundManager.microBreakStartSoundName,
+                            soundType: .microBreakStart,
+                            onSelectionChange: { soundName in
+                                soundManager.microBreakStartSoundName = soundName
+                                soundManager.playPreviewSound(named: soundName)
                             }
                         )
                         
                         ModernDivider()
                         
                         ModernSoundSelectionRow(
-                            title: "结束音效",
-                            icon: "stop.circle",
-                            iconColor: .red,
-                            selectedSound: timerManager.microBreakEndSoundType,
-                            onSelectionChange: { soundType in
-                                NotificationCenter.default.post(
-                                    name: .playMicroBreakEndSound,
-                                    object: soundType.rawValue
-                                )
-                                timerManager.microBreakEndSoundType = soundType
+                            title: "微休息结束",
+                            icon: "play.circle",
+                            iconColor: .teal,
+                            selectedSound: soundManager.microBreakEndSoundName,
+                            soundType: .microBreakEnd,
+                            onSelectionChange: { soundName in
+                                soundManager.microBreakEndSoundName = soundName
+                                soundManager.playPreviewSound(named: soundName)
                             }
                         )
                         
-                        ModernInfoBox(
-                            icon: "info.circle",
-                            text: "每隔 \(timerManager.promptMinInterval)-\(timerManager.promptMaxInterval) 分钟播放提示音",
-                            color: .blue
-                        )
+
                     }
                     .transition(.asymmetric(
                         insertion: .opacity.combined(with: .scale(scale: 0.95)).combined(with: .offset(y: -10)),
                         removal: .opacity.combined(with: .scale(scale: 0.95))
                     ))
                 }
+                
+                ModernDivider()
+                
+                // 专注结束音效
+                ModernSoundSelectionRow(
+                    title: "专注结束",
+                    icon: "checkmark.circle.fill",
+                    iconColor: .green,
+                    selectedSound: soundManager.endSoundName,
+                    soundType: .focusEnd,
+                    onSelectionChange: { soundName in
+                        soundManager.endSoundName = soundName
+                        soundManager.playPreviewSound(named: soundName)
+                    }
+                )
+                
+                ModernDivider()
+                
+                // 休息结束音效
+                ModernSoundSelectionRow(
+                    title: "休息结束",
+                    icon: "bell.fill",
+                    iconColor: .orange,
+                    selectedSound: soundManager.breakEndSoundName,
+                    soundType: .breakEnd,
+                    onSelectionChange: { soundName in
+                        soundManager.breakEndSoundName = soundName
+                        soundManager.playPreviewSound(named: soundName)
+                    }
+                )
             }
         }
     }
@@ -354,15 +370,13 @@ struct SettingsView: View {
     // MARK: - 行为设置分组
     private var behaviorSettingsSection: some View {
         ModernSettingsSection(
-            title: "行为控制",
-            icon: "gearshape.2",
-            iconColor: .orange
+            title: "行为控制"
         ) {
             VStack(spacing: DesignSystem.Spacing.md) {
                 ModernToggleRow(
                     title: "微休息通知",
                     subtitle: "发送系统通知提醒",
-                    icon: "bell",
+                    icon: "bell.badge.fill",
                     iconColor: .orange,
                     isOn: $timerManager.microBreakNotificationEnabled
                 )
@@ -372,7 +386,7 @@ struct SettingsView: View {
                 ModernToggleRow(
                     title: "全屏模式",
                     subtitle: "微休息时启用全屏遮罩",
-                    icon: "rectangle.fill",
+                    icon: "rectangle.inset.filled",
                     iconColor: .indigo,
                     isOn: $timerManager.blackoutEnabled
                 )
@@ -383,7 +397,7 @@ struct SettingsView: View {
                     ModernToggleRow(
                         title: "媒体控制",
                         subtitle: "切换暂停/播放音视频状态",
-                        icon: "pause.rectangle",
+                        icon: "play.slash.fill",
                         iconColor: .pink,
                         isOn: $timerManager.muteAudioDuringBreak
                     )
@@ -397,15 +411,13 @@ struct SettingsView: View {
     // MARK: - 权限设置分组
     private var notificationSection: some View {
         ModernSettingsSection(
-            title: "权限",
-            icon: "bell.badge",
-            iconColor: .red
+            title: "权限"
         ) {
             VStack(spacing: DesignSystem.Spacing.md) {
                 ModernPermissionRow(
                     title: "通知权限",
                     subtitle: "「微休息通知」需要此权限",
-                    icon: "bell",
+                    icon: "bell.fill",
                     iconColor: .orange,
                     isGranted: notificationPermissionGranted,
                     onSettingsAction: openNotificationSettings
@@ -416,7 +428,7 @@ struct SettingsView: View {
                 ModernPermissionRow(
                     title: "辅助功能权限",
                     subtitle: "「媒体控制」需要此权限",
-                    icon: "accessibility",
+                    icon: "hand.raised.fill",
                     iconColor: .blue,
                     isGranted: accessibilityPermissionGranted,
                     onSettingsAction: openAccessibilitySettings
@@ -511,22 +523,15 @@ struct SettingsView: View {
 // MARK: - 现代设置分组组件
 struct ModernSettingsSection<Content: View>: View {
     let title: String
-    let icon: String
-    let iconColor: Color
     let content: Content
     
     @Environment(\.colorScheme) private var colorScheme
-    @State private var isHovered = false
     
     init(
         title: String,
-        icon: String,
-        iconColor: Color,
         @ViewBuilder content: () -> Content
     ) {
         self.title = title
-        self.icon = icon
-        self.iconColor = iconColor
         self.content = content()
     }
     
@@ -534,21 +539,9 @@ struct ModernSettingsSection<Content: View>: View {
         VStack(alignment: .leading, spacing: DesignSystem.Spacing.md) {
             // 分组标题
             HStack(spacing: DesignSystem.Spacing.md) {
-                ZStack {
-                    Circle()
-                        .fill(iconColor.opacity(0.15))
-                        .frame(width: 32, height: 32)
-                    
-                    Image(systemName: icon)
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundColor(iconColor)
-                }
-                
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(title)
-                        .font(.system(size: 16, weight: .semibold, design: .rounded))
-                        .foregroundColor(DesignSystem.Colors.primary)
-                }
+                Text(title)
+                    .font(.system(size: 16, weight: .semibold, design: .rounded))
+                    .foregroundColor(DesignSystem.Colors.primary)
                 
                 Spacer()
             }
@@ -561,10 +554,10 @@ struct ModernSettingsSection<Content: View>: View {
             .padding(DesignSystem.Spacing.lg)
             .background(
                 RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.lg)
-                    .fill(.regularMaterial)
+                    .fill(Color(hex: "ebebea"))
                     .shadow(
                         color: DesignSystem.Shadow.soft.color,
-                        radius: isHovered ? DesignSystem.Shadow.medium.radius : DesignSystem.Shadow.soft.radius,
+                        radius: DesignSystem.Shadow.soft.radius,
                         x: DesignSystem.Shadow.soft.x,
                         y: DesignSystem.Shadow.soft.y
                     )
@@ -574,8 +567,8 @@ struct ModernSettingsSection<Content: View>: View {
                     .stroke(
                         LinearGradient(
                             colors: [
-                                iconColor.opacity(0.1),
-                                iconColor.opacity(0.05),
+                                Color.accentColor.opacity(0.1),
+                                Color.accentColor.opacity(0.05),
                                 Color.clear
                             ],
                             startPoint: .topLeading,
@@ -584,12 +577,6 @@ struct ModernSettingsSection<Content: View>: View {
                         lineWidth: 1
                     )
             )
-            .scaleEffect(isHovered ? 1.02 : 1.0)
-            .onHover { hovering in
-                withAnimation(.easeInOut(duration: 0.2)) {
-                    isHovered = hovering
-                }
-            }
         }
     }
 }
@@ -609,9 +596,9 @@ struct ModernTimeInputRow: View {
     var body: some View {
         HStack(spacing: DesignSystem.Spacing.md) {
             Image(systemName: icon)
-                .font(.system(size: 16, weight: .medium))
+                .font(.system(size: 14, weight: .regular))
                 .foregroundColor(iconColor)
-                .frame(width: 20)
+                .frame(width: 16)
             
             Text(title)
                 .font(.system(size: 14, weight: .medium))
@@ -666,9 +653,9 @@ struct ModernToggleRow: View {
     var body: some View {
         HStack(spacing: DesignSystem.Spacing.md) {
             Image(systemName: icon)
-                .font(.system(size: 16, weight: .medium))
+                .font(.system(size: 14, weight: .regular))
                 .foregroundColor(iconColor)
-                .frame(width: 20)
+                .frame(width: 16)
             
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
@@ -695,17 +682,18 @@ struct ModernSoundSelectionRow: View {
     let title: String
     let icon: String
     let iconColor: Color
-    let selectedSound: SoundType
-    let onSelectionChange: (SoundType) -> Void
+    let selectedSound: String
+    let soundType: SoundType
+    let onSelectionChange: (String) -> Void
     
     @State private var isMenuOpen = false
     
     var body: some View {
         HStack(spacing: DesignSystem.Spacing.md) {
             Image(systemName: icon)
-                .font(.system(size: 16, weight: .medium))
+                .font(.system(size: 14, weight: .regular))
                 .foregroundColor(iconColor)
-                .frame(width: 20)
+                .frame(width: 16)
             
             Text(title)
                 .font(.system(size: 14, weight: .medium))
@@ -714,13 +702,13 @@ struct ModernSoundSelectionRow: View {
             Spacer()
             
             Menu {
-                ForEach(SoundType.allCases) { soundType in
+                ForEach(SoundManager.getOrderedSoundOptions(for: soundType), id: \.self) { soundName in
                     Button(action: {
-                        onSelectionChange(soundType)
+                        onSelectionChange(soundName)
                     }) {
                         HStack {
-                            Text(soundType.displayName)
-                            if selectedSound == soundType {
+                            Text(SoundManager.getDisplayNameWithDefault(for: soundName, defaultSound: SoundManager.getDefaultSound(for: soundType)))
+                            if selectedSound == soundName {
                                 Spacer()
                                 Image(systemName: "checkmark")
                                     .foregroundColor(.accentColor)
@@ -730,7 +718,7 @@ struct ModernSoundSelectionRow: View {
                 }
             } label: {
                 HStack(spacing: DesignSystem.Spacing.sm) {
-                    Text(selectedSound.displayName)
+                    Text(SoundManager.getDisplayName(for: selectedSound))
                         .font(.system(size: 13, weight: .medium))
                         .foregroundColor(DesignSystem.Colors.primary)
                     
@@ -755,11 +743,8 @@ struct ModernSoundSelectionRow: View {
                         .stroke(DesignSystem.Colors.separator.opacity(0.3), lineWidth: 0.5)
                 )
             }
-            .scaleEffect(isMenuOpen ? 0.98 : 1.0)
             .onMenuOpen { isOpen in
-                withAnimation(.easeInOut(duration: 0.1)) {
-                    isMenuOpen = isOpen
-                }
+                isMenuOpen = isOpen
             }
         }
     }
@@ -777,9 +762,9 @@ struct ModernPermissionRow: View {
     var body: some View {
         HStack(spacing: DesignSystem.Spacing.md) {
             Image(systemName: icon)
-                .font(.system(size: 16, weight: .medium))
+                .font(.system(size: 14, weight: .regular))
                 .foregroundColor(iconColor)
-                .frame(width: 20)
+                .frame(width: 16)
             
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
@@ -806,7 +791,6 @@ struct ModernPermissionBadge: View {
     let isGranted: Bool
     let onSettingsAction: () -> Void
     
-    @State private var isHovered = false
     
     var body: some View {
         if isGranted {
@@ -841,12 +825,6 @@ struct ModernPermissionBadge: View {
                     onSettingsAction()
                 }
                 .buttonStyle(CompactMiniButtonStyle())
-                .scaleEffect(isHovered ? 1.02 : 1.0)
-                .onHover { hovering in
-                    withAnimation(.easeInOut(duration: 0.15)) {
-                        isHovered = hovering
-                    }
-                }
             }
             .padding(.horizontal, 6)
             .padding(.vertical, 6)

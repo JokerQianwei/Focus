@@ -9,66 +9,7 @@ import Foundation
 import Combine
 import AppKit
 
-// 声音类型枚举
-enum SoundType: String, CaseIterable, Identifiable {
-    case none = "None"
-    case tink = "Tink"
-    case glass = "Glass"
-    case bell = "Blow"
-    case hero = "Hero"
-    case submarine = "Submarine"
-    case basso = "Basso"
-    case bottle = "Bottle"
-    case frog = "Frog"
-    case funk = "Funk"
-    case morse = "Morse"
-    case ping = "Ping"
-    case pop = "Pop"
-    case purr = "Purr"
-    case sosumi = "Sosumi"
-    
-    var id: String { self.rawValue }
-    
-    var fileName: String {
-        switch self {
-            case .none: return ""
-            case .tink: return "Tink.aiff"
-            case .glass: return "Glass.aiff"
-            case .bell: return "Blow.aiff"
-            case .hero: return "Hero.aiff"
-            case .submarine: return "Submarine.aiff"
-            case .basso: return "Basso.aiff"
-            case .bottle: return "Bottle.aiff"
-            case .frog: return "Frog.aiff"
-            case .funk: return "Funk.aiff"
-            case .morse: return "Morse.aiff"
-            case .ping: return "Ping.aiff"
-            case .pop: return "Pop.aiff"
-            case .purr: return "Purr.aiff"
-            case .sosumi: return "Sosumi.aiff"
-        }
-    }
-    
-    var displayName: String {
-        switch self {
-            case .none: return "无"
-            case .tink: return "水滴声"
-            case .glass: return "玻璃声"
-            case .bell: return "铃声"
-            case .hero: return "完成声"
-            case .submarine: return "潜艇声"
-            case .basso: return "低音声"
-            case .bottle: return "瓶子声"
-            case .frog: return "青蛙声"
-            case .funk: return "放克声"
-            case .morse: return "电报声"
-            case .ping: return "乒乓声"
-            case .pop: return "爆破声"
-            case .purr: return "呼噜声"
-            case .sosumi: return "经典声"
-        }
-    }
-}
+// 音效相关的类型定义已移至 SoundManager.swift
 
 // 计时器管理器，作为单例，在应用程序的不同部分之间共享计时器状态
 class TimerManager: ObservableObject {
@@ -87,7 +28,7 @@ class TimerManager: ObservableObject {
     private let showStatusBarIconKey = "showStatusBarIcon" // 控制状态栏图标显示的键
     private let blackoutEnabledKey = "blackoutEnabled" // 控制黑屏功能的键
     private let muteAudioDuringBreakKey = "muteAudioDuringBreak" // 控制微休息期间暂停媒体播放的键
-    // 音效相关键
+    // 音效相关键 - 已弃用，保留以便兼容旧数据
     private let microBreakStartSoundTypeKey = "microBreakStartSoundType"
     private let microBreakEndSoundTypeKey = "microBreakEndSoundType"
     // 微休息通知键
@@ -161,17 +102,13 @@ class TimerManager: ObservableObject {
     @Published private var completionTimestamps: [Date] = [] // Store completion timestamps
     @Published var focusSessions: [FocusSession] = [] // 新增：专注会话数组
 
-    // 微休息开始和结束的声音设置
-    @Published var microBreakStartSoundType: SoundType {
-        didSet {
-            UserDefaults.standard.set(microBreakStartSoundType.rawValue, forKey: microBreakStartSoundTypeKey)
-        }
+    // 微休息音效设置 - 现在由 SoundManager 管理
+    var microBreakStartSoundName: String {
+        SoundManager.shared.microBreakStartSoundName
     }
-
-    @Published var microBreakEndSoundType: SoundType {
-        didSet {
-            UserDefaults.standard.set(microBreakEndSoundType.rawValue, forKey: microBreakEndSoundTypeKey)
-        }
+    
+    var microBreakEndSoundName: String {
+        SoundManager.shared.microBreakEndSoundName
     }
     
     // 微休息通知设置
@@ -266,20 +203,13 @@ class TimerManager: ObservableObject {
             self.muteAudioDuringBreak = false // 默认关闭视频控制
         }
         
-        // 微休息开始声音设置
-        if let soundTypeString = UserDefaults.standard.string(forKey: microBreakStartSoundTypeKey),
-           let soundType = SoundType(rawValue: soundTypeString) {
-            self.microBreakStartSoundType = soundType
-        } else {
-            self.microBreakStartSoundType = .glass // 默认值改为玻璃声
+        // 音效设置现在由 SoundManager 统一管理
+        // 清理旧的音效设置数据（如果存在）
+        if UserDefaults.standard.object(forKey: microBreakStartSoundTypeKey) != nil {
+            UserDefaults.standard.removeObject(forKey: microBreakStartSoundTypeKey)
         }
-
-        // 微休息结束声音设置
-        if let soundTypeString = UserDefaults.standard.string(forKey: microBreakEndSoundTypeKey),
-           let soundType = SoundType(rawValue: soundTypeString) {
-            self.microBreakEndSoundType = soundType
-        } else {
-            self.microBreakEndSoundType = .hero // 默认值改为完成声
+        if UserDefaults.standard.object(forKey: microBreakEndSoundTypeKey) != nil {
+            UserDefaults.standard.removeObject(forKey: microBreakEndSoundTypeKey)
         }
 
         // 微休息通知设置
@@ -427,9 +357,9 @@ class TimerManager: ObservableObject {
                     }
 
                 } else {
-                    // 休息模式结束，发送开始声音通知，然后切换到工作模式
+                    // 休息模式结束，发送休息结束声音通知，然后切换到工作模式
                     if self.promptSoundEnabled {
-                        NotificationCenter.default.post(name: .playStartSound, object: nil)
+                        NotificationCenter.default.post(name: .playBreakEndSound, object: nil)
                     }
                     self.isWorkMode = true
                     self.minutes = self.workMinutes
@@ -536,7 +466,7 @@ class TimerManager: ObservableObject {
             // 播放微休息开始提示音
             NotificationCenter.default.post(
                 name: .playMicroBreakStartSound,
-                object: self.microBreakStartSoundType.rawValue
+                object: nil
             )
             
             // 如果启用了微休息通知，发送通知
@@ -562,7 +492,7 @@ class TimerManager: ObservableObject {
             // 播放微休息结束提示音
             NotificationCenter.default.post(
                 name: .playMicroBreakEndSound,
-                object: self.microBreakEndSoundType.rawValue
+                object: nil
             )
             
             // 如果启用了微休息通知，发送通知
