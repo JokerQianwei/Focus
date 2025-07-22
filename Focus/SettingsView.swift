@@ -190,16 +190,14 @@ struct SettingsView: View {
     // MARK: - 计时设置分组
     private var timerSettingsSection: some View {
         ModernSettingsSection(
-            title: "计时设置",
-            icon: "timer",
-            iconColor: .blue
+            title: "计时设置"
         ) {
             VStack(spacing: DesignSystem.Spacing.md) {
                 ModernTimeInputRow(
                     title: "专注时间",
                     value: $workMinutesInput,
                     unit: "分钟",
-                    icon: "brain.head.profile",
+                    icon: "timer",
                     iconColor: .blue,
                     isDisabled: timerManager.timerRunning
                 ) { newValue in
@@ -217,7 +215,7 @@ struct SettingsView: View {
                     title: "休息时间",
                     value: $breakMinutesInput,
                     unit: "分钟",
-                    icon: "cup.and.saucer",
+                    icon: "pause.circle.fill",
                     iconColor: .orange,
                     isDisabled: timerManager.timerRunning
                 ) { newValue in
@@ -232,16 +230,14 @@ struct SettingsView: View {
     // MARK: - 随机提示设置分组
     private var promptSettingsSection: some View {
         ModernSettingsSection(
-            title: "随机提示音",
-            icon: "waveform.path.ecg",
-            iconColor: .green
+            title: "随机提示音"
         ) {
             VStack(spacing: DesignSystem.Spacing.md) {
                 ModernTimeInputRow(
                     title: "最小间隔",
                     value: $promptMinInput,
                     unit: "分钟",
-                    icon: "minus.circle",
+                    icon: "arrow.down.circle",
                     iconColor: .green,
                     isDisabled: timerManager.timerRunning
                 ) { newValue in
@@ -256,7 +252,7 @@ struct SettingsView: View {
                     title: "最大间隔",
                     value: $promptMaxInput,
                     unit: "分钟",
-                    icon: "plus.circle",
+                    icon: "arrow.up.circle",
                     iconColor: .green,
                     isDisabled: timerManager.timerRunning
                 ) { newValue in
@@ -271,7 +267,7 @@ struct SettingsView: View {
                     title: "微休息时长",
                     value: $microBreakInput,
                     unit: "秒",
-                    icon: "clock.badge.checkmark",
+                    icon: "clock.arrow.circlepath",
                     iconColor: .mint,
                     isDisabled: timerManager.timerRunning
                 ) { newValue in
@@ -286,14 +282,12 @@ struct SettingsView: View {
     // MARK: - 声音设置分组
     private var soundSettingsSection: some View {
         ModernSettingsSection(
-            title: "声音效果",
-            icon: "speaker.wave.3",
-            iconColor: .purple
+            title: "声音效果"
         ) {
             VStack(spacing: DesignSystem.Spacing.md) {
                 ModernToggleRow(
                     title: "启用微休息",
-                    icon: "speaker.2",
+                    icon: "speaker.wave.2",
                     iconColor: .purple,
                     isOn: $timerManager.promptSoundEnabled
                 )
@@ -304,7 +298,7 @@ struct SettingsView: View {
                         
                         ModernSoundSelectionRow(
                             title: "开始音效",
-                            icon: "play.circle",
+                            icon: "play.circle.fill",
                             iconColor: .green,
                             selectedSound: timerManager.microBreakStartSoundType,
                             onSelectionChange: { soundType in
@@ -320,7 +314,7 @@ struct SettingsView: View {
                         
                         ModernSoundSelectionRow(
                             title: "结束音效",
-                            icon: "stop.circle",
+                            icon: "stop.circle.fill",
                             iconColor: .red,
                             selectedSound: timerManager.microBreakEndSoundType,
                             onSelectionChange: { soundType in
@@ -350,15 +344,13 @@ struct SettingsView: View {
     // MARK: - 行为设置分组
     private var behaviorSettingsSection: some View {
         ModernSettingsSection(
-            title: "行为控制",
-            icon: "gearshape.2",
-            iconColor: .orange
+            title: "行为控制"
         ) {
             VStack(spacing: DesignSystem.Spacing.md) {
                 ModernToggleRow(
                     title: "微休息通知",
                     subtitle: "发送系统通知提醒",
-                    icon: "bell",
+                    icon: "bell.badge.fill",
                     iconColor: .orange,
                     isOn: $timerManager.microBreakNotificationEnabled
                 )
@@ -368,7 +360,7 @@ struct SettingsView: View {
                 ModernToggleRow(
                     title: "全屏模式",
                     subtitle: "微休息时启用全屏遮罩",
-                    icon: "rectangle.fill",
+                    icon: "rectangle.inset.filled",
                     iconColor: .indigo,
                     isOn: $timerManager.blackoutEnabled
                 )
@@ -379,7 +371,7 @@ struct SettingsView: View {
                     ModernToggleRow(
                         title: "媒体控制",
                         subtitle: "切换暂停/播放音视频状态",
-                        icon: "pause.rectangle",
+                        icon: "play.slash.fill",
                         iconColor: .pink,
                         isOn: $timerManager.muteAudioDuringBreak
                     )
@@ -393,15 +385,13 @@ struct SettingsView: View {
     // MARK: - 权限设置分组
     private var notificationSection: some View {
         ModernSettingsSection(
-            title: "权限",
-            icon: "bell.badge",
-            iconColor: .red
+            title: "权限"
         ) {
             VStack(spacing: DesignSystem.Spacing.md) {
                 ModernPermissionRow(
                     title: "通知权限",
                     subtitle: "「微休息通知」需要此权限",
-                    icon: "bell",
+                    icon: "bell.fill",
                     iconColor: .orange,
                     isGranted: notificationPermissionGranted,
                     onSettingsAction: openNotificationSettings
@@ -412,7 +402,7 @@ struct SettingsView: View {
                 ModernPermissionRow(
                     title: "辅助功能权限",
                     subtitle: "「媒体控制」需要此权限",
-                    icon: "accessibility",
+                    icon: "hand.raised.fill",
                     iconColor: .blue,
                     isGranted: accessibilityPermissionGranted,
                     onSettingsAction: openAccessibilitySettings
@@ -507,21 +497,15 @@ struct SettingsView: View {
 // MARK: - 现代设置分组组件
 struct ModernSettingsSection<Content: View>: View {
     let title: String
-    let icon: String
-    let iconColor: Color
     let content: Content
     
     @Environment(\.colorScheme) private var colorScheme
     
     init(
         title: String,
-        icon: String,
-        iconColor: Color,
         @ViewBuilder content: () -> Content
     ) {
         self.title = title
-        self.icon = icon
-        self.iconColor = iconColor
         self.content = content()
     }
     
@@ -529,21 +513,9 @@ struct ModernSettingsSection<Content: View>: View {
         VStack(alignment: .leading, spacing: DesignSystem.Spacing.md) {
             // 分组标题
             HStack(spacing: DesignSystem.Spacing.md) {
-                ZStack {
-                    Circle()
-                        .fill(iconColor.opacity(0.15))
-                        .frame(width: 32, height: 32)
-                    
-                    Image(systemName: icon)
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundColor(iconColor)
-                }
-                
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(title)
-                        .font(.system(size: 16, weight: .semibold, design: .rounded))
-                        .foregroundColor(DesignSystem.Colors.primary)
-                }
+                Text(title)
+                    .font(.system(size: 16, weight: .semibold, design: .rounded))
+                    .foregroundColor(DesignSystem.Colors.primary)
                 
                 Spacer()
             }
@@ -569,8 +541,8 @@ struct ModernSettingsSection<Content: View>: View {
                     .stroke(
                         LinearGradient(
                             colors: [
-                                iconColor.opacity(0.1),
-                                iconColor.opacity(0.05),
+                                Color.accentColor.opacity(0.1),
+                                Color.accentColor.opacity(0.05),
                                 Color.clear
                             ],
                             startPoint: .topLeading,
@@ -598,9 +570,9 @@ struct ModernTimeInputRow: View {
     var body: some View {
         HStack(spacing: DesignSystem.Spacing.md) {
             Image(systemName: icon)
-                .font(.system(size: 16, weight: .medium))
+                .font(.system(size: 14, weight: .regular))
                 .foregroundColor(iconColor)
-                .frame(width: 20)
+                .frame(width: 16)
             
             Text(title)
                 .font(.system(size: 14, weight: .medium))
@@ -655,9 +627,9 @@ struct ModernToggleRow: View {
     var body: some View {
         HStack(spacing: DesignSystem.Spacing.md) {
             Image(systemName: icon)
-                .font(.system(size: 16, weight: .medium))
+                .font(.system(size: 14, weight: .regular))
                 .foregroundColor(iconColor)
-                .frame(width: 20)
+                .frame(width: 16)
             
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
@@ -692,9 +664,9 @@ struct ModernSoundSelectionRow: View {
     var body: some View {
         HStack(spacing: DesignSystem.Spacing.md) {
             Image(systemName: icon)
-                .font(.system(size: 16, weight: .medium))
+                .font(.system(size: 14, weight: .regular))
                 .foregroundColor(iconColor)
-                .frame(width: 20)
+                .frame(width: 16)
             
             Text(title)
                 .font(.system(size: 14, weight: .medium))
@@ -766,9 +738,9 @@ struct ModernPermissionRow: View {
     var body: some View {
         HStack(spacing: DesignSystem.Spacing.md) {
             Image(systemName: icon)
-                .font(.system(size: 16, weight: .medium))
+                .font(.system(size: 14, weight: .regular))
                 .foregroundColor(iconColor)
-                .frame(width: 20)
+                .frame(width: 16)
             
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
