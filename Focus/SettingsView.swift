@@ -279,57 +279,9 @@ struct SettingsView: View {
             title: "声音"
         ) {
             VStack(spacing: DesignSystem.Spacing.md) {
-                // 专注开始音效（固定）
-                HStack(spacing: DesignSystem.Spacing.md) {
-                    Image(systemName: "play.fill")
-                        .font(.system(size: 14, weight: .regular))
-                        .foregroundColor(.blue)
-                        .frame(width: 16)
-                    
-                    Text("专注开始")
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundColor(DesignSystem.Colors.primary)
-                    
-                    Spacer()
-                    
-                    Text("Ding")
-                        .font(.system(size: 13, weight: .medium))
-                        .foregroundColor(DesignSystem.Colors.secondary)
-                }
-                
-                ModernDivider()
-                
-                // 专注结束音效
-                ModernSoundSelectionRow(
-                    title: "专注结束",
-                    icon: "checkmark.circle.fill",
-                    iconColor: .green,
-                    selectedSound: SoundManager.shared.endSoundName,
-                    onSelectionChange: { soundName in
-                        SoundManager.shared.endSoundName = soundName
-                        SoundManager.shared.playPreviewSound(named: soundName)
-                    }
-                )
-                
-                ModernDivider()
-                
-                // 休息结束音效
-                ModernSoundSelectionRow(
-                    title: "休息结束",
-                    icon: "bell.fill",
-                    iconColor: .orange,
-                    selectedSound: SoundManager.shared.breakEndSoundName,
-                    onSelectionChange: { soundName in
-                        SoundManager.shared.breakEndSoundName = soundName
-                        SoundManager.shared.playPreviewSound(named: soundName)
-                    }
-                )
-                
-                ModernDivider()
-                
                 // 微休息设置
                 ModernToggleRow(
-                    title: "启用微休息",
+                    title: "专注期间提示音",
                     icon: "speaker.wave.2",
                     iconColor: .purple,
                     isOn: $timerManager.promptSoundEnabled
@@ -374,6 +326,34 @@ struct SettingsView: View {
                         removal: .opacity.combined(with: .scale(scale: 0.95))
                     ))
                 }
+                
+                ModernDivider()
+                
+                // 专注结束音效
+                ModernSoundSelectionRow(
+                    title: "专注结束",
+                    icon: "checkmark.circle.fill",
+                    iconColor: .green,
+                    selectedSound: SoundManager.shared.endSoundName,
+                    onSelectionChange: { soundName in
+                        SoundManager.shared.endSoundName = soundName
+                        SoundManager.shared.playPreviewSound(named: soundName)
+                    }
+                )
+                
+                ModernDivider()
+                
+                // 休息结束音效
+                ModernSoundSelectionRow(
+                    title: "休息结束",
+                    icon: "bell.fill",
+                    iconColor: .orange,
+                    selectedSound: SoundManager.shared.breakEndSoundName,
+                    onSelectionChange: { soundName in
+                        SoundManager.shared.breakEndSoundName = soundName
+                        SoundManager.shared.playPreviewSound(named: soundName)
+                    }
+                )
             }
         }
     }
