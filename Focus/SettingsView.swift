@@ -718,7 +718,7 @@ struct ModernSoundSelectionRow: View {
                 }
             } label: {
                 HStack(spacing: DesignSystem.Spacing.sm) {
-                    Text(SoundManager.getDisplayNameWithDefault(for: selectedSound, defaultSound: SoundManager.getDefaultSound(for: soundType)))
+                    Text(SoundManager.getDisplayName(for: selectedSound))
                         .font(.system(size: 13, weight: .medium))
                         .foregroundColor(DesignSystem.Colors.primary)
                     
