@@ -83,6 +83,9 @@ struct SettingsView: View {
 
     // 使用TimerManager
     @ObservedObject var timerManager: TimerManager
+    
+    // 观察SoundManager以确保音效选择后视图更新
+    @ObservedObject private var soundManager = SoundManager.shared
 
     // 临时存储输入值的状态
     @State private var workMinutesInput: String
@@ -301,10 +304,11 @@ struct SettingsView: View {
                             title: "微休息开始",
                             icon: "pause.circle",
                             iconColor: .indigo,
-                            selectedSound: SoundManager.shared.microBreakStartSoundName,
+                            selectedSound: soundManager.microBreakStartSoundName,
+                            soundType: .microBreakStart,
                             onSelectionChange: { soundName in
-                                SoundManager.shared.microBreakStartSoundName = soundName
-                                SoundManager.shared.playPreviewSound(named: soundName)
+                                soundManager.microBreakStartSoundName = soundName
+                                soundManager.playPreviewSound(named: soundName)
                             }
                         )
                         
@@ -314,10 +318,11 @@ struct SettingsView: View {
                             title: "微休息结束",
                             icon: "play.circle",
                             iconColor: .teal,
-                            selectedSound: SoundManager.shared.microBreakEndSoundName,
+                            selectedSound: soundManager.microBreakEndSoundName,
+                            soundType: .microBreakEnd,
                             onSelectionChange: { soundName in
-                                SoundManager.shared.microBreakEndSoundName = soundName
-                                SoundManager.shared.playPreviewSound(named: soundName)
+                                soundManager.microBreakEndSoundName = soundName
+                                soundManager.playPreviewSound(named: soundName)
                             }
                         )
                         
@@ -336,10 +341,11 @@ struct SettingsView: View {
                     title: "专注结束",
                     icon: "checkmark.circle.fill",
                     iconColor: .green,
-                    selectedSound: SoundManager.shared.endSoundName,
+                    selectedSound: soundManager.endSoundName,
+                    soundType: .focusEnd,
                     onSelectionChange: { soundName in
-                        SoundManager.shared.endSoundName = soundName
-                        SoundManager.shared.playPreviewSound(named: soundName)
+                        soundManager.endSoundName = soundName
+                        soundManager.playPreviewSound(named: soundName)
                     }
                 )
                 
@@ -350,10 +356,11 @@ struct SettingsView: View {
                     title: "休息结束",
                     icon: "bell.fill",
                     iconColor: .orange,
-                    selectedSound: SoundManager.shared.breakEndSoundName,
+                    selectedSound: soundManager.breakEndSoundName,
+                    soundType: .breakEnd,
                     onSelectionChange: { soundName in
-                        SoundManager.shared.breakEndSoundName = soundName
-                        SoundManager.shared.playPreviewSound(named: soundName)
+                        soundManager.breakEndSoundName = soundName
+                        soundManager.playPreviewSound(named: soundName)
                     }
                 )
             }
@@ -676,6 +683,7 @@ struct ModernSoundSelectionRow: View {
     let icon: String
     let iconColor: Color
     let selectedSound: String
+    let soundType: SoundType
     let onSelectionChange: (String) -> Void
     
     @State private var isMenuOpen = false
@@ -694,12 +702,12 @@ struct ModernSoundSelectionRow: View {
             Spacer()
             
             Menu {
-                ForEach(SoundManager.systemSoundOptions, id: \.self) { soundName in
+                ForEach(SoundManager.getOrderedSoundOptions(for: soundType), id: \.self) { soundName in
                     Button(action: {
                         onSelectionChange(soundName)
                     }) {
                         HStack {
-                            Text(SoundManager.getDisplayName(for: soundName))
+                            Text(SoundManager.getDisplayNameWithDefault(for: soundName, defaultSound: SoundManager.getDefaultSound(for: soundType)))
                             if selectedSound == soundName {
                                 Spacer()
                                 Image(systemName: "checkmark")
@@ -710,7 +718,7 @@ struct ModernSoundSelectionRow: View {
                 }
             } label: {
                 HStack(spacing: DesignSystem.Spacing.sm) {
-                    Text(SoundManager.getDisplayName(for: selectedSound))
+                    Text(SoundManager.getDisplayNameWithDefault(for: selectedSound, defaultSound: SoundManager.getDefaultSound(for: soundType)))
                         .font(.system(size: 13, weight: .medium))
                         .foregroundColor(DesignSystem.Colors.primary)
                     

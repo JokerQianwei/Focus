@@ -70,6 +70,46 @@ class SoundManager: ObservableObject {
         return fileToDisplayName[soundName] ?? soundName
     }
     
+    // 获取带默认标记的显示名称
+    static func getDisplayNameWithDefault(for soundName: String, defaultSound: String) -> String {
+        let displayName = getDisplayName(for: soundName)
+        if soundName == defaultSound {
+            return "\(displayName)（默认）"
+        }
+        return displayName
+    }
+    
+    // 获取特定音效类型的有序选项列表
+    static func getOrderedSoundOptions(for soundType: SoundType) -> [String] {
+        let defaultSound = getDefaultSound(for: soundType)
+        var orderedOptions = ["无"]  // "无" 始终在第一位
+        
+        // 将默认音效放在第二位
+        if defaultSound != "无" {
+            orderedOptions.append(defaultSound)
+        }
+        
+        // 添加其他音效选项
+        let otherOptions = systemSoundOptions.filter { $0 != "无" && $0 != defaultSound }
+        orderedOptions.append(contentsOf: otherOptions)
+        
+        return orderedOptions
+    }
+    
+    // 获取默认音效
+    static func getDefaultSound(for soundType: SoundType) -> String {
+        switch soundType {
+        case .microBreakStart:
+            return "Ding"      // 点击
+        case .microBreakEnd:
+            return "Ba"        // 轻提
+        case .focusEnd:
+            return "BellRing"  // 清铃
+        case .breakEnd:
+            return "Piano"     // 钢琴
+        }
+    }
+    
     // 专注开始声音固定为"Ding"
     let startSoundName = "Ding"
     
@@ -103,11 +143,11 @@ class SoundManager: ObservableObject {
     
     // 私有初始化方法
     private init() {
-        // 从 UserDefaults 加载保存的设置
-        self.endSoundName = UserDefaults.standard.string(forKey: endSoundKey) ?? "BellRing"
-        self.microBreakStartSoundName = UserDefaults.standard.string(forKey: microBreakStartSoundKey) ?? "Ding"
-        self.microBreakEndSoundName = UserDefaults.standard.string(forKey: microBreakEndSoundKey) ?? "Ba"
-        self.breakEndSoundName = UserDefaults.standard.string(forKey: breakEndSoundKey) ?? "Piano"
+        // 从 UserDefaults 加载保存的设置，使用新的默认值
+        self.endSoundName = UserDefaults.standard.string(forKey: endSoundKey) ?? "BellRing"  // 专注结束：清铃
+        self.microBreakStartSoundName = UserDefaults.standard.string(forKey: microBreakStartSoundKey) ?? "Ding"  // 微休息开始：点击
+        self.microBreakEndSoundName = UserDefaults.standard.string(forKey: microBreakEndSoundKey) ?? "Ba"  // 微休息结束：轻提
+        self.breakEndSoundName = UserDefaults.standard.string(forKey: breakEndSoundKey) ?? "Piano"  // 休息结束：钢琴
         
         // 设置音频会话
         setupAudioSession()
@@ -118,6 +158,8 @@ class SoundManager: ObservableObject {
         // 预加载常用的音效文件
         preloadCommonSounds()
     }
+
+
     
     // 预加载常用的音效文件
     private func preloadCommonSounds() {
@@ -354,6 +396,14 @@ class SoundManager: ObservableObject {
         // 使用开始声音作为测试
         playSystemSound(named: startSoundName)
     }
+}
+
+// 音效类型枚举
+enum SoundType {
+    case microBreakStart  // 微休息开始
+    case microBreakEnd    // 微休息结束
+    case focusEnd         // 专注结束
+    case breakEnd         // 休息结束
 }
 
 // 添加新的通知名称
