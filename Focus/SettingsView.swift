@@ -184,7 +184,7 @@ struct SettingsView: View {
     // MARK: - 计时设置分组
     private var timerSettingsSection: some View {
         ModernSettingsSection(
-            title: "计时设置"
+            title: "计时"
         ) {
             VStack(spacing: DesignSystem.Spacing.md) {
                 ModernTimeInputRow(
@@ -276,7 +276,7 @@ struct SettingsView: View {
     // MARK: - 声音设置分组
     private var soundSettingsSection: some View {
         ModernSettingsSection(
-            title: "声音效果"
+            title: "声音"
         ) {
             VStack(spacing: DesignSystem.Spacing.md) {
                 // 专注开始音效（固定）
