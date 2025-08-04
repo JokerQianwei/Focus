@@ -142,6 +142,21 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
             object: nil
         )
         
+        // 监听媒体控制通知
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handlePauseMedia),
+            name: .pauseMedia,
+            object: nil
+        )
+        
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleResumeMedia),
+            name: .resumeMedia,
+            object: nil
+        )
+        
         // 调试：测试通知权限（仅在调试模式下）
         #if DEBUG
         DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
@@ -248,6 +263,16 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
         }
         
         // 恢复视频播放（通过恢复系统音量）
+        videoControlManager?.resumeVideo()
+    }
+    
+    // 处理暂停媒体请求
+    @objc private func handlePauseMedia() {
+        videoControlManager?.pauseVideo()
+    }
+    
+    // 处理恢复媒体请求
+    @objc private func handleResumeMedia() {
         videoControlManager?.resumeVideo()
     }
     

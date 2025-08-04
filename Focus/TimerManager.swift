@@ -478,6 +478,11 @@ class TimerManager: ObservableObject {
             if self.blackoutEnabled {
                 NotificationCenter.default.post(name: .showBlackout, object: nil)
             }
+            
+            // 如果启用了媒体控制，发送暂停媒体通知
+            if self.muteAudioDuringBreak {
+                NotificationCenter.default.post(name: .pauseMedia, object: nil)
+            }
 
             // 安排微休息时间后的第二次提示音
             self.scheduleSecondPrompt()
@@ -503,6 +508,11 @@ class TimerManager: ObservableObject {
             // 如果启用了黑屏，发送结束黑屏通知
             if self.blackoutEnabled {
                 NotificationCenter.default.post(name: .hideBlackout, object: nil)
+            }
+            
+            // 如果启用了媒体控制，发送恢复媒体通知
+            if self.muteAudioDuringBreak {
+                NotificationCenter.default.post(name: .resumeMedia, object: nil)
             }
 
             // 重新启动随机提示音计时器
@@ -625,4 +635,7 @@ extension Notification.Name {
     static let hideBlackout = Notification.Name("hideBlackout")
     static let microBreakStartNotification = Notification.Name("microBreakStartNotification")
     static let microBreakEndNotification = Notification.Name("microBreakEndNotification")
+    // 媒体控制通知
+    static let pauseMedia = Notification.Name("pauseMedia")
+    static let resumeMedia = Notification.Name("resumeMedia")
 }
