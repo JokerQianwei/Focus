@@ -168,7 +168,7 @@ struct SettingsView: View {
                         .frame(width: 28, height: 28)
                         .background(
                             Circle()
-                                .fill(Color(hex: "ebebea"))
+                                .fill(Color(.controlBackgroundColor))
                         )
                 }
                 .buttonStyle(PlainButtonStyle())
@@ -181,7 +181,7 @@ struct SettingsView: View {
     
     // MARK: - 现代背景渐变
     private var modernBackgroundGradient: some View {
-        Color(hex: "efeeee")
+        Color(.windowBackgroundColor)
     }
     
     // MARK: - 计时设置分组
@@ -554,7 +554,7 @@ struct ModernSettingsSection<Content: View>: View {
             .padding(DesignSystem.Spacing.lg)
             .background(
                 RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.lg)
-                    .fill(Color(hex: "ebebea"))
+                    .fill(Color(.controlBackgroundColor))
                     .shadow(
                         color: DesignSystem.Shadow.soft.color,
                         radius: DesignSystem.Shadow.soft.radius,
