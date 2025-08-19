@@ -172,6 +172,7 @@ struct SettingsView: View {
                         )
                 }
                 .buttonStyle(PlainButtonStyle())
+                .focusEffectDisabled()
             }
             .padding(.horizontal, DesignSystem.Spacing.xxl)
             .padding(.top, DesignSystem.Spacing.xl)
