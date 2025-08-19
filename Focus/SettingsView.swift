@@ -909,7 +909,7 @@ struct ModernWarningBox: View {
 struct ModernDivider: View {
     var body: some View {
         Rectangle()
-            .fill(DesignSystem.Colors.separator.opacity(0.3))
+            .fill(DesignSystem.Colors.separator.opacity(1.5))
             .frame(height: 0.5)
             .padding(.horizontal, -DesignSystem.Spacing.sm)
     }
