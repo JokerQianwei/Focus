@@ -100,6 +100,7 @@ struct SettingsView: View {
     
     // 动画状态
     @State private var isVisible = false
+    @State private var isHoveringClose = false
 
     init(timerManager: TimerManager) {
         self.timerManager = timerManager
@@ -164,14 +165,21 @@ struct SettingsView: View {
                 }) {
                     Image(systemName: "xmark")
                         .font(.system(size: 10, weight: .semibold))
-                        .foregroundColor(DesignSystem.Colors.secondary)
+                        .foregroundColor(isHoveringClose ? .primary : DesignSystem.Colors.secondary)
                         .frame(width: 28, height: 28)
                         .background(
                             Circle()
-                                .fill(Color(hex: "ebebea"))
+                                .fill(Color(.controlBackgroundColor))
                         )
+                        .scaleEffect(isHoveringClose ? 1.1 : 1.0)
                 }
                 .buttonStyle(PlainButtonStyle())
+                .focusEffectDisabled()
+                .onHover { hovering in
+                    withAnimation(.easeInOut(duration: 0.1)) {
+                        isHoveringClose = hovering
+                    }
+                }
             }
             .padding(.horizontal, DesignSystem.Spacing.xxl)
             .padding(.top, DesignSystem.Spacing.xl)
@@ -181,7 +189,7 @@ struct SettingsView: View {
     
     // MARK: - 现代背景渐变
     private var modernBackgroundGradient: some View {
-        Color(hex: "efeeee")
+        Color(.windowBackgroundColor)
     }
     
     // MARK: - 计时设置分组
@@ -554,7 +562,7 @@ struct ModernSettingsSection<Content: View>: View {
             .padding(DesignSystem.Spacing.lg)
             .background(
                 RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.lg)
-                    .fill(Color(hex: "ebebea"))
+                    .fill(Color(.controlBackgroundColor))
                     .shadow(
                         color: DesignSystem.Shadow.soft.color,
                         radius: DesignSystem.Shadow.soft.radius,
@@ -901,7 +909,7 @@ struct ModernWarningBox: View {
 struct ModernDivider: View {
     var body: some View {
         Rectangle()
-            .fill(DesignSystem.Colors.separator.opacity(0.3))
+            .fill(DesignSystem.Colors.separator.opacity(1.5))
             .frame(height: 0.5)
             .padding(.horizontal, -DesignSystem.Spacing.sm)
     }
@@ -949,7 +957,7 @@ struct ModernToggleStyle: ToggleStyle {
                 
                 ZStack {
                     RoundedRectangle(cornerRadius: 16)
-                        .fill(configuration.isOn ? Color.accentColor : DesignSystem.Colors.cardBackground)
+                        .fill(configuration.isOn ? Color.accentColor : Color(.tertiarySystemFill))
                         .frame(width: 44, height: 26)
                         .shadow(
                             color: DesignSystem.Shadow.subtle.color,

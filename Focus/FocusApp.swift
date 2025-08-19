@@ -202,11 +202,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
             let content = UNMutableNotificationContent()
 
             if timerManager.isWorkMode {
+                content.title = "休息时间结束"
+                content.body = "开始新的专注周期吧！"
+            } else {
                 content.title = "专注时间结束"
                 content.body = "休息一下吧！"
-            } else {
-                content.title = "休息时间结束"
-                content.body = "开始新的专注周期！"
             }
 
             content.sound = UNNotificationSound.default
