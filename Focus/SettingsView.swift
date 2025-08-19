@@ -100,6 +100,7 @@ struct SettingsView: View {
     
     // 动画状态
     @State private var isVisible = false
+    @State private var isHoveringClose = false
 
     init(timerManager: TimerManager) {
         self.timerManager = timerManager
@@ -164,15 +165,21 @@ struct SettingsView: View {
                 }) {
                     Image(systemName: "xmark")
                         .font(.system(size: 10, weight: .semibold))
-                        .foregroundColor(DesignSystem.Colors.secondary)
+                        .foregroundColor(isHoveringClose ? .primary : DesignSystem.Colors.secondary)
                         .frame(width: 28, height: 28)
                         .background(
                             Circle()
                                 .fill(Color(.controlBackgroundColor))
                         )
+                        .scaleEffect(isHoveringClose ? 1.1 : 1.0)
                 }
                 .buttonStyle(PlainButtonStyle())
                 .focusEffectDisabled()
+                .onHover { hovering in
+                    withAnimation(.easeInOut(duration: 0.1)) {
+                        isHoveringClose = hovering
+                    }
+                }
             }
             .padding(.horizontal, DesignSystem.Spacing.xxl)
             .padding(.top, DesignSystem.Spacing.xl)
