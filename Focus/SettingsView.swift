@@ -949,7 +949,7 @@ struct ModernToggleStyle: ToggleStyle {
                 
                 ZStack {
                     RoundedRectangle(cornerRadius: 16)
-                        .fill(configuration.isOn ? Color.accentColor : DesignSystem.Colors.cardBackground)
+                        .fill(configuration.isOn ? Color.accentColor : Color(.tertiarySystemFill))
                         .frame(width: 44, height: 26)
                         .shadow(
                             color: DesignSystem.Shadow.subtle.color,
