@@ -102,6 +102,9 @@ struct SettingsView: View {
     @State private var isVisible = false
     @State private var isHoveringClose = false
 
+    // 辅助功能权限轮询定时器（关闭设置页时要停止，否则会一直空转）
+    @State private var accessibilityTimer: Timer?
+
     init(timerManager: TimerManager) {
         self.timerManager = timerManager
         // 初始化输入字段
@@ -138,6 +141,10 @@ struct SettingsView: View {
             withAnimation(.easeOut(duration: 0.6).delay(0.1)) {
                 isVisible = true
             }
+        }
+        .onDisappear {
+            accessibilityTimer?.invalidate()
+            accessibilityTimer = nil
         }
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
             // 当应用重新激活时（比如从系统设置返回），重新检查权限
@@ -487,7 +494,8 @@ struct SettingsView: View {
         print("🔄 开始监听辅助功能权限变化...")
         #endif
         
-        Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { timer in
+        accessibilityTimer?.invalidate()
+        accessibilityTimer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { timer in
             // 使用与检测相同的逻辑
             let isGrantedBasic = AXIsProcessTrusted()
             let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: false]

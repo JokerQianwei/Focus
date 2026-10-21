@@ -93,9 +93,11 @@ class BlackoutWindowController: NSWindowController {
         
         // 先完成基本的初始化
         super.init(window: customWindow)
-        
-        // 在super.init之后设置内容视图
-        setupContentView()
+
+        // 延迟到真正显示黑屏时再创建内容视图：
+        // 退出时这个全屏窗口一直存在，如果提前挂载 SwiftUI 视图，
+        // 里面的 repeatForever 呼吸动画会在后台持续驱动渲染。
+        // setupContentView() 在 showBlackoutWindow() 中按需调用。
         
         // 注册观察者，接收显示和隐藏通知
         NotificationCenter.default.addObserver(
@@ -113,7 +115,16 @@ class BlackoutWindowController: NSWindowController {
         )
     }
     
+    // 是否已创建内容视图
+    private var isContentViewSetup = false
+
     // 设置内容视图的辅助方法
+    private func setupContentViewIfNeeded() {
+        guard !isContentViewSetup else { return }
+        setupContentView()
+        isContentViewSetup = true
+    }
+
     private func setupContentView() {
         let countdownView = BlackoutCountdownView(
             onSkip: { self.hideBlackoutWindow() },
@@ -138,7 +149,10 @@ class BlackoutWindowController: NSWindowController {
         guard !isActive, timerManager.blackoutEnabled else { return }
         
         isActive = true
-        
+
+        // 首次显示时才挂载 SwiftUI 视图
+        setupContentViewIfNeeded()
+
         // 直接创建全屏黑屏窗口
         createOverlayWindowsForAllScreens()
         

@@ -243,6 +243,9 @@ class TimerManager: ObservableObject {
         }
     }
 
+    // 今天（凌晨5点起）完成周期数的缓存，避免每秒刷新 UI 时重复做日历计算
+    private var completedSessionsCache: (dayStart: Date, timestampCount: Int, value: Int)?
+
     // 计算今天（凌晨5点起）完成的专注周期数
     var completedSessionsToday: Int {
         let now = Date()
@@ -270,6 +273,12 @@ class TimerManager: ObservableObject {
             return 0 // 无法计算，返回0
         }
 
+        if let cache = completedSessionsCache,
+           cache.dayStart == startOfToday5AM,
+           cache.timestampCount == completionTimestamps.count {
+            return cache.value
+        }
+
         // 筛选出在今天5AM到明天5AM之间的时间戳
         let todayTimestamps = completionTimestamps.filter { $0 >= startOfToday5AM && $0 < startOfTomorrow5AM }
 
@@ -278,7 +287,9 @@ class TimerManager: ObservableObject {
         // print("All Timestamps: \(completionTimestamps)")
         #endif
 
-        return todayTimestamps.count
+        let value = todayTimestamps.count
+        completedSessionsCache = (startOfToday5AM, completionTimestamps.count, value)
+        return value
     }
 
     // 开始计时器
@@ -388,6 +399,8 @@ class TimerManager: ObservableObject {
             // 发送通知，计时器已更新
             NotificationCenter.default.post(name: .timerUpdated, object: nil)
         }
+        // 允许系统合并唤醒，降低空闲功耗
+        timer?.tolerance = 0.1
 
         // 如果是工作模式且启用了提示音，启动提示音系统
         if isWorkMode && promptSoundEnabled {
@@ -487,6 +500,7 @@ class TimerManager: ObservableObject {
             // 安排微休息时间后的第二次提示音
             self.scheduleSecondPrompt()
         }
+        promptTimer?.tolerance = 1.0
     }
 
     // 安排微休息时间后的第二次提示音
