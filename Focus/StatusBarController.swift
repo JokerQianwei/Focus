@@ -19,6 +19,7 @@ class StatusBarController {
     private var soundPlayer: NSSound?
     private var mainWindowController: NSWindowController?
     private var currentWidth: CGFloat = 40
+    private var lastStatusText: String?
 
     init() {
         statusBar = NSStatusBar.system
@@ -313,19 +314,20 @@ class StatusBarController {
 
         // 在主线程上更新UI
         DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+
+            // 文本没变化（例如计时器停止时）就不必重绘菜单栏
+            guard text != self.lastStatusText else { return }
+            self.lastStatusText = text
+
             // 先更新宽度
-            self?.updateStatusBarWidth(for: text)
+            self.updateStatusBarWidth(for: text)
             
             // 更新自定义视图
-            self?.statusBarView?.update(text: text, textColor: textColor)
+            self.statusBarView?.update(text: text, textColor: textColor)
 
-            // 确保视图重绘
-            self?.statusBarView?.needsDisplay = true
-            
             // 强制刷新状态栏按钮
-            if let button = self?.statusItem.button {
-                button.needsDisplay = true
-            }
+            self.statusItem.button?.needsDisplay = true
         }
     }
 

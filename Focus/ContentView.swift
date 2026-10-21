@@ -157,7 +157,9 @@ struct ContentView: View {
                         )
                         .rotationEffect(.degrees(-90))
                         .padding(8)
-                        .animation(.easeInOut(duration: 0.7), value: progressRatio)
+                        // 注意：不要给每秒变化的 progressRatio 加隐式动画，
+                        // 否则圆环会持续以 60fps 重绘，空闲时也能吃掉 15%+ CPU。
+                        // 每秒 1/5400 的步进肉眼不可见，离散更新即可。
                         .animation(.easeOut(duration: 1.0), value: animateProgress)
                         .onAppear {
                             DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
