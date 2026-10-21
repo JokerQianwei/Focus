@@ -31,7 +31,7 @@ struct FocusApp: App {
                     NSApplication.shared.orderFrontStandardAboutPanel(
                         options: [
                             NSApplication.AboutPanelOptionKey.applicationName: "专注时钟",
-                            NSApplication.AboutPanelOptionKey.applicationVersion: "1.0",
+                            NSApplication.AboutPanelOptionKey.applicationVersion: (Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String) ?? "1.3.7",
                             NSApplication.AboutPanelOptionKey.credits: NSAttributedString(
                                 string: "一个简单的专注时钟应用，帮助您提高工作效率。"
                             )
