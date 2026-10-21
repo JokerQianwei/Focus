@@ -10,7 +10,7 @@ import AVFoundation
 import AppKit
 
 // 声音管理类，负责处理所有的声音播放请求
-class SoundManager: ObservableObject {
+class SoundManager: NSObject, ObservableObject, AVAudioPlayerDelegate {
     // 单例实例
     static let shared = SoundManager()
     
@@ -22,6 +22,14 @@ class SoundManager: ObservableObject {
     
     // 添加音频播放器缓存字典
     private var audioPlayerCache: [String: AVAudioPlayer] = [:]
+    
+    // 自定义（用户自选文件）音效播放器
+    private var customPlayer: AVAudioPlayer?
+    private var customScopedURL: CustomSoundStore.ScopedURL?
+    private var customPlayingType: SoundType?
+    
+    // 各类音效当前的自定义文件名，用于界面显示；为空表示使用系统音效
+    @Published private(set) var customFileNames: [String: String] = [:]
     
     // UserDefaults中存储声音设置的键
     private let endSoundKey = "endSound"
@@ -142,12 +150,23 @@ class SoundManager: ObservableObject {
     }
     
     // 私有初始化方法
-    private init() {
+    private override init() {
         // 从 UserDefaults 加载保存的设置，使用新的默认值
         self.endSoundName = UserDefaults.standard.string(forKey: endSoundKey) ?? "BellRing"  // 专注结束：清铃
         self.microBreakStartSoundName = UserDefaults.standard.string(forKey: microBreakStartSoundKey) ?? "Ding"  // 微休息开始：点击
         self.microBreakEndSoundName = UserDefaults.standard.string(forKey: microBreakEndSoundKey) ?? "Ba"  // 微休息结束：轻提
         self.breakEndSoundName = UserDefaults.standard.string(forKey: breakEndSoundKey) ?? "Piano"  // 休息结束：钢琴
+        
+        super.init()
+        
+        // 加载自定义音效文件名（书签本身在播放时解析）
+        var names: [String: String] = [:]
+        for type in SoundType.allCases {
+            if let name = CustomSoundStore.fileName(for: type) {
+                names[type.rawValue] = name
+            }
+        }
+        self.customFileNames = names
         
         // 设置音频会话
         setupAudioSession()
@@ -262,26 +281,217 @@ class SoundManager: ObservableObject {
     
     // 播放结束声音
     @objc private func playEndSound() {
-        print("【播放声音】专注结束 - \(endSoundName)")
-        playSystemSound(named: endSoundName)
+        playSound(for: .focusEnd)
     }
     
     // 播放微休息开始音效
     @objc private func playMicroBreakStartSound() {
-        print("【播放声音】微休息开始 - \(microBreakStartSoundName)")
-        playSystemSound(named: microBreakStartSoundName)
+        playSound(for: .microBreakStart)
     }
     
     // 播放微休息结束音效
     @objc private func playMicroBreakEndSound() {
-        print("【播放声音】微休息结束 - \(microBreakEndSoundName)")
-        playSystemSound(named: microBreakEndSoundName)
+        playSound(for: .microBreakEnd)
     }
     
     // 播放休息结束音效
     @objc private func playBreakEndSound() {
-        print("【播放声音】休息结束 - \(breakEndSoundName)")
-        playSystemSound(named: breakEndSoundName)
+        playSound(for: .breakEnd)
+    }
+    
+    // 播放某类音效：优先自定义文件，否则回退到该类音效当前选中的系统音效
+    private func playSound(for type: SoundType) {
+        if hasCustomSound(for: type), playCustomSound(for: type) {
+            return
+        }
+        playSystemSound(named: systemSoundName(for: type))
+    }
+    
+    // 某类音效当前选中的系统音效名称
+    private func systemSoundName(for type: SoundType) -> String {
+        switch type {
+        case .microBreakStart:
+            return microBreakStartSoundName
+        case .microBreakEnd:
+            return microBreakEndSoundName
+        case .focusEnd:
+            return endSoundName
+        case .breakEnd:
+            return breakEndSoundName
+        }
+    }
+    
+    // MARK: - 自定义音效
+    
+    // 该校验是否设置了自定义文件
+    func hasCustomSound(for type: SoundType) -> Bool {
+        return customFileNames[type.rawValue] != nil
+    }
+    
+    // 自定义文件名（含扩展名），未设置时为 nil
+    func customFileName(for type: SoundType) -> String? {
+        return customFileNames[type.rawValue]
+    }
+    
+    // 设置自定义音效：验证 → 复制进容器 → 记录 → 尽力保存书签 → 试听
+    func setCustomSound(url: URL, for type: SoundType) throws {
+        // NSOpenPanel 返回的 URL 一般已可直接读取，这里兜底开启安全作用域
+        let didStartAccessing = url.startAccessingSecurityScopedResource()
+        defer {
+            if didStartAccessing {
+                url.stopAccessingSecurityScopedResource()
+            }
+        }
+
+        // 1. 先验证文件确实能被解码，避免保存一个无法播放的文件
+        let probe = try AVAudioPlayer(contentsOf: url)
+        probe.prepareToPlay()
+
+        // 2. 复制进 App 容器。沙盒 + ad-hoc 签名下，持久化书签并不可靠，
+        //    播放副本可以彻底绕开临时授权过期、原文件被移动/删除等问题。
+        _ = try copyIntoContainer(from: url, for: type)
+
+        // 3. 记录界面显示名
+        CustomSoundStore.setFileName(url.lastPathComponent, for: type)
+        customFileNames[type.rawValue] = url.lastPathComponent
+
+        // 4. 尽力保存安全作用域书签（失败不影响使用副本播放）
+        do {
+            try CustomSoundStore.saveBookmark(url: url, for: type)
+        } catch {
+            CustomSoundStore.clearBookmark(for: type)
+            print("书签保存失败(\(type.rawValue))：\(error.localizedDescription)；已使用容器副本，功能不受影响")
+        }
+
+        stopAllSounds()
+        if !playCustomSound(for: type) {
+            playSystemSound(named: systemSoundName(for: type))
+        }
+    }
+
+    // 清除自定义音效，并播放当前选中的系统音效
+    func clearCustomSound(for type: SoundType) {
+        if customPlayingType == type {
+            stopCustomPlayback()
+        }
+        removeLocalCopy(for: type)
+        CustomSoundStore.clear(for: type)
+        customFileNames.removeValue(forKey: type.rawValue)
+        playSystemSound(named: systemSoundName(for: type))
+    }
+
+    // 试听某类音效（设置界面改动后调用，规则与实际播放一致）
+    func playPreview(for type: SoundType) {
+        playSound(for: type)
+    }
+
+    // 播放自定义音频，返回是否成功
+    @discardableResult
+    private func playCustomSound(for type: SoundType) -> Bool {
+        stopAllSounds()
+
+        // 优先播放容器内的副本
+        if let localURL = localCopyURL(for: type),
+           startCustomPlayer(url: localURL, type: type, scoped: nil) {
+            return true
+        }
+
+        // 副本丢失时再尝试书签（兼容旧版本保存的数据）
+        if let scoped = CustomSoundStore.resolve(for: type),
+           startCustomPlayer(url: scoped.url, type: type, scoped: scoped) {
+            return true
+        }
+
+        print("自定义音效不可用(\(type.rawValue))，回退系统音效")
+        removeLocalCopy(for: type)
+        CustomSoundStore.clear(for: type)
+        customFileNames.removeValue(forKey: type.rawValue)
+        return false
+    }
+
+    // 用指定 URL 启动自定义播放器
+    private func startCustomPlayer(url: URL, type: SoundType, scoped: CustomSoundStore.ScopedURL?) -> Bool {
+        do {
+            let player = try AVAudioPlayer(contentsOf: url)
+            player.delegate = self
+            player.volume = 1.0
+            player.prepareToPlay()
+
+            customPlayer = player
+            customScopedURL = scoped
+            customPlayingType = type
+
+            player.play()
+            print("【播放声音】自定义音效(\(type.rawValue)) - \(url.lastPathComponent)")
+            return true
+        } catch {
+            print("自定义音效播放失败(\(type.rawValue)): \(error.localizedDescription)")
+            scoped?.release()
+            return false
+        }
+    }
+
+    // MARK: - 自定义音频文件（App 容器内副本）
+
+    private func customSoundsDirectory() -> URL {
+        let base = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
+            ?? FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Library/Application Support")
+        let dir = base.appendingPathComponent("Focus/CustomSounds", isDirectory: true)
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        return dir
+    }
+
+    private func localCopyURL(for type: SoundType) -> URL? {
+        let files = (try? FileManager.default.contentsOfDirectory(at: customSoundsDirectory(), includingPropertiesForKeys: nil)) ?? []
+        return files.first { $0.deletingPathExtension().lastPathComponent == type.rawValue }
+    }
+
+    private func removeLocalCopy(for type: SoundType) {
+        let files = (try? FileManager.default.contentsOfDirectory(at: customSoundsDirectory(), includingPropertiesForKeys: nil)) ?? []
+        for file in files where file.deletingPathExtension().lastPathComponent == type.rawValue {
+            try? FileManager.default.removeItem(at: file)
+        }
+    }
+
+    @discardableResult
+    private func copyIntoContainer(from url: URL, for type: SoundType) throws -> URL {
+        let directory = customSoundsDirectory()
+        removeLocalCopy(for: type)
+        let ext = url.pathExtension.isEmpty ? "audio" : url.pathExtension
+        let destination = directory.appendingPathComponent(type.rawValue).appendingPathExtension(ext)
+        try FileManager.default.copyItem(at: url, to: destination)
+        return destination
+    }
+
+    // 停止自定义音频并释放安全作用域
+    private func stopCustomPlayback() {
+        if let player = customPlayer, player.isPlaying {
+            player.stop()
+        }
+        customPlayer?.currentTime = 0
+        customPlayer = nil
+        customPlayingType = nil
+        customScopedURL?.release()
+        customScopedURL = nil
+    }
+    
+    // MARK: - AVAudioPlayerDelegate
+    
+    func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
+        guard player === customPlayer else { return }
+        // 播放结束，释放安全作用域访问
+        customPlayer = nil
+        customPlayingType = nil
+        customScopedURL?.release()
+        customScopedURL = nil
+    }
+    
+    func audioPlayerDecodeErrorDidOccur(_ player: AVAudioPlayer, error: Error?) {
+        guard player === customPlayer else { return }
+        if let error = error {
+            print("自定义音效解码失败: \(error.localizedDescription)")
+        }
+        stopCustomPlayback()
     }
     
     // 停止所有正在播放的音效
@@ -292,6 +502,7 @@ class SoundManager: ObservableObject {
                 player.currentTime = 0
             }
         }
+        stopCustomPlayback()
     }
     
     // 播放系统声音的通用方法
@@ -411,7 +622,7 @@ class SoundManager: ObservableObject {
 }
 
 // 音效类型枚举
-enum SoundType {
+enum SoundType: String, CaseIterable {
     case microBreakStart  // 微休息开始
     case microBreakEnd    // 微休息结束
     case focusEnd         // 专注结束

@@ -8,6 +8,8 @@
 import SwiftUI
 import UserNotifications
 import ApplicationServices
+import AppKit
+import UniformTypeIdentifiers
 
 // MARK: - Color Extension for Hex
 extension Color {
@@ -290,6 +292,36 @@ struct SettingsView: View {
         }
     }
     
+    // MARK: - 自定义音效选择
+
+    /// 弹出 NSOpenPanel 选择本机音频文件，作为该类微休息/结束提示音
+    private func pickCustomSound(for type: SoundType) {
+        let panel = NSOpenPanel()
+        panel.title = "选择自定义提示音"
+        panel.message = "支持 mp3、wav、m4a、aiff 格式的音频文件"
+        panel.prompt = "选择"
+        panel.allowedContentTypes = [.mp3, .wav, .aiff, .mpeg4Audio]
+        panel.allowsMultipleSelection = false
+        panel.canChooseDirectories = false
+        panel.canCreateDirectories = false
+        panel.resolvesAliases = true
+
+        // 应用是菜单栏（accessory）应用，先把自身激活，避免选择面板出现在其他窗口后面
+        NSApp.activate()
+
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+
+        do {
+            try soundManager.setCustomSound(url: url, for: type)
+        } catch {
+            let alert = NSAlert()
+            alert.alertStyle = .warning
+            alert.messageText = "无法使用该音频文件"
+            alert.informativeText = "请确认文件为 mp3、wav、m4a 或 aiff 格式，且未损坏。\n\n\(error.localizedDescription)"
+            alert.runModal()
+        }
+    }
+
     // MARK: - 声音设置分组
     private var soundSettingsSection: some View {
         ModernSettingsSection(
@@ -314,10 +346,13 @@ struct SettingsView: View {
                             iconColor: .indigo,
                             selectedSound: soundManager.microBreakStartSoundName,
                             soundType: .microBreakStart,
+                            customFileName: soundManager.customFileName(for: .microBreakStart),
                             onSelectionChange: { soundName in
                                 soundManager.microBreakStartSoundName = soundName
-                                soundManager.playPreviewSound(named: soundName)
-                            }
+                                soundManager.playPreview(for: .microBreakStart)
+                            },
+                            onPickCustomFile: { pickCustomSound(for: .microBreakStart) },
+                            onClearCustomFile: { soundManager.clearCustomSound(for: .microBreakStart) }
                         )
                         
                         ModernDivider()
@@ -328,10 +363,13 @@ struct SettingsView: View {
                             iconColor: .teal,
                             selectedSound: soundManager.microBreakEndSoundName,
                             soundType: .microBreakEnd,
+                            customFileName: soundManager.customFileName(for: .microBreakEnd),
                             onSelectionChange: { soundName in
                                 soundManager.microBreakEndSoundName = soundName
-                                soundManager.playPreviewSound(named: soundName)
-                            }
+                                soundManager.playPreview(for: .microBreakEnd)
+                            },
+                            onPickCustomFile: { pickCustomSound(for: .microBreakEnd) },
+                            onClearCustomFile: { soundManager.clearCustomSound(for: .microBreakEnd) }
                         )
                         
 
@@ -351,10 +389,13 @@ struct SettingsView: View {
                     iconColor: .green,
                     selectedSound: soundManager.endSoundName,
                     soundType: .focusEnd,
+                    customFileName: soundManager.customFileName(for: .focusEnd),
                     onSelectionChange: { soundName in
                         soundManager.endSoundName = soundName
-                        soundManager.playPreviewSound(named: soundName)
-                    }
+                        soundManager.playPreview(for: .focusEnd)
+                    },
+                    onPickCustomFile: { pickCustomSound(for: .focusEnd) },
+                    onClearCustomFile: { soundManager.clearCustomSound(for: .focusEnd) }
                 )
                 
                 ModernDivider()
@@ -366,10 +407,13 @@ struct SettingsView: View {
                     iconColor: .orange,
                     selectedSound: soundManager.breakEndSoundName,
                     soundType: .breakEnd,
+                    customFileName: soundManager.customFileName(for: .breakEnd),
                     onSelectionChange: { soundName in
                         soundManager.breakEndSoundName = soundName
-                        soundManager.playPreviewSound(named: soundName)
-                    }
+                        soundManager.playPreview(for: .breakEnd)
+                    },
+                    onPickCustomFile: { pickCustomSound(for: .breakEnd) },
+                    onClearCustomFile: { soundManager.clearCustomSound(for: .breakEnd) }
                 )
             }
         }
@@ -692,23 +736,41 @@ struct ModernSoundSelectionRow: View {
     let iconColor: Color
     let selectedSound: String
     let soundType: SoundType
+    let customFileName: String?
     let onSelectionChange: (String) -> Void
-    
+    let onPickCustomFile: () -> Void
+    let onClearCustomFile: () -> Void
+
     @State private var isMenuOpen = false
-    
+
     var body: some View {
-        HStack(spacing: DesignSystem.Spacing.md) {
+        HStack(spacing: 5) {
             Image(systemName: icon)
                 .font(.system(size: 14, weight: .regular))
                 .foregroundColor(iconColor)
                 .frame(width: 16)
-            
+
             Text(title)
                 .font(.system(size: 14, weight: .medium))
                 .foregroundColor(DesignSystem.Colors.primary)
-            
-            Spacer()
-            
+                .lineLimit(1)
+                .layoutPriority(1)
+
+            Spacer(minLength: DesignSystem.Spacing.xs)
+
+            // 自定义音频按钮位于下拉列表左侧
+            customSoundButton
+
+            if customFileName != nil {
+                Button(action: onClearCustomFile) {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.system(size: 13, weight: .regular))
+                        .foregroundColor(DesignSystem.Colors.secondary)
+                }
+                .buttonStyle(.plain)
+                .help("清除自定义音频，恢复系统音效")
+            }
+
             Menu {
                 ForEach(SoundManager.getOrderedSoundOptions(for: soundType), id: \.self) { soundName in
                     Button(action: {
@@ -725,17 +787,19 @@ struct ModernSoundSelectionRow: View {
                     }
                 }
             } label: {
-                HStack(spacing: DesignSystem.Spacing.sm) {
+                HStack(spacing: 4) {
                     Text(SoundManager.getDisplayName(for: selectedSound))
                         .font(.system(size: 13, weight: .medium))
                         .foregroundColor(DesignSystem.Colors.primary)
-                    
+                        .lineLimit(1)
+
                     Image(systemName: "chevron.up.chevron.down")
-                        .font(.system(size: 10, weight: .medium))
+                        .font(.system(size: 9, weight: .medium))
                         .foregroundColor(DesignSystem.Colors.secondary)
                 }
-                .padding(.horizontal, DesignSystem.Spacing.md)
+                .padding(.horizontal, 4)
                 .padding(.vertical, DesignSystem.Spacing.sm)
+                .fixedSize(horizontal: true, vertical: false)
                 .background(
                     RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.sm)
                         .fill(DesignSystem.Colors.cardBackground)
@@ -755,6 +819,45 @@ struct ModernSoundSelectionRow: View {
                 isMenuOpen = isOpen
             }
         }
+    }
+
+    // 自定义音频按钮：未选择时为空（＋ 图标），选择后显示文件名（过长只显示前 4 个字符）
+    private var customSoundButton: some View {
+        Button(action: onPickCustomFile) {
+            HStack(spacing: 3) {
+                if let name = customFileName {
+                    Text(shortFileName(name))
+                        .font(.system(size: 12, weight: .medium))
+                        .lineLimit(1)
+                } else {
+                    Image(systemName: "plus")
+                        .font(.system(size: 10, weight: .semibold))
+                }
+            }
+            .foregroundColor(customFileName == nil ? DesignSystem.Colors.secondary : DesignSystem.Colors.primary)
+            .padding(.horizontal, 6)
+            .padding(.vertical, 5)
+            .fixedSize(horizontal: true, vertical: false)
+            .background(
+                RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.sm)
+                    .fill(DesignSystem.Colors.cardBackground)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: DesignSystem.CornerRadius.sm)
+                    .stroke(DesignSystem.Colors.separator.opacity(0.3), lineWidth: 0.5)
+            )
+        }
+        .buttonStyle(.plain)
+        .help(customFileName.map { "当前自定义音频：\($0)\n点击可重新选择" } ?? "选择本机音频文件（mp3 / wav / m4a / aiff）")
+    }
+
+    private func shortFileName(_ fileName: String) -> String {
+        let base = (fileName as NSString).deletingPathExtension
+        guard !base.isEmpty else { return String(fileName.prefix(4)) }
+        if base.count > 4 {
+            return String(base.prefix(4)) + "…"
+        }
+        return base
     }
 }
 
